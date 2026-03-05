@@ -3,95 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diouf Ous Pro V16 - Gestion de Gros</title>
+    <title>Diouf Ous Business V17 - Gestion Crédit</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --p: #6366f1; --s: #10b981; --bg: #f8fafc; --dark: #1e293b; }
+        :root { --p: #6366f1; --s: #10b981; --w: #f59e0b; --d: #ef4444; --bg: #f8fafc; --dark: #1e293b; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg); margin: 0; padding-bottom: 90px; }
-        .scan-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        #reader { width: 95%; max-width: 450px; border-radius: 20px; border: 4px solid var(--p); overflow: hidden; }
-        .header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top:0; z-index:100; }
         .container { padding: 15px; max-width: 800px; margin: auto; }
-        .card { background: white; border-radius: 18px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 15px; }
-        .excel-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .excel-table th { background: #f1f5f9; padding: 10px; text-align: left; }
-        .excel-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
-        input, select { width: 100%; padding: 14px; margin: 8px 0; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 1rem; }
-        .btn { border: none; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; }
+        .card { background: white; border-radius: 18px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 15px; border: 1px solid #f1f5f9; }
+        .btn { border: none; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 5px; }
         .btn-p { background: var(--p); color: white; }
         .btn-s { background: var(--s); color: white; }
-        .nav-b { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px; border-top: 1px solid #eee; }
-        .nav-btn { flex: 1; border: none; background: none; font-size: 0.75rem; font-weight: 700; color: #94a3b8; display: flex; flex-direction: column; align-items: center; }
+        .btn-w { background: var(--w); color: white; }
+        .nav-b { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
+        .nav-btn { flex: 1; border: none; background: none; font-size: 0.7rem; font-weight: 700; color: #94a3b8; display: flex; flex-direction: column; align-items: center; }
         .nav-btn.active { color: var(--p); }
+        .badge { background: var(--d); color: white; border-radius: 10px; padding: 2px 6px; font-size: 0.7rem; }
+        .dette-item { border-left: 5px solid var(--w); padding-left: 10px; margin-bottom: 15px; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 1rem; }
+        .scan-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        #reader { width: 95%; max-width: 450px; border-radius: 20px; overflow: hidden; }
     </style>
 </head>
 <body>
 
 <div id="scan-overlay" class="scan-overlay">
     <div id="reader"></div>
-    <button class="btn" style="background:#ef4444; color:white; width:80%; margin-top:20px;" onclick="stopScan()">✖ ANNULER</button>
+    <button class="btn" style="background:var(--d); color:white; width:80%; margin-top:20px;" onclick="stopScan()">ANNULER</button>
 </div>
 
 <div class="header">
-    <h3 style="margin:0;">Diouf Ous Business</h3>
+    <h3 style="margin:0;">Diouf Ous Pro</h3>
     <div id="benef-val" style="color:var(--s); font-weight:800;">0 F</div>
 </div>
 
 <div class="container">
     <div id="p-stocks" class="page">
         <div class="card">
-            <h4>📦 Entrée de Stock</h4>
+            <h4>📦 Ajouter un Produit</h4>
             <div style="display:flex; gap:10px;">
-                <input type="text" id="p-code" placeholder="Code (Pièce ou Carton)">
+                <input type="text" id="p-code" placeholder="Scanner Code-barres">
                 <button onclick="startScan('p-code')" style="background:var(--p); border:none; padding:15px; border-radius:12px; color:white;">📷</button>
             </div>
-            <input type="text" id="p-nom" placeholder="Nom du produit">
-            <div style="display:flex; gap:10px;">
-                <input type="number" id="p-pa" placeholder="Prix Achat Unité">
-                <input type="number" id="p-pv" placeholder="Prix Vente Unité">
-            </div>
-            <input type="number" id="p-qty" placeholder="Quantité totale d'unités">
+            <input type="text" id="p-nom" placeholder="Nom de l'article">
+            <input type="number" id="p-pa" placeholder="Prix Achat Unité">
+            <input type="number" id="p-pv" placeholder="Prix Vente Unité">
+            <input type="number" id="p-qty" placeholder="Quantité en Stock">
             <button class="btn btn-p" onclick="saveP()">ENREGISTRER</button>
-        </div>
-        <div class="card">
-            <h4>📋 Inventaire</h4>
-            <div style="overflow-x: auto;">
-                <table class="excel-table">
-                    <thead><tr><th>Code</th><th>Produit</th><th>Stock</th></tr></thead>
-                    <tbody id="inventory-body"></tbody>
-                </table>
-            </div>
         </div>
     </div>
 
     <div id="p-vendre" class="page" style="display:none;">
-        <button class="btn btn-p" style="background:var(--dark); margin-bottom:15px;" onclick="startScan('sale')">📷 SCANNER (PIÈCE OU CARTON)</button>
+        <button class="btn" style="background:var(--dark); color:white; margin-bottom:15px;" onclick="startScan('sale')">📷 SCANNER UN PRODUIT</button>
         <div id="list-vendre"></div>
     </div>
 
     <div id="p-panier" class="page" style="display:none;">
         <div class="card">
-            <h3>🛒 Panier</h3>
+            <h3>🛒 Panier Actuel</h3>
             <div id="cart-list"></div>
             <h2 id="cart-total" style="text-align:right; color:var(--p);">0 F</h2>
-            <button class="btn btn-s" onclick="finish()">💰 VALIDER LA VENTE</button>
+            <hr>
+            <input type="text" id="c-name" placeholder="Nom du client (Obligatoire pour crédit)">
+            <button class="btn btn-s" onclick="finish('CASH')">💰 PAYER PAR CASH</button>
+            <button class="btn btn-w" onclick="finish('CREDIT')">💳 PRENDRE À CRÉDIT</button>
         </div>
+    </div>
+
+    <div id="p-credits" class="page" style="display:none;">
+        <h3>📔 Cahier des Crédits (Dettes)</h3>
+        <div id="list-dettes"></div>
     </div>
 </div>
 
 <nav class="nav-b">
     <button class="nav-btn active" onclick="showP('stocks')">Stock</button>
     <button class="nav-btn" onclick="showP('vendre')">Vendre</button>
-    <button class="nav-btn" onclick="showP('panier')">Panier</button>
+    <button class="nav-btn" onclick="showP('panier')">Panier <span id="c-badge" class="badge">0</span></button>
+    <button class="nav-btn" onclick="showP('credits')">Crédits</button>
 </nav>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('diouf_v16')) || { stocks: [], sales: [] };
+    let db = JSON.parse(localStorage.getItem('diouf_v17')) || { stocks: [], sales: [], dettes: [] };
     let cart = [];
     let html5QrCode;
-    const beep = new Audio('https://www.soundjay.com/button/beep-07.mp3');
 
     function showP(id) {
         document.querySelectorAll('.page').forEach(p=>p.style.display='none');
@@ -104,76 +101,86 @@
     function startScan(target) {
         document.getElementById('scan-overlay').style.display = 'flex';
         html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 30, qrbox: 250 },
-            (decodedText) => {
-                stopScan().then(() => {
-                    beep.play();
-                    if(target === 'p-code') {
-                        document.getElementById('p-code').value = decodedText;
-                    } else {
-                        handleSaleQuick(decodedText);
-                    }
-                });
-            }
-        ).catch(() => stopScan());
+        html5QrCode.start({ facingMode: "environment" }, { fps: 30, qrbox: 250 }, (txt) => {
+            stopScan().then(() => {
+                if(target === 'p-code') { document.getElementById('p-code').value = txt; document.getElementById('p-nom').focus(); }
+                else { handleQuickSale(txt); }
+            });
+        }).catch(() => stopScan());
     }
 
-    async function stopScan() {
-        if(html5QrCode) { await html5QrCode.stop(); html5QrCode = null; }
-        document.getElementById('scan-overlay').style.display='none';
-    }
+    async function stopScan() { if(html5QrCode) { await html5QrCode.stop(); html5QrCode = null; } document.getElementById('scan-overlay').style.display='none'; }
 
-    function handleSaleQuick(code) {
+    function handleQuickSale(code) {
         const p = db.stocks.find(i => i.code === code.trim());
         if(p) {
-            // DEMANDE DE QUANTITÉ IMMÉDIATE
-            let qte = prompt(`Produit : ${p.nom}\nCombien d'unités voulez-vous vendre ?`, "1");
-            if (qte != null && qte > 0) {
-                addCartManual(p.id, parseFloat(qte));
-                showP('panier');
+            let qte = prompt(`Produit : ${p.nom}\nQuantité ?`, "1");
+            if(qte > 0) { 
+                cart.push({ id: p.id, nom: p.nom, q: parseFloat(qte), total: p.pv * qte, profit: (p.pv - p.pa) * qte });
+                render(); showP('panier');
             }
         } else { alert("Produit inconnu !"); }
     }
 
     function saveP() {
-        const p = {
-            id: Date.now(),
-            code: document.getElementById('p-code').value.trim(),
-            nom: document.getElementById('p-nom').value,
-            pa: parseFloat(document.getElementById('p-pa').value),
-            pv: parseFloat(document.getElementById('p-pv').value),
-            stock: parseFloat(document.getElementById('p-qty').value)
-        };
-        db.stocks.unshift(p);
-        localStorage.setItem('diouf_v16', JSON.stringify(db));
-        render();
-        alert("Produit enregistré !");
+        const p = { id: Date.now(), code: document.getElementById('p-code').value.trim(), nom: document.getElementById('p-nom').value, pa: parseFloat(document.getElementById('p-pa').value), pv: parseFloat(document.getElementById('p-pv').value), stock: parseFloat(document.getElementById('p-qty').value) };
+        db.stocks.unshift(p); update(); render(); alert("Produit ajouté !");
     }
 
-    function addCartManual(id, qte) {
-        const p = db.stocks.find(i=>i.id===id);
-        if(p.stock < qte) return alert("Stock insuffisant ! Il reste " + p.stock);
-        cart.push({ id: p.id, nom: p.nom, q: qte, total: p.pv * qte, profit: (p.pv - p.pa) * qte });
-        render();
-    }
+    function finish(mode) {
+        if(cart.length === 0) return;
+        const client = document.getElementById('c-name').value.trim();
+        if(mode === 'CREDIT' && !client) return alert("Veuillez saisir le nom du client pour le crédit !");
 
-    function finish() {
+        const total = cart.reduce((s,i)=>s+i.total, 0);
+        const details = cart.map(i => `${i.q}x ${i.nom}`).join(', ');
+
+        if(mode === 'CREDIT') {
+            db.dettes.unshift({ id: Date.now(), client: client, date: new Date().toLocaleString(), detail: details, total: total });
+        } else {
+            db.sales.push({ profit: cart.reduce((s,i)=>s+i.profit,0) });
+        }
+
+        // Mise à jour stock
         cart.forEach(c => { const s = db.stocks.find(st=>st.id===c.id); if(s) s.stock -= c.q; });
-        db.sales.push({ profit: cart.reduce((s,i)=>s+i.profit,0) });
-        localStorage.setItem('diouf_v16', JSON.stringify(db));
-        cart = []; render(); showP('stocks');
-        alert("Vente enregistrée ! Stock mis à jour.");
+        
+        cart = []; document.getElementById('c-name').value = "";
+        update(); render(); showP(mode === 'CREDIT' ? 'credits' : 'stocks');
+        alert(mode === 'CREDIT' ? "Dette enregistrée dans le cahier !" : "Vente Cash réussie !");
     }
+
+    function reglerDette(id) {
+        const d = db.dettes.find(i => i.id === id);
+        db.sales.push({ profit: 0 }); // On peut ajuster ici le profit si on veut
+        db.dettes = db.dettes.filter(i => i.id !== id);
+        update(); render();
+        alert("Dette marquée comme réglée !");
+    }
+
+    function update() { localStorage.setItem('diouf_v17', JSON.stringify(db)); }
 
     function render() {
+        document.getElementById('c-badge').innerText = cart.length;
         document.getElementById('benef-val').innerText = db.sales.reduce((s,v)=>s+v.profit,0).toLocaleString() + " F";
-        document.getElementById('inventory-body').innerHTML = db.stocks.map(p => `<tr><td>${p.code}</td><td>${p.nom}</td><td>${p.stock}</td></tr>`).join('');
+        
+        // Liste Vendre Rapide
         document.getElementById('list-vendre').innerHTML = db.stocks.map(p=>`
-            <div class="card" onclick="handleSaleQuick('${p.code}')">
+            <div class="card" onclick="handleQuickSale('${p.code}')">
                 <b>${p.nom}</b> - ${p.pv} F <br><small>Stock: ${p.stock}</small>
             </div>`).join('');
-        document.getElementById('cart-list').innerHTML = cart.map(c=>`<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;"><span>${c.q}x ${c.nom}</span><b>${c.total} F</b></div>`).join('');
+
+        // Liste Panier
+        document.getElementById('cart-list').innerHTML = cart.map(c=>`<div style="display:flex; justify-content:space-between; padding:5px 0;"><span>${c.q}x ${c.nom}</span><b>${c.total} F</b></div>`).join('');
         document.getElementById('cart-total').innerText = cart.reduce((s,i)=>s+i.total,0).toLocaleString() + " F";
+
+        // Liste Dettes (Le Récit)
+        document.getElementById('list-dettes').innerHTML = db.dettes.map(d=>`
+            <div class="card dette-item">
+                <div style="display:flex; justify-content:space-between;"><b>👤 ${d.client}</b> <b style="color:var(--d)">${d.total} F</b></div>
+                <div style="font-size:0.8rem; color:#666; margin:5px 0;">📅 ${d.date}</div>
+                <div style="font-size:0.85rem; background:#fef3c7; padding:5px; border-radius:5px;">🛒 ${d.detail}</div>
+                <button class="btn btn-s" style="padding:8px; font-size:0.8rem;" onclick="reglerDette(${d.id})">✅ DETTE RÉGLÉE</button>
+            </div>`).join('') || "<p>Aucun crédit en cours.</p>";
     }
     render();
 </script>
