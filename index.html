@@ -3,82 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diouf Ous Business V19 - Excel & Edit</title>
+    <title>Diouf Ous Business V20 - Catégories</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --p: #6366f1; --s: #10b981; --w: #f59e0b; --d: #ef4444; --bg: #f8fafc; --dark: #1e293b; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--dark); }
+        body { background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--dark); }
         .header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top:0; z-index:100; }
-        .container { padding: 15px; max-width: 900px; margin: auto; }
-        .card { background: white; border-radius: 18px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 15px; border: 1px solid #f1f5f9; }
+        .container { padding: 10px; max-width: 900px; margin: auto; }
+        .card { background: white; border-radius: 18px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 15px; border: 1px solid #f1f5f9; }
         
-        /* TABLEAU EXCEL STYLE */
-        .excel-container { overflow-x: auto; margin-top: 10px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .excel-table { width: 100%; border-collapse: collapse; background: white; font-size: 0.8rem; }
-        .excel-table th { background: #f1f5f9; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; }
-        .excel-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
-        .excel-table tr:hover { background: #f8fafc; }
+        /* FILTRES CATEGORIES */
+        .filter-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 10px; scrollbar-width: none; }
+        .filter-btn { background: white; border: 1px solid #e2e8f0; padding: 8px 15px; border-radius: 20px; white-space: nowrap; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+        .filter-btn.active { background: var(--p); color: white; border-color: var(--p); }
 
-        input { width: 100%; padding: 12px; margin: 5px 0; border: 2px solid #f1f5f9; border-radius: 10px; font-size: 0.9rem; }
-        .btn { border: none; padding: 14px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px; }
+        .excel-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .excel-table th { background: #f1f5f9; padding: 8px; text-align: left; }
+        .excel-table td { padding: 8px; border-bottom: 1px solid #f1f5f9; }
+
+        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 2px solid #f1f5f9; border-radius: 10px; font-size: 0.9rem; outline: none; }
+        .btn { border: none; padding: 14px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-p { background: var(--p); color: white; }
         .btn-s { background: var(--s); color: white; }
-        .btn-excel { background: #15803d; color: white; margin-bottom: 15px; }
-        .nav-b { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
+        
+        .nav-b { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-btn { flex: 1; border: none; background: none; font-size: 0.7rem; font-weight: 700; color: #94a3b8; display: flex; flex-direction: column; align-items: center; }
         .nav-btn.active { color: var(--p); }
+
         .scan-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        #reader { width: 95%; max-width: 450px; border-radius: 20px; overflow: hidden; }
+        #reader { width: 90%; max-width: 400px; border-radius: 20px; overflow: hidden; }
     </style>
 </head>
 <body>
 
 <div id="scan-overlay" class="scan-overlay">
     <div id="reader"></div>
-    <button class="btn" style="background:var(--d); color:white; width:80%; margin-top:20px;" onclick="stopScan()">ANNULER</button>
+    <button class="btn" style="background:var(--d); color:white; width:80%; margin-top:20px;" onclick="stopScan()">ANNULER LE SCAN</button>
 </div>
 
 <div class="header">
-    <h3 style="margin:0;">Diouf Ous Pro V19</h3>
+    <h3 style="margin:0;">Diouf Ous Pro V20</h3>
     <div id="benef-val" style="color:var(--s); font-weight:800;">0 F</div>
 </div>
 
 <div class="container">
     <div id="p-stocks" class="page">
         <div class="card">
-            <h4 id="form-title">📦 Enregistrer / Modifier Produit</h4>
+            <h4 id="form-title">📦 Gestion du Stock</h4>
             <input type="hidden" id="edit-id">
             <div style="display:flex; gap:10px;">
                 <input type="text" id="p-code" placeholder="Code-barres">
                 <button onclick="startScan('p-code')" style="background:var(--p); border:none; padding:12px; border-radius:10px; color:white;">📷</button>
             </div>
             <input type="text" id="p-nom" placeholder="Nom du produit">
+            <select id="p-cat">
+                <option value="Alimentaire">🍽️ Alimentaire</option>
+                <option value="Frais/Vrac">🥔 Frais & Vrac</option>
+                <option value="Cosmétique">🧼 Hygiène & Cosmétique</option>
+                <option value="Entretien">🧽 Entretien Maison</option>
+                <option value="Boissons">🍹 Boissons & Goûters</option>
+                <option value="Quincaillerie">🔋 Quincaillerie</option>
+                <option value="Pain">🥖 Pain</option>
+                <option value="Transfert">💸 Transfert d'Argent</option>
+            </select>
             <div style="display:flex; gap:10px;">
                 <input type="number" id="p-pa" placeholder="Prix Achat">
                 <input type="number" id="p-pv" placeholder="Prix Vente">
             </div>
-            <input type="number" id="p-qty" placeholder="Quantité en stock">
-            <button class="btn btn-p" id="btn-save" onclick="saveP()">ENREGISTRER</button>
-            <button class="btn" id="btn-cancel" style="display:none; background:#94a3b8; color:white;" onclick="cancelEdit()">ANNULER MODIF</button>
+            <input type="number" id="p-qty" placeholder="Quantité">
+            <button class="btn btn-p" id="btn-save" onclick="saveP()">ENREGISTRER PRODUIT</button>
+            <button class="btn" id="btn-cancel" style="display:none; background:#94a3b8; color:white; margin-top:5px;" onclick="cancelEdit()">ANNULER MODIF</button>
         </div>
 
-        <button class="btn btn-excel" onclick="exportToExcel()">📥 EXPORTER VERS EXCEL (.CSV)</button>
+        <button class="btn" style="background:#15803d; color:white; margin-bottom:10px;" onclick="exportExcel()">📥 EXCEL (.CSV)</button>
 
         <div class="card">
-            <h4>📊 Inventaire Complet</h4>
-            <div class="excel-container">
+            <h4>📊 Inventaire</h4>
+            <div style="overflow-x:auto;">
                 <table class="excel-table">
-                    <thead>
-                        <tr>
-                            <th>Nom</th>
-                            <th>Code</th>
-                            <th>Vente</th>
-                            <th>Stock</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Produit</th><th>Catégorie</th><th>Stock</th><th>Action</th></tr></thead>
                     <tbody id="inventory-body"></tbody>
                 </table>
             </div>
@@ -86,7 +91,19 @@
     </div>
 
     <div id="p-vendre" class="page" style="display:none;">
-        <button class="btn" style="background:var(--dark); color:white; margin-bottom:15px;" onclick="startScan('sale')">📷 SCANNER POUR VENDRE</button>
+        <button class="btn" style="background:var(--dark); color:white; margin-bottom:10px;" onclick="startScan('sale')">📷 SCANNER UN PRODUIT</button>
+        
+        <div class="filter-scroll" id="cat-filters">
+            <button class="filter-btn active" onclick="filterCat('All')">Tout</button>
+            <button class="filter-btn" onclick="filterCat('Alimentaire')">Alimentaire</button>
+            <button class="filter-btn" onclick="filterCat('Frais/Vrac')">Frais</button>
+            <button class="filter-btn" onclick="filterCat('Cosmétique')">Hygiène</button>
+            <button class="filter-btn" onclick="filterCat('Entretien')">Entretien</button>
+            <button class="filter-btn" onclick="filterCat('Boissons')">Boissons</button>
+            <button class="filter-btn" onclick="filterCat('Pain')">Pain</button>
+            <button class="filter-btn" onclick="filterCat('Transfert')">Transfert</button>
+        </div>
+
         <div id="list-vendre"></div>
     </div>
 
@@ -95,7 +112,10 @@
             <h3>🛒 Panier</h3>
             <div id="cart-list"></div>
             <h2 id="cart-total" style="text-align:right; color:var(--p);">0 F</h2>
-            <button class="btn btn-s" onclick="finish()">💰 VALIDER LA VENTE</button>
+            <hr>
+            <input type="text" id="c-name" placeholder="Nom client (si crédit)">
+            <button class="btn btn-s" onclick="finish('CASH')">💰 ENCAISSER CASH</button>
+            <button class="btn" style="background:var(--w); color:white; margin-top:10px;" onclick="finish('CREDIT')">💳 CRÉDIT (ARDOISE)</button>
         </div>
     </div>
 </div>
@@ -107,8 +127,9 @@
 </nav>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('diouf_v19')) || { stocks: [], sales: [] };
+    let db = JSON.parse(localStorage.getItem('diouf_v20')) || { stocks: [], sales: [], dettes: [] };
     let cart = [];
+    let currentCat = 'All';
     let html5QrCode;
 
     function showP(id) {
@@ -116,6 +137,14 @@
         document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
         document.getElementById('p-'+id).style.display='block';
         event.currentTarget.classList.add('active');
+        render();
+    }
+
+    function filterCat(cat) {
+        currentCat = cat;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.toggle('active', b.innerText.includes(cat) || (cat==='All' && b.innerText==='Tout'));
+        });
         render();
     }
 
@@ -132,13 +161,14 @@
     }
     async function stopScan() { if(html5QrCode) await html5QrCode.stop(); document.getElementById('scan-overlay').style.display='none'; }
 
-    // --- GESTION PRODUITS (SAVE & EDIT) ---
+    // --- GESTION ---
     function saveP() {
         const id = document.getElementById('edit-id').value;
         const p = {
             id: id ? parseInt(id) : Date.now(),
             code: document.getElementById('p-code').value.trim(),
             nom: document.getElementById('p-nom').value,
+            cat: document.getElementById('p-cat').value,
             pa: parseFloat(document.getElementById('p-pa').value) || 0,
             pv: parseFloat(document.getElementById('p-pv').value) || 0,
             stock: parseFloat(document.getElementById('p-qty').value) || 0
@@ -147,15 +177,12 @@
         if(id) {
             const idx = db.stocks.findIndex(s => s.id === p.id);
             db.stocks[idx] = p;
-            alert("Produit modifié !");
         } else {
             db.stocks.unshift(p);
-            alert("Produit enregistré !");
         }
         
-        cancelEdit();
-        update();
-        render();
+        cancelEdit(); update(); render();
+        alert("Action réussie !");
     }
 
     function editP(id) {
@@ -163,14 +190,14 @@
         document.getElementById('edit-id').value = p.id;
         document.getElementById('p-code').value = p.code;
         document.getElementById('p-nom').value = p.nom;
+        document.getElementById('p-cat').value = p.cat;
         document.getElementById('p-pa').value = p.pa;
         document.getElementById('p-pv').value = p.pv;
         document.getElementById('p-qty').value = p.stock;
-        
-        document.getElementById('form-title').innerText = "✏️ Modification de : " + p.nom;
+        document.getElementById('form-title').innerText = "✏️ Modif : " + p.nom;
         document.getElementById('btn-save').innerText = "METTRE À JOUR";
         document.getElementById('btn-cancel').style.display = "block";
-        window.scrollTo(0,0);
+        showP('stocks'); window.scrollTo(0,0);
     }
 
     function cancelEdit() {
@@ -180,69 +207,62 @@
         document.getElementById('p-pa').value = "";
         document.getElementById('p-pv').value = "";
         document.getElementById('p-qty').value = "";
-        document.getElementById('form-title').innerText = "📦 Enregistrer / Modifier Produit";
-        document.getElementById('btn-save').innerText = "ENREGISTRER";
+        document.getElementById('form-title').innerText = "📦 Gestion du Stock";
+        document.getElementById('btn-save').innerText = "ENREGISTRER PRODUIT";
         document.getElementById('btn-cancel').style.display = "none";
     }
 
-    // --- EXPORT EXCEL ---
-    function exportToExcel() {
-        let csv = "Code;Nom;Prix Achat;Prix Vente;Stock;Valeur Stock\n";
-        db.stocks.forEach(p => {
-            csv += `${p.code};${p.nom};${p.pa};${p.pv};${p.stock};${p.pa * p.stock}\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", "Inventaire_Diouf_Ous_" + new Date().toLocaleDateString() + ".csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    // --- VENTE ---
     function handleSale(code) {
         const p = db.stocks.find(i => i.code === code.trim());
         if(p && p.stock > 0) {
-            let q = prompt(`Produit: ${p.nom}\nQuantité?`, "1");
+            let q = prompt(`Vendre ${p.nom} (Stock: ${p.stock})`, "1");
             if(q > 0 && q <= p.stock) {
                 cart.push({ id: p.id, nom: p.nom, q: parseFloat(q), total: p.pv * q, profit: (p.pv-p.pa)*q });
                 render(); showP('panier');
-            } else { alert("Stock insuffisant !"); }
-        } else { alert("Inconnu ou Rupture !"); }
+            } else if(q > p.stock) alert("Pas assez de stock !");
+        } else alert("Inconnu ou Rupture !");
     }
 
-    function finish() {
+    function finish(mode) {
+        if(cart.length === 0) return;
+        const client = document.getElementById('c-name').value;
+        if(mode === 'CREDIT' && !client) return alert("Nom client obligatoire !");
+
         cart.forEach(c => { const s = db.stocks.find(st=>st.id===c.id); if(s) s.stock -= c.q; });
-        db.sales.push({ profit: cart.reduce((s,i)=>s+i.profit,0) });
+        db.sales.push({ profit: cart.reduce((s,i)=>s+i.profit,0), date: new Date().toLocaleString() });
+        
         cart = []; update(); render(); showP('stocks');
-        alert("Vente validée !");
+        alert("Vente enregistrée !");
     }
 
-    function update() { localStorage.setItem('diouf_v19', JSON.stringify(db)); }
+    function exportExcel() {
+        let csv = "Code;Nom;Categorie;PV;Stock;Valeur\n";
+        db.stocks.forEach(p => csv += `${p.code};${p.nom};${p.cat};${p.pv};${p.stock};${p.pa*p.stock}\n`);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Inventaire.csv'; a.click();
+    }
+
+    function update() { localStorage.setItem('diouf_v20', JSON.stringify(db)); }
 
     function render() {
         document.getElementById('c-badge').innerText = cart.length;
         document.getElementById('benef-val').innerText = db.sales.reduce((s,v)=>s+v.profit,0).toLocaleString() + " F";
         
-        // Rendu Inventaire Excel
+        // Inventaire
         document.getElementById('inventory-body').innerHTML = db.stocks.map(p => `
-            <tr>
-                <td><b>${p.nom}</b></td>
-                <td>${p.code}</td>
-                <td>${p.pv}F</td>
-                <td style="color:${p.stock<=0?'red':'green'}">${p.stock}</td>
-                <td><button onclick="editP(${p.id})" style="border:none; background:none; cursor:pointer;">✏️</button></td>
-            </tr>
+            <tr><td><b>${p.nom}</b></td><td>${p.cat}</td><td style="color:${p.stock<=0?'red':'black'}">${p.stock}</td>
+            <td><button onclick="editP(${p.id})">✏️</button></td></tr>
         `).join('');
 
-        // Rendu Vente
-        document.getElementById('list-vendre').innerHTML = db.stocks.map(p=>`
+        // Vente Filtrée
+        const filtered = db.stocks.filter(p => currentCat === 'All' || p.cat === currentCat);
+        document.getElementById('list-vendre').innerHTML = filtered.map(p=>`
             <div class="card" onclick="handleSale('${p.code}')" style="opacity:${p.stock<=0?0.5:1}">
-                <b>${p.nom}</b> - ${p.pv} F <br><small>Stock: ${p.stock}</small>
-            </div>`).join('');
+                <div style="display:flex; justify-content:space-between;"><b>${p.nom}</b> <small>${p.cat}</small></div>
+                <div style="color:var(--p); font-weight:800; margin-top:5px;">${p.pv} F <span style="font-weight:400; color:#666; font-size:0.7rem;">(Stock: ${p.stock})</span></div>
+            </div>`).join('') || "<p style='text-align:center;'>Aucun produit dans cette catégorie.</p>";
 
-        document.getElementById('cart-list').innerHTML = cart.map(c=>`<div style="display:flex; justify-content:space-between; padding:5px 0;"><span>${c.q}x ${c.nom}</span><b>${c.total} F</b></div>`).join('');
+        document.getElementById('cart-list').innerHTML = cart.map(c=>`<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #eee;"><span>${c.q}x ${c.nom}</span><b>${c.total} F</b></div>`).join('');
         document.getElementById('cart-total').innerText = cart.reduce((s,i)=>s+i.total,0).toLocaleString() + " F";
     }
     render();
