@@ -3,30 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diouf Ous Business Pro V14</title>
+    <title>Diouf Ous Pro V15 - Performance</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --p: #6366f1; --s: #10b981; --w: #f59e0b; --d: #ef4444; --bg: #f8fafc; --dark: #1e293b; }
-        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--dark); }
+        
+        /* SCANNER TURBO */
         .scan-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        #reader { width: 90%; max-width: 400px; border-radius: 20px; border: 4px solid var(--p); overflow: hidden; background: #222; }
+        #reader { width: 95%; max-width: 450px; border-radius: 20px; border: 4px solid var(--p); overflow: hidden; }
+
         .header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .nav-b { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-btn { flex: 1; border: none; background: none; font-size: 0.75rem; font-weight: 700; color: #94a3b8; display: flex; flex-direction: column; align-items: center; position: relative; }
         .nav-btn.active { color: var(--p); }
         .badge { position: absolute; top: -5px; right: 20%; background: var(--d); color: white; border-radius: 12px; padding: 2px 7px; font-size: 0.7rem; }
-        .container { padding: 15px; max-width: 500px; margin: auto; }
-        .card { background: white; border-radius: 18px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 15px; border: 1px solid #f1f5f9; }
+
+        .container { padding: 15px; max-width: 800px; margin: auto; }
+        .card { background: white; border-radius: 18px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 15px; }
+        
+        /* TABLEAU STYLE EXCEL */
+        .excel-table { width: 100%; border-collapse: collapse; background: white; font-size: 0.85rem; border-radius: 10px; overflow: hidden; }
+        .excel-table th { background: #e2e8f0; padding: 10px; text-align: left; }
+        .excel-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+        .stock-empty { background: #fee2e2 !important; color: #b91c1c; font-weight: bold; }
+
         input, select { width: 100%; padding: 14px; margin: 8px 0; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 1rem; outline: none; }
-        .btn { border: none; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn { border: none; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-p { background: var(--p); color: white; }
         .btn-s { background: var(--s); color: white; }
         .btn-scan { background: var(--dark); color: white; margin-bottom: 15px; }
-        .item-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; align-items: center; }
-        #print-zone { display: none; }
-        @media print { body * { visibility: hidden; } #print-zone, #print-zone * { visibility: visible; } #print-zone { position: absolute; left: 0; top: 0; width: 100%; text-align: center; } table { width: 100%; border-collapse: collapse; } td { padding: 8px; border-bottom: 1px solid #000; } }
+
+        @media print { .no-print { display: none; } #print-zone { display: block !important; } }
     </style>
 </head>
 <body>
@@ -37,19 +47,19 @@
 </div>
 
 <div class="header">
-    <div><h3 style="margin:0;">Diouf Ous Pro</h3></div>
-    <div style="text-align:right;"><small>Bénéfice Total</small><div id="benef-val" style="color:var(--s); font-weight:800;">0 F</div></div>
+    <h3 style="margin:0;">Diouf Ous Business</h3>
+    <div style="text-align:right;"><small>Bénéfice</small><div id="benef-val" style="color:var(--s); font-weight:800;">0 F</div></div>
 </div>
 
 <div class="container">
     <div id="p-stocks" class="page">
-        <div class="card">
-            <h4>📦 Nouveau Produit</h4>
+        <div class="card no-print">
+            <h4>📦 Entrée de Marchandise</h4>
             <div style="display:flex; gap:10px;">
-                <input type="text" id="p-code" placeholder="Code-barres">
+                <input type="text" id="p-code" placeholder="Scanner Code-barres">
                 <button onclick="startScan('p-code')" style="background:var(--p); border:none; padding:15px; border-radius:12px; color:white;">📷</button>
             </div>
-            <input type="text" id="p-nom" placeholder="Nom de l'article">
+            <input type="text" id="p-nom" placeholder="Nom du produit">
             <div style="display:flex; gap:10px;">
                 <input type="number" id="p-pa" placeholder="Prix Achat">
                 <input type="number" id="p-pv" placeholder="Prix Vente">
@@ -58,44 +68,46 @@
                 <option value="unit">📦 Unité (Sachet, Pot...)</option>
                 <option value="weight">⚖️ Détail (Riz, Huile...)</option>
             </select>
-            <div id="p-w-div" style="display:none;"><input type="number" id="p-poids-sac" placeholder="Taille du sac (ex: 50)" value="50"></div>
-            <input type="number" id="p-qty" placeholder="Quantité en stock">
-            <button class="btn btn-p" onclick="saveP()">ENREGISTRER</button>
+            <div id="p-w-div" style="display:none;"><input type="number" id="p-poids-sac" placeholder="Taille du sac (50kg?)" value="50"></div>
+            <input type="number" id="p-qty" placeholder="Quantité livrée">
+            <button class="btn btn-p" onclick="saveP()">ENREGISTRER EN STOCK</button>
         </div>
-        <div id="list-stocks"></div>
+
+        <div class="card">
+            <h4>📋 Inventaire (Fichier Excel)</h4>
+            <div style="overflow-x: auto;">
+                <table class="excel-table" id="inventory-table">
+                    <thead>
+                        <tr><th>Code</th><th>Nom</th><th>Prix Vente</th><th>Stock Actuel</th></tr>
+                    </thead>
+                    <tbody id="inventory-body"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <div id="p-vendre" class="page" style="display:none;">
-        <button class="btn btn-scan" onclick="startScan('sale')">📷 SCANNER UN PRODUIT</button>
+        <button class="btn btn-scan" onclick="startScan('sale')">📷 SCANNER POUR VENDRE</button>
         <div id="list-vendre"></div>
     </div>
 
     <div id="p-panier" class="page" style="display:none;">
         <div class="card">
-            <h3>🛒 Panier</h3>
+            <h3>🛒 Panier Client</h3>
             <div id="cart-list"></div>
             <div style="display:flex; justify-content:space-between; margin-top:20px; font-size:1.5rem; font-weight:800; border-top:2px solid #eee; padding-top:15px;">
                 <span>TOTAL :</span> <span id="cart-total" style="color:var(--p);">0 F</span>
             </div>
-            <input type="text" id="c-name" placeholder="Nom du client">
-            <button class="btn btn-s" onclick="finish('cash')">💰 VALIDER CASH</button>
-            <button class="btn" style="background:var(--w); color:white;" onclick="finish('credit')">💳 CRÉDIT</button>
+            <button class="btn btn-s" onclick="finish('cash')">💰 ENCAISSER CASH</button>
         </div>
     </div>
 </div>
 
-<nav class="nav-b">
+<nav class="nav-b no-print">
     <button class="nav-btn active" onclick="showP('stocks')"><span>📦</span>Stock</button>
     <button class="nav-btn" onclick="showP('vendre')"><span>💰</span>Vendre</button>
     <button class="nav-btn" onclick="showP('panier')"><span>🛒</span>Panier <span id="c-badge" class="badge">0</span></button>
 </nav>
-
-<div id="print-zone">
-    <h2>DIOUF OUS BUSINESS</h2>
-    <p id="f-n"></p><p id="f-d"></p>
-    <hr><table id="f-b" style="width:100%"></table><hr>
-    <h3>TOTAL : <span id="f-t"></span> F</h3>
-</div>
 
 <script>
     let db = JSON.parse(localStorage.getItem('diouf_vFinal')) || { stocks: [], sales: [] };
@@ -112,17 +124,27 @@
         render();
     }
 
-    // --- SCANNER ---
+    // SCANNER TURBO (Optimisé Barcode)
     function startScan(target) {
         document.getElementById('scan-overlay').style.display = 'flex';
         html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 280, height: 160 } },
+        const config = { 
+            fps: 30, // Plus rapide
+            qrbox: { width: 300, height: 150 },
+            formatsToSupport: [ Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8 ] // Focus produits
+        };
+
+        html5QrCode.start({ facingMode: "environment" }, config,
             (decodedText) => {
-                // Dès qu'on a le texte, on arrête TOUT de suite la caméra
                 stopScan().then(() => {
                     beep.play();
                     navigator.vibrate(100);
-                    handleScanResult(decodedText, target);
+                    if(target === 'p-code') {
+                        document.getElementById('p-code').value = decodedText;
+                        document.getElementById('p-nom').focus(); // Saute au nom !
+                    } else {
+                        handleSale(decodedText);
+                    }
                 });
             }
         ).catch(() => { alert("Caméra bloquée."); stopScan(); });
@@ -133,87 +155,72 @@
             await html5QrCode.stop();
             document.getElementById('scan-overlay').style.display='none';
             html5QrCode = null;
-        } else {
-            document.getElementById('scan-overlay').style.display='none';
-        }
+        } else { document.getElementById('scan-overlay').style.display='none'; }
     }
 
-    function handleScanResult(code, target) {
-        const cleanCode = code.trim();
-        if(target === 'p-code') {
-            document.getElementById('p-code').value = cleanCode;
-        } else {
-            const p = db.stocks.find(i => i.code.trim() === cleanCode);
-            if(p) {
-                if(p.type === 'weight') {
-                    showP('vendre');
-                    alert("📦 " + p.nom + "\nEntrez le poids manuellement.");
-                } else {
-                    cart.push({ id: p.id, nom: p.nom, label: "1 unit", q_int: 1, total: p.pv, profit: (p.pv-p.pa) });
-                    render();
-                    showP('panier');
-                }
-            } else {
-                alert("❌ Produit inconnu [" + cleanCode + "]");
-            }
-        }
+    function handleSale(code) {
+        const p = db.stocks.find(i => i.code.trim() === code.trim());
+        if(p) {
+            if(p.type === 'weight') { showP('vendre'); alert("Saisir poids pour " + p.nom); }
+            else { cart.push({ id: p.id, nom: p.nom, q_int: 1, total: p.pv, profit: (p.pv-p.pa) }); render(); showP('panier'); }
+        } else { alert("Inconnu ! Enregistrez d'abord."); }
     }
 
-    // --- METIER ---
     function saveP() {
-        const type = document.getElementById('p-type').value;
         const p = {
             id: Date.now(),
             code: document.getElementById('p-code').value.trim(),
             nom: document.getElementById('p-nom').value,
             pa: parseFloat(document.getElementById('p-pa').value),
             pv: parseFloat(document.getElementById('p-pv').value),
-            type: type,
-            p_sac: type === 'weight' ? parseFloat(document.getElementById('p-poids-sac').value) : 1,
-            stock: type === 'weight' ? parseFloat(document.getElementById('p-qty').value)*parseFloat(document.getElementById('p-poids-sac').value)*1000 : parseInt(document.getElementById('p-qty').value)
+            type: document.getElementById('p-type').value,
+            p_sac: parseFloat(document.getElementById('p-poids-sac').value) || 1,
+            stock: (document.getElementById('p-type').value === 'weight') ? parseFloat(document.getElementById('p-qty').value)*parseFloat(document.getElementById('p-poids-sac').value)*1000 : parseInt(document.getElementById('p-qty').value)
         };
-        if(!p.nom || isNaN(p.pv)) return alert("Vérifiez les prix !");
-        db.stocks.unshift(p); update(); render();
-        document.getElementById('p-code').value=""; document.getElementById('p-nom').value="";
+        db.stocks.unshift(p); localStorage.setItem('diouf_vFinal', JSON.stringify(db));
+        render(); alert("Enregistré !");
     }
 
     function addCart(id) {
         const p = db.stocks.find(i=>i.id===id);
         const qVal = parseFloat(document.getElementById(`q-${id}`).value);
         if(!qVal) return;
-        let realQ = (p.type==='weight') ? ( (document.getElementById(`u-${id}`).value==='g' || document.getElementById(`u-${id}`).value==='ml') ? qVal : qVal*1000 ) : qVal;
-        if(p.stock < realQ) return alert("Stock insuffisant !");
+        let realQ = (p.type==='weight') ? qVal*1000 : qVal;
         const ratio = (p.type==='weight')?(realQ/(p.p_sac*1000)):realQ;
-        cart.push({ id: p.id, nom: p.nom, label: qVal+(p.type==='weight'?document.getElementById(`u-${id}`).value:' unit'), q_int: realQ, total: Math.round(ratio*p.pv), profit: Math.round(ratio*(p.pv-p.pa)) });
+        cart.push({ id: p.id, nom: p.nom, q_int: realQ, total: Math.round(ratio*p.pv), profit: Math.round(ratio*(p.pv-p.pa)) });
         render();
     }
 
     function finish(mode) {
-        if(cart.length===0) return;
-        const sale = { n: "F"+Date.now().toString().slice(-4), d: new Date().toLocaleString(), items: [...cart], total: cart.reduce((s,i)=>s+i.total,0), profit: cart.reduce((s,i)=>s+i.profit,0), mode: mode, c: document.getElementById('c-name').value };
         cart.forEach(c => { const s = db.stocks.find(st=>st.id===c.id); if(s) s.stock -= c.q_int; });
-        db.sales.unshift(sale); update();
-        document.getElementById('f-n').innerText = "Ticket: " + sale.n;
-        document.getElementById('f-b').innerHTML = sale.items.map(i=>`<tr><td>${i.nom}</td><td>${i.total}F</td></tr>`).join('');
-        document.getElementById('f-t').innerText = sale.total;
-        window.print();
-        cart = []; render(); showP('vendre');
+        db.sales.unshift({ d: new Date().toLocaleString(), total: cart.reduce((s,i)=>s+i.total,0), profit: cart.reduce((s,i)=>s+i.profit,0) });
+        localStorage.setItem('diouf_vFinal', JSON.stringify(db));
+        cart = []; render(); showP('stocks');
+        alert("Vente validée et stock mis à jour !");
     }
 
-    function update() { localStorage.setItem('diouf_vFinal', JSON.stringify(db)); }
     function render() {
         document.getElementById('c-badge').innerText = cart.length;
         document.getElementById('benef-val').innerText = db.sales.reduce((s,v)=>s+v.profit,0).toLocaleString() + " F";
+        
+        // RENDU TABLEAU EXCEL
+        document.getElementById('inventory-body').innerHTML = db.stocks.map(p => {
+            const stockDisplay = p.type === 'unit' ? p.stock : (p.stock/1000).toFixed(2) + " kg";
+            const isLow = p.stock <= 0 ? 'stock-empty' : '';
+            return `<tr class="${isLow}"><td>${p.code}</td><td>${p.nom}</td><td>${p.pv} F</td><td>${stockDisplay}</td></tr>`;
+        }).join('');
+
+        // RENDU VENTE
         document.getElementById('list-vendre').innerHTML = db.stocks.map(p=>`
             <div class="card">
-                <div style="display:flex; justify-content:space-between;"><b>${p.nom}</b><b style="color:var(--p)">${p.pv} F</b></div>
-                <div style="display:flex; gap:8px; margin-top:10px;">
-                    <input type="number" id="q-${p.id}" placeholder="Qté" style="margin:0;">
-                    ${p.type==='weight' ? `<select id="u-${p.id}" style="width:85px; margin:0;"><option value="kg">kg</option><option value="g">g</option><option value="L">L</option></select>`:''}
-                    <button class="btn-p" onclick="addCart(${p.id})" style="width:60px; border-radius:12px; color:white;">+</button>
+                <b>${p.nom}</b> - ${p.pv} F
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <input type="number" id="q-${p.id}" placeholder="Qté/Kg">
+                    <button class="btn btn-p" onclick="addCart(${p.id})" style="width:60px">+</button>
                 </div>
             </div>`).join('');
-        document.getElementById('cart-list').innerHTML = cart.map((c,i)=>`<div class="item-row"><span>${c.nom} (${c.label})</span><b>${c.total} F</b></div>`).join('');
+
+        document.getElementById('cart-list').innerHTML = cart.map(c=>`<div class="item-row"><span>${c.nom}</span><b>${c.total} F</b></div>`).join('');
         document.getElementById('cart-total').innerText = cart.reduce((s,i)=>s+i.total,0).toLocaleString() + " F";
     }
     render();
