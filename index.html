@@ -3,27 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diouf Ous Pro V18 - Sécurité Stock</title>
+    <title>Diouf Ous Business V19 - Excel & Edit</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --p: #6366f1; --s: #10b981; --w: #f59e0b; --d: #ef4444; --bg: #f8fafc; --dark: #1e293b; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); margin: 0; padding-bottom: 90px; }
+        body { background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--dark); }
         .header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top:0; z-index:100; }
-        .container { padding: 15px; max-width: 800px; margin: auto; }
+        .container { padding: 15px; max-width: 900px; margin: auto; }
         .card { background: white; border-radius: 18px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 15px; border: 1px solid #f1f5f9; }
-        .btn { border: none; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 5px; }
+        
+        /* TABLEAU EXCEL STYLE */
+        .excel-container { overflow-x: auto; margin-top: 10px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .excel-table { width: 100%; border-collapse: collapse; background: white; font-size: 0.8rem; }
+        .excel-table th { background: #f1f5f9; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+        .excel-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+        .excel-table tr:hover { background: #f8fafc; }
+
+        input { width: 100%; padding: 12px; margin: 5px 0; border: 2px solid #f1f5f9; border-radius: 10px; font-size: 0.9rem; }
+        .btn { border: none; padding: 14px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px; }
         .btn-p { background: var(--p); color: white; }
         .btn-s { background: var(--s); color: white; }
-        .btn-disabled { background: #e2e8f0 !important; color: #94a3b8 !important; cursor: not-allowed; }
+        .btn-excel { background: #15803d; color: white; margin-bottom: 15px; }
         .nav-b { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
         .nav-btn { flex: 1; border: none; background: none; font-size: 0.7rem; font-weight: 700; color: #94a3b8; display: flex; flex-direction: column; align-items: center; }
         .nav-btn.active { color: var(--p); }
-        .badge { background: var(--d); color: white; border-radius: 10px; padding: 2px 6px; font-size: 0.7rem; }
         .scan-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
         #reader { width: 95%; max-width: 450px; border-radius: 20px; overflow: hidden; }
-        .rupture { color: var(--d); font-weight: bold; font-size: 0.75rem; }
     </style>
 </head>
 <body>
@@ -34,23 +41,47 @@
 </div>
 
 <div class="header">
-    <h3 style="margin:0;">Diouf Ous Business</h3>
+    <h3 style="margin:0;">Diouf Ous Pro V19</h3>
     <div id="benef-val" style="color:var(--s); font-weight:800;">0 F</div>
 </div>
 
 <div class="container">
     <div id="p-stocks" class="page">
         <div class="card">
-            <h4>📦 Entrée / Approvisionnement</h4>
+            <h4 id="form-title">📦 Enregistrer / Modifier Produit</h4>
+            <input type="hidden" id="edit-id">
             <div style="display:flex; gap:10px;">
-                <input type="text" id="p-code" placeholder="Scanner Code-barres" style="width:100%; padding:14px; border-radius:12px; border:2px solid #f1f5f9;">
-                <button onclick="startScan('p-code')" style="background:var(--p); border:none; padding:15px; border-radius:12px; color:white;">📷</button>
+                <input type="text" id="p-code" placeholder="Code-barres">
+                <button onclick="startScan('p-code')" style="background:var(--p); border:none; padding:12px; border-radius:10px; color:white;">📷</button>
             </div>
-            <input type="text" id="p-nom" placeholder="Nom de l'article" style="width:100%; padding:14px; margin-top:10px; border-radius:12px; border:2px solid #f1f5f9;">
-            <input type="number" id="p-pa" placeholder="Prix Achat Unité" style="width:100%; padding:14px; margin-top:10px; border-radius:12px; border:2px solid #f1f5f9;">
-            <input type="number" id="p-pv" placeholder="Prix Vente Unité" style="width:100%; padding:14px; margin-top:10px; border-radius:12px; border:2px solid #f1f5f9;">
-            <input type="number" id="p-qty" placeholder="Quantité à ajouter" style="width:100%; padding:14px; margin-top:10px; border-radius:12px; border:2px solid #f1f5f9;">
-            <button class="btn btn-p" onclick="saveP()">ENREGISTRER</button>
+            <input type="text" id="p-nom" placeholder="Nom du produit">
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="p-pa" placeholder="Prix Achat">
+                <input type="number" id="p-pv" placeholder="Prix Vente">
+            </div>
+            <input type="number" id="p-qty" placeholder="Quantité en stock">
+            <button class="btn btn-p" id="btn-save" onclick="saveP()">ENREGISTRER</button>
+            <button class="btn" id="btn-cancel" style="display:none; background:#94a3b8; color:white;" onclick="cancelEdit()">ANNULER MODIF</button>
+        </div>
+
+        <button class="btn btn-excel" onclick="exportToExcel()">📥 EXPORTER VERS EXCEL (.CSV)</button>
+
+        <div class="card">
+            <h4>📊 Inventaire Complet</h4>
+            <div class="excel-container">
+                <table class="excel-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Code</th>
+                            <th>Vente</th>
+                            <th>Stock</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -64,10 +95,7 @@
             <h3>🛒 Panier</h3>
             <div id="cart-list"></div>
             <h2 id="cart-total" style="text-align:right; color:var(--p);">0 F</h2>
-            <hr>
-            <input type="text" id="c-name" placeholder="Nom client (si crédit)" style="width:100%; padding:14px; margin-bottom:10px; border-radius:12px; border:2px solid #f1f5f9;">
-            <button class="btn btn-s" onclick="finish('CASH')">💰 CASH</button>
-            <button class="btn" style="background:var(--w); color:white;" onclick="finish('CREDIT')">💳 CRÉDIT</button>
+            <button class="btn btn-s" onclick="finish()">💰 VALIDER LA VENTE</button>
         </div>
     </div>
 </div>
@@ -75,11 +103,11 @@
 <nav class="nav-b">
     <button class="nav-btn active" onclick="showP('stocks')">Stock</button>
     <button class="nav-btn" onclick="showP('vendre')">Vendre</button>
-    <button class="nav-btn" onclick="showP('panier')">Panier <span id="c-badge" class="badge">0</span></button>
+    <button class="nav-btn" onclick="showP('panier')">Panier <span id="c-badge" style="background:var(--d); color:white; border-radius:10px; padding:2px 5px;">0</span></button>
 </nav>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('diouf_v18')) || { stocks: [], sales: [], dettes: [] };
+    let db = JSON.parse(localStorage.getItem('diouf_v19')) || { stocks: [], sales: [] };
     let cart = [];
     let html5QrCode;
 
@@ -91,88 +119,128 @@
         render();
     }
 
+    // --- SCANNER ---
     function startScan(target) {
         document.getElementById('scan-overlay').style.display = 'flex';
         html5QrCode = new Html5Qrcode("reader");
         html5QrCode.start({ facingMode: "environment" }, { fps: 30, qrbox: 250 }, (txt) => {
             stopScan().then(() => {
-                if(target === 'p-code') { document.getElementById('p-code').value = txt; }
-                else { handleSecureSale(txt); }
+                if(target === 'p-code') document.getElementById('p-code').value = txt;
+                else handleSale(txt);
             });
         }).catch(() => stopScan());
     }
+    async function stopScan() { if(html5QrCode) await html5QrCode.stop(); document.getElementById('scan-overlay').style.display='none'; }
 
-    async function stopScan() { if(html5QrCode) { await html5QrCode.stop(); html5QrCode = null; } document.getElementById('scan-overlay').style.display='none'; }
-
-    // --- LOGIQUE DE VENTE SÉCURISÉE ---
-    function handleSecureSale(code) {
-        const p = db.stocks.find(i => i.code === code.trim());
-        if(!p) return alert("Produit inconnu !");
-        
-        if(p.stock <= 0) {
-            alert("❌ VENTE IMPOSSIBLE !\nLe stock de " + p.nom + " est épuisé (0).");
-            return;
-        }
-
-        let qte = prompt(`Produit : ${p.nom}\nEn stock : ${p.stock}\nCombien voulez-vous vendre ?`, "1");
-        if(qte != null && qte > 0) {
-            if(parseFloat(qte) > p.stock) {
-                alert("❌ STOCK INSUFFISANT !\nVous ne pouvez pas vendre " + qte + ". Il ne reste que " + p.stock + " en rayon.");
-            } else {
-                cart.push({ id: p.id, nom: p.nom, q: parseFloat(qte), total: p.pv * qte, profit: (p.pv - p.pa) * qte });
-                render(); showP('panier');
-            }
-        }
-    }
-
+    // --- GESTION PRODUITS (SAVE & EDIT) ---
     function saveP() {
-        const code = document.getElementById('p-code').value.trim();
-        const existing = db.stocks.find(s => s.code === code);
-        const qtyToAdd = parseFloat(document.getElementById('p-qty').value) || 0;
+        const id = document.getElementById('edit-id').value;
+        const p = {
+            id: id ? parseInt(id) : Date.now(),
+            code: document.getElementById('p-code').value.trim(),
+            nom: document.getElementById('p-nom').value,
+            pa: parseFloat(document.getElementById('p-pa').value) || 0,
+            pv: parseFloat(document.getElementById('p-pv').value) || 0,
+            stock: parseFloat(document.getElementById('p-qty').value) || 0
+        };
 
-        if(existing) {
-            existing.stock += qtyToAdd;
-            alert("Stock mis à jour (+"+qtyToAdd+")");
+        if(id) {
+            const idx = db.stocks.findIndex(s => s.id === p.id);
+            db.stocks[idx] = p;
+            alert("Produit modifié !");
         } else {
-            const p = { id: Date.now(), code: code, nom: document.getElementById('p-nom').value, pa: parseFloat(document.getElementById('p-pa').value), pv: parseFloat(document.getElementById('p-pv').value), stock: qtyToAdd };
             db.stocks.unshift(p);
+            alert("Produit enregistré !");
         }
-        update(); render();
-        document.getElementById('p-code').value=""; document.getElementById('p-nom').value="";
+        
+        cancelEdit();
+        update();
+        render();
     }
 
-    function finish(mode) {
-        if(cart.length === 0) return;
-        if(mode === 'CREDIT' && !document.getElementById('c-name').value) return alert("Nom client requis !");
+    function editP(id) {
+        const p = db.stocks.find(s => s.id === id);
+        document.getElementById('edit-id').value = p.id;
+        document.getElementById('p-code').value = p.code;
+        document.getElementById('p-nom').value = p.nom;
+        document.getElementById('p-pa').value = p.pa;
+        document.getElementById('p-pv').value = p.pv;
+        document.getElementById('p-qty').value = p.stock;
+        
+        document.getElementById('form-title').innerText = "✏️ Modification de : " + p.nom;
+        document.getElementById('btn-save').innerText = "METTRE À JOUR";
+        document.getElementById('btn-cancel').style.display = "block";
+        window.scrollTo(0,0);
+    }
 
-        // Déduction finale du stock
-        cart.forEach(c => { 
-            const s = db.stocks.find(st=>st.id===c.id); 
-            if(s) s.stock -= c.q; 
+    function cancelEdit() {
+        document.getElementById('edit-id').value = "";
+        document.getElementById('p-code').value = "";
+        document.getElementById('p-nom').value = "";
+        document.getElementById('p-pa').value = "";
+        document.getElementById('p-pv').value = "";
+        document.getElementById('p-qty').value = "";
+        document.getElementById('form-title').innerText = "📦 Enregistrer / Modifier Produit";
+        document.getElementById('btn-save').innerText = "ENREGISTRER";
+        document.getElementById('btn-cancel').style.display = "none";
+    }
+
+    // --- EXPORT EXCEL ---
+    function exportToExcel() {
+        let csv = "Code;Nom;Prix Achat;Prix Vente;Stock;Valeur Stock\n";
+        db.stocks.forEach(p => {
+            csv += `${p.code};${p.nom};${p.pa};${p.pv};${p.stock};${p.pa * p.stock}\n`;
         });
-
-        db.sales.push({ profit: cart.reduce((s,i)=>s+i.profit,0), date: new Date().toLocaleString() });
-        cart = []; update(); render(); showP('stocks');
-        alert("Vente enregistrée avec succès !");
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", "Inventaire_Diouf_Ous_" + new Date().toLocaleDateString() + ".csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
-    function update() { localStorage.setItem('diouf_v18', JSON.stringify(db)); }
+    // --- VENTE ---
+    function handleSale(code) {
+        const p = db.stocks.find(i => i.code === code.trim());
+        if(p && p.stock > 0) {
+            let q = prompt(`Produit: ${p.nom}\nQuantité?`, "1");
+            if(q > 0 && q <= p.stock) {
+                cart.push({ id: p.id, nom: p.nom, q: parseFloat(q), total: p.pv * q, profit: (p.pv-p.pa)*q });
+                render(); showP('panier');
+            } else { alert("Stock insuffisant !"); }
+        } else { alert("Inconnu ou Rupture !"); }
+    }
+
+    function finish() {
+        cart.forEach(c => { const s = db.stocks.find(st=>st.id===c.id); if(s) s.stock -= c.q; });
+        db.sales.push({ profit: cart.reduce((s,i)=>s+i.profit,0) });
+        cart = []; update(); render(); showP('stocks');
+        alert("Vente validée !");
+    }
+
+    function update() { localStorage.setItem('diouf_v19', JSON.stringify(db)); }
 
     function render() {
         document.getElementById('c-badge').innerText = cart.length;
         document.getElementById('benef-val').innerText = db.sales.reduce((s,v)=>s+v.profit,0).toLocaleString() + " F";
         
-        document.getElementById('list-vendre').innerHTML = db.stocks.map(p=> {
-            const isOut = p.stock <= 0;
-            return `
-            <div class="card" onclick="${isOut ? '' : `handleSecureSale('${p.code}')`}" style="${isOut ? 'opacity:0.6' : ''}">
-                <div style="display:flex; justify-content:space-between;">
-                    <b>${p.nom}</b> 
-                    <span class="${isOut ? 'rupture' : ''}">${isOut ? '[RUPTURE]' : p.stock + ' en stock'}</span>
-                </div>
-                <div style="color:var(--p); font-weight:800; margin-top:5px;">${p.pv} F</div>
-            </div>`;
-        }).join('');
+        // Rendu Inventaire Excel
+        document.getElementById('inventory-body').innerHTML = db.stocks.map(p => `
+            <tr>
+                <td><b>${p.nom}</b></td>
+                <td>${p.code}</td>
+                <td>${p.pv}F</td>
+                <td style="color:${p.stock<=0?'red':'green'}">${p.stock}</td>
+                <td><button onclick="editP(${p.id})" style="border:none; background:none; cursor:pointer;">✏️</button></td>
+            </tr>
+        `).join('');
+
+        // Rendu Vente
+        document.getElementById('list-vendre').innerHTML = db.stocks.map(p=>`
+            <div class="card" onclick="handleSale('${p.code}')" style="opacity:${p.stock<=0?0.5:1}">
+                <b>${p.nom}</b> - ${p.pv} F <br><small>Stock: ${p.stock}</small>
+            </div>`).join('');
 
         document.getElementById('cart-list').innerHTML = cart.map(c=>`<div style="display:flex; justify-content:space-between; padding:5px 0;"><span>${c.q}x ${c.nom}</span><b>${c.total} F</b></div>`).join('');
         document.getElementById('cart-total').innerText = cart.reduce((s,i)=>s+i.total,0).toLocaleString() + " F";
