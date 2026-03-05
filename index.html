@@ -196,16 +196,38 @@
         render();
     }
 
-    function addQuick(p) {
+   // --- Cette version est plus "intelligente" pour trouver tes produits ---
+function addQuick(decodedText) {
+    // On nettoie le code scanné (on enlève les espaces au début et à la fin)
+    const cleanCode = decodedText.trim();
+    
+    // On cherche dans le stock
+    const p = db.stocks.find(i => i.code.trim() === cleanCode);
+    
+    if(p) {
         if(p.type === 'weight') { 
+            // Si c'est du riz/huile, on va sur la page vente pour mettre le poids
             showP('vendre');
-            alert("Produit au détail : Saisissez le poids (g/kg/L) pour " + p.nom);
+            alert("📦 Produit : " + p.nom + "\nSaisissez le poids (g/kg/L) manuellement.");
+            // On fait défiler l'écran jusqu'au produit pour t'aider
+            document.getElementById(`q-${p.id}`).focus();
         } else {
-            cart.push({ id: p.id, nom: p.nom, label: "1 unit", q_int: 1, total: p.pv, profit: (p.pv-p.pa) });
+            // Si c'est un sachet simple, on l'ajoute direct !
+            cart.push({ 
+                id: p.id, 
+                nom: p.nom, 
+                label: "1 unit", 
+                q_int: 1, 
+                total: p.pv, 
+                profit: (p.pv - p.pa) 
+            });
             render();
-            showP('panier');
+            showP('panier'); // On montre le panier pour confirmer
         }
+    } else {
+        alert("❌ Erreur : Le code [" + cleanCode + "] n'existe pas dans votre stock.\n\nAllez dans 'Stock' pour l'enregistrer d'abord.");
     }
+}
 
     function removeCart(idx) { cart.splice(idx,1); render(); }
 
@@ -271,4 +293,5 @@
 </script>
 
 </body>
+
 </html>
