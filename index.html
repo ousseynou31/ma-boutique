@@ -99,7 +99,19 @@
         <button class="btn-save" onclick="saveToDatabase()">VALIDER L'ENREGISTREMENT</button>
     </div>
 </div>
+<hr style="margin: 20px 0; border: 1px solid #eee;">
 
+<div style="display: flex; gap: 10px;">
+    <button class="btn-save" style="background: var(--dark); flex: 1;" onclick="togglePage('inventaire')">📂 PRODUITS ENREGISTRÉS</button>
+    <button id="btn-export" class="btn-save" style="background: var(--s); flex: 1; display: none;" onclick="exportToExcel()">📥 EXPORTER EXCEL</button>
+</div>
+
+<div id="page-inventaire" style="display:none; margin-top: 20px;">
+    <div class="section-title">📊 État des Stocks au <span id="current-time"></span></div>
+    <div id="inventory-list">
+        </div>
+</div>
+    
 <script>
     let isDetailMode = false;
     let html5QrCode;
@@ -159,7 +171,102 @@
         alert("Produit enregistré avec succès !");
         location.reload(); // Réinitialise le formulaire
     }
+
+    // Fonction pour changer de page sans perdre les données
+function togglePage(page) {
+    const invPage = document.getElementById('page-inventaire');
+    const btnExport = document.getElementById('btn-export');
+    
+    if (invPage.style.display === 'none') {
+        invPage.style.display = 'block';
+        btnExport.style.display = 'flex';
+        renderInventory();
+    } else {
+        invPage.style.display = 'none';
+        btnExport.style.display = 'none';
+    }
+}
+
+// Mise à jour de l'heure en temps réel
+setInterval(() => {
+    const now = new Date();
+    document.getElementById('current-time').innerText = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+}, 1000);
+
+// Fonction pour afficher l'inventaire avec la reconstitution des sacs
+function renderInventory() {
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    const container = document.getElementById('inventory-list');
+    container.innerHTML = "";
+
+    db.forEach(p => {
+        // Logique mathématique de reconstitution
+        const nbSacsEntiers = Math.floor(p.stockTotal / p.capaciteUnite);
+        const resteDetail = (p.stockTotal % p.capaciteUnite).toFixed(2);
+        const uniteLabel = p.mode === 'DETAIL' ? 'kg/L' : 'unités';
+        const contenantLabel = p.mode === 'DETAIL' ? 'sacs/bidons' : 'cartons/caisses';
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.marginBottom = "10px";
+        card.style.borderLeft = "5px solid var(--p)";
+        card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <strong style="font-size:1.1rem;">${p.nom}</strong> <br>
+                    <small style="color:#64748b;">Code: ${p.code || 'N/A'} | ${p.cat}</small>
+                </div>
+                <div style="text-align:right;">
+                    <span style="font-weight:800; color:var(--p);">${nbSacsEntiers} ${contenantLabel}</span><br>
+                    <span style="color:var(--s);">+ ${resteDetail} ${uniteLabel}</span>
+                </div>
+            </div>
+            <div style="margin-top:10px; font-size:0.8rem; background:#f8fafc; padding:8px; border-radius:8px; display:flex; justify-content:space-between;">
+                <span>PA: ${p.pa} F | PV: ${p.pv} F</span>
+                <strong>Valeur: ${(p.stockTotal * p.pa).toLocaleString()} F</strong>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Fonction d'exportation Excel simplifiée (CSV compatible Excel)
+function exportToExcel() {
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    if(db.length === 0) return alert("Aucune donnée à exporter");
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Date;Code;Produit;Categorie;Stock Total;Sacs Entiers;Reste Detail;Prix Achat;Valeur Stock\n";
+
+    db.forEach(p => {
+        const nbSacs = Math.floor(p.stockTotal / p.capaciteUnite);
+        const reste = (p.stockTotal % p.capaciteUnite).toFixed(2);
+        const valeur = p.stockTotal * p.pa;
+        
+        let row = [
+            new Date().toLocaleDateString(),
+            p.code,
+            p.nom,
+            p.cat,
+            p.stockTotal,
+            nbSacs,
+            reste,
+            p.pa,
+            valeur
+        ].join(";");
+        csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "Inventaire_Diouf_Ous_" + new Date().toLocaleDateString() + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 </script>
 
 </body>
 </html>
+
