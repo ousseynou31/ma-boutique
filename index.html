@@ -103,10 +103,9 @@
 
 <div style="display: flex; gap: 10px;">
     <button class="btn-save" style="background: var(--dark); flex: 1;" onclick="togglePage('inventaire')">📂 PRODUITS ENREGISTRÉS</button>
-    <button class="btn-save" style="background: #475569; flex: 1;" onclick="toggleTable()">👁️ APERÇU TABLEAU</button>
-    
     <button id="btn-export" class="btn-save" style="background: var(--s); flex: 1; display: none;" onclick="exportToExcel()">📥 EXPORTER EXCEL</button>
 </div>
+<button class="btn-save" style="background: #475569; flex: 1;" onclick="toggleTable()">👁️ APERÇU TABLEAU</button>    
 
 <div id="page-inventaire" style="display:none; margin-top: 20px;">
     <div class="section-title">📊 État des Stocks au <span id="current-time"></span></div>
@@ -378,6 +377,7 @@ function renderTable() {
 
 </body>
 </html>
+
 
 
 
