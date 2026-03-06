@@ -3,235 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diouf Ous Business V23 - Intégral</title>
+    <title>Diouf Ous V25 - Module Enregistrement Pro</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --p: #6366f1; --s: #10b981; --w: #f59e0b; --d: #ef4444; --bg: #f8fafc; --dark: #1e293b; }
+        :root { --p: #6366f1; --s: #10b981; --d: #ef4444; --bg: #f8fafc; --dark: #1e293b; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--dark); }
-        .header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top:0; z-index:100; }
-        .container { padding: 10px; max-width: 800px; margin: auto; }
-        .card { background: white; border-radius: 18px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 15px; border: 1px solid #f1f5f9; }
+        body { background: var(--bg); margin: 0; padding: 20px; color: var(--dark); }
+        .container { max-width: 600px; margin: auto; }
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         
-        .type-selector { display: flex; gap: 10px; margin-bottom: 15px; }
-        .t-btn { flex: 1; padding: 10px; border-radius: 10px; border: 2px solid #e2e8f0; font-weight: 800; cursor: pointer; text-align: center; font-size: 0.8rem; }
+        .section-title { font-weight: 800; font-size: 1.2rem; margin-bottom: 20px; color: var(--p); display: flex; align-items: center; gap: 10px; }
+        
+        /* Sélecteur de Type */
+        .type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .t-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #f1f5f9; font-weight: 700; cursor: pointer; text-align: center; transition: 0.3s; }
         .t-btn.active { border-color: var(--p); color: var(--p); background: #eef2ff; }
 
-        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 2px solid #f1f5f9; border-radius: 10px; font-size: 0.9rem; outline: none; }
-        .btn { border: none; padding: 14px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-p { background: var(--p); color: white; }
-        
-        /* TABLEAU */
-        .excel-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 10px; }
-        .excel-table th { background: #f1f5f9; padding: 10px; text-align: left; }
-        .excel-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; margin-top: 15px; margin-bottom: 5px; color: #64748b; }
+        input, select { width: 100%; padding: 14px; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 1rem; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--p); }
 
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .portion-btn { background: #f1f5f9; border: 2px solid #e2e8f0; padding: 15px; border-radius: 12px; text-align: center; font-weight: 800; cursor: pointer; }
-        .scan-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 4000; display: none; }
+        /* Bloc Calculateur */
+        .calc-box { background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0; margin-top: 10px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .result-banner { background: var(--dark); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-top: 15px; font-weight: 800; }
+
+        .btn-save { background: var(--p); color: white; border: none; padding: 18px; border-radius: 15px; width: 100%; font-weight: 800; font-size: 1.1rem; cursor: pointer; margin-top: 30px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+        
+        /* Scanner overlay */
+        #reader-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: none; flex-direction: column; }
     </style>
 </head>
 <body>
 
-<div id="scan-overlay" class="scan-overlay">
-    <div id="reader" style="width:100%; height:80%;"></div>
-    <button class="btn" style="background:var(--d); color:white; width:90%; margin: 20px auto;" onclick="stopScan()">FERMER SCANNER</button>
-</div>
-
-<div id="detail-modal" class="modal">
-    <div class="card" style="width: 100%; max-width: 400px;">
-        <h3 id="m-name">Produit</h3>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;" id="m-options"></div>
-        <button class="btn" style="margin-top:15px; background:#94a3b8; color:white;" onclick="closeModal()">ANNULER</button>
-    </div>
-</div>
-
-<div class="header">
-    <h3 style="margin:0;">Diouf Ous V23</h3>
-    <div id="benef-val" style="color:var(--s); font-weight:800;">0 F</div>
+<div id="reader-modal">
+    <div id="reader" style="flex:1;"></div>
+    <button onclick="stopScan()" style="padding:20px; background:var(--d); color:white; border:none; font-weight:800;">FERMER LE SCANNER</button>
 </div>
 
 <div class="container">
-    <div id="p-stocks" class="page">
-        <div class="card">
-            <h4>📦 Enregistrement Mixte</h4>
-            <div class="type-selector">
-                <div id="t-simple" class="t-btn active" onclick="setType(false)">SIMPLE (Unité/Paquet)</div>
-                <div id="t-complex" class="t-btn" onclick="setType(true)">DÉTAIL (Kilo/Litre)</div>
-            </div>
-            
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="p-code" placeholder="Code-barres">
-                <button onclick="startScan('p-code')" style="background:var(--p); border:none; padding:10px; border-radius:10px; color:white;">📷</button>
-            </div>
-            <input type="text" id="p-nom" placeholder="Nom du produit">
-            <select id="p-cat">
-                <option value="Alimentaire">🍽️ Alimentaire</option>
-                <option value="Cosmétique">🧼 Cosmétique</option>
-                <option value="Boissons">🍹 Boissons</option>
-                <option value="Frais">🥔 Frais/Vrac</option>
-                <option value="Entretien">🧽 Entretien</option>
-            </select>
-            
-            <div style="display:flex; gap:10px;">
-                <div style="flex:1;"><small>Prix Achat (Unité/Kg)</small><input type="number" id="p-pa" placeholder="PA"></div>
-                <div style="flex:1;"><small>Prix Vente (Unité/Kg)</small><input type="number" id="p-pv" placeholder="PV"></div>
-            </div>
-            <input type="number" id="p-qty" placeholder="Stock Initial (Quantité ou Kilos)">
-            
-            <button class="btn btn-p" onclick="saveP()">ENREGISTRER DANS LE STOCK</button>
+    <div class="card">
+        <div class="section-title">📦 Nouvel Enregistrement</div>
+
+        <label>Type de produit</label>
+        <div class="type-selector">
+            <div id="t-simple" class="t-btn active" onclick="setMode(false)">SIMPLE<br><small>(Unité/Paquet)</small></div>
+            <div id="t-complex" class="t-btn" onclick="setMode(true)">AU DÉTAIL<br><small>(Kilo/Litre)</small></div>
         </div>
 
-        <div class="card">
-            <h4>📊 Inventaire & Coûts</h4>
-            <div style="overflow-x:auto;">
-                <table class="excel-table">
-                    <thead><tr><th>Produit</th><th>PA</th><th>PV</th><th>Stock</th><th>Action</th></tr></thead>
-                    <tbody id="inventory-body"></tbody>
-                </table>
+        <label>Identification</label>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="p-code" placeholder="Code-barres">
+            <button onclick="startScan()" style="background:var(--p); border:none; padding:10px 15px; border-radius:12px; color:white; cursor:pointer;">📷</button>
+        </div>
+        <input type="text" id="p-nom" placeholder="Nom du produit (ex: Riz Brisé)" style="margin-top:10px;">
+        
+        <select id="p-cat" style="margin-top:10px;">
+            <option value="">Sélectionner une catégorie</option>
+            <option value="Alimentaire">Alimentaire</option>
+            <option value="Boisson">Boisson</option>
+            <option value="Hygiène">Hygiène</option>
+            <option value="Entretien">Entretien</option>
+        </select>
+
+        <label>Inventaire de l'arrivage</label>
+        <div class="calc-box">
+            <div class="grid">
+                <div>
+                    <small id="label-nb">Nombre de sacs / cartons</small>
+                    <input type="number" id="p-nb-cont" placeholder="ex: 100" oninput="calculateStock()">
+                </div>
+                <div>
+                    <small id="label-capa">Poids / Volume par sac</small>
+                    <input type="number" id="p-capa" placeholder="ex: 50" oninput="calculateStock()">
+                </div>
+            </div>
+            <div class="result-banner">
+                STOCK TOTAL : <span id="total-display">0</span> <span id="unit-label">unités</span>
             </div>
         </div>
-    </div>
 
-    <div id="p-vendre" class="page" style="display:none;">
-        <button class="btn" style="background:var(--dark); color:white; margin-bottom:15px;" onclick="startScan('sale')">📷 SCANNER POUR VENDRE</button>
-        <div id="sell-list"></div>
-    </div>
-
-    <div id="p-panier" class="page" style="display:none;">
-        <div class="card">
-            <h3>🛒 Panier</h3>
-            <div id="cart-list"></div>
-            <h2 id="cart-total" style="text-align:right; color:var(--p);">0 F</h2>
-            <button class="btn btn-p" style="background:var(--s);" onclick="finish()">VALIDER LA VENTE</button>
+        <label>Configuration des prix (à l'unité ou au kg)</label>
+        <div class="grid">
+            <div>
+                <small>Prix Achat (PA)</small>
+                <input type="number" id="p-pa" placeholder="Prix achat">
+            </div>
+            <div>
+                <small>Prix Vente (PV)</small>
+                <input type="number" id="p-pv" placeholder="Prix vente">
+            </div>
         </div>
+
+        <button class="btn-save" onclick="saveToDatabase()">VALIDER L'ENREGISTREMENT</button>
     </div>
 </div>
 
-<nav class="nav-b">
-    <button class="nav-btn active" onclick="showP('stocks')">Stock</button>
-    <button class="nav-btn" onclick="showP('vendre')">Vendre</button>
-    <button class="nav-btn" onclick="showP('panier')">Panier <span id="c-badge" style="background:var(--d); color:white; border-radius:10px; padding:2px 5px;">0</span></button>
-</nav>
-
 <script>
-    let db = JSON.parse(localStorage.getItem('diouf_v23')) || { stocks: [], sales: [] };
-    let cart = [];
-    let isComplex = false;
+    let isDetailMode = false;
     let html5QrCode;
 
-    function setType(complex) {
-        isComplex = complex;
-        document.getElementById('t-complex').classList.toggle('active', complex);
-        document.getElementById('t-simple').classList.toggle('active', !complex);
+    function setMode(mode) {
+        isDetailMode = mode;
+        document.getElementById('t-complex').classList.toggle('active', mode);
+        document.getElementById('t-simple').classList.toggle('active', !mode);
+        
+        // Mise à jour des labels selon le mode
+        document.getElementById('label-nb').innerText = mode ? "Nombre de sacs / bidons" : "Nombre de cartons / caisses";
+        document.getElementById('label-capa').innerText = mode ? "Kilos / Litres par sac" : "Unités par carton";
+        document.getElementById('unit-label').innerText = mode ? "Kg/L" : "Unités";
+        calculateStock();
     }
 
-    function showP(id) {
-        document.querySelectorAll('.page').forEach(p=>p.style.display='none');
-        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-        document.getElementById('p-'+id).style.display='block';
-        event.currentTarget.classList.add('active');
-        render();
+    function calculateStock() {
+        const nb = parseFloat(document.getElementById('p-nb-cont').value) || 0;
+        const capa = parseFloat(document.getElementById('p-capa').value) || 0;
+        document.getElementById('total-display').innerText = (nb * capa).toLocaleString();
     }
 
-    function saveP() {
-        const p = {
+    function startScan() {
+        document.getElementById('reader-modal').style.display = 'flex';
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+            document.getElementById('p-code').value = txt;
+            stopScan();
+        }).catch(err => console.error(err));
+    }
+
+    async function stopScan() {
+        if(html5QrCode) await html5QrCode.stop();
+        document.getElementById('reader-modal').style.display = 'none';
+    }
+
+    function saveToDatabase() {
+        const product = {
             id: Date.now(),
+            mode: isDetailMode ? 'DETAIL' : 'SIMPLE',
             code: document.getElementById('p-code').value,
             nom: document.getElementById('p-nom').value,
             cat: document.getElementById('p-cat').value,
-            pa: parseFloat(document.getElementById('p-pa').value) || 0,
-            pv: parseFloat(document.getElementById('p-pv').value) || 0,
-            stock: parseFloat(document.getElementById('p-qty').value) || 0,
-            isDetail: isComplex
+            nbContenants: document.getElementById('p-nb-cont').value,
+            capaciteUnite: document.getElementById('p-capa').value,
+            stockTotal: parseFloat(document.getElementById('total-display').innerText.replace(/\s/g, '')),
+            pa: document.getElementById('p-pa').value,
+            pv: document.getElementById('p-pv').value
         };
-        db.stocks.unshift(p);
-        update(); render(); alert("Produit ajouté !");
+
+        if(!product.nom || !product.stockTotal) return alert("Veuillez remplir le nom et le stock");
+
+        let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+        db.unshift(product);
+        localStorage.setItem('diouf_ous_db', JSON.stringify(db));
+
+        alert("Produit enregistré avec succès !");
+        location.reload(); // Réinitialise le formulaire
     }
-
-    function startScan(target) {
-        document.getElementById('scan-overlay').style.display = 'block';
-        html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-            stopScan().then(() => {
-                if(target === 'p-code') document.getElementById('p-code').value = txt;
-                else handleSale(txt);
-            });
-        }).catch(err => stopScan());
-    }
-    async function stopScan() { if(html5QrCode) await html5QrCode.stop(); document.getElementById('scan-overlay').style.display='none'; }
-
-    function handleSale(codeOrId) {
-        const p = db.stocks.find(s => s.code === codeOrId || s.id == codeOrId);
-        if(!p || p.stock <= 0) return alert("Indisponible !");
-
-        if(p.isDetail) {
-            document.getElementById('m-name').innerText = p.nom;
-            const ops = [
-                {n:'1 unit', v:1, f:1}, {n:'1/2 (Demi)', v:0.5, f:2},
-                {n:'1/4 (Quart)', v:0.25, f:4}, {n:'1/8 (Demicar)', v:0.125, f:8}
-            ];
-            document.getElementById('m-options').innerHTML = ops.map(o => `
-                <div class="portion-btn" onclick="addToCart(${p.id}, ${o.v}, ${p.pv/o.f}, ${(p.pv-p.pa)/o.f})">
-                    ${o.n}<br>${p.pv/o.f} F
-                </div>
-            `).join('');
-            document.getElementById('detail-modal').style.display = 'flex';
-        } else {
-            addToCart(p.id, 1, p.pv, p.pv - p.pa);
-        }
-    }
-
-    function addToCart(id, qty, total, profit) {
-        const p = db.stocks.find(s => s.id === id);
-        if(p.stock < qty) return alert("Stock insuffisant");
-        cart.push({ id: p.id, nom: p.nom, q: qty, total: total, profit: profit });
-        closeModal(); render(); showP('panier');
-    }
-
-    function closeModal() { document.getElementById('detail-modal').style.display = 'none'; }
-
-    function finish() {
-        cart.forEach(c => { const s = db.stocks.find(st=>st.id===c.id); if(s) s.stock -= c.q; });
-        db.sales.push({ profit: cart.reduce((s,i)=>s+i.profit,0), date: new Date() });
-        cart = []; update(); render(); showP('stocks'); alert("Vente validée !");
-    }
-
-    function update() { localStorage.setItem('diouf_v23', JSON.stringify(db)); }
-
-    function render() {
-        document.getElementById('c-badge').innerText = cart.length;
-        document.getElementById('benef-val').innerText = db.sales.reduce((s,v)=>s+v.profit,0).toLocaleString() + " F";
-        
-        document.getElementById('inventory-body').innerHTML = db.stocks.map(p => `
-            <tr>
-                <td><b>${p.nom}</b><br><small>${p.cat}</small></td>
-                <td>${p.pa}</td>
-                <td>${p.pv}</td>
-                <td style="color:${p.stock <= 0 ? 'red' : 'green'}">${p.stock.toFixed(2)}</td>
-                <td><button onclick="handleSale(${p.id})">🛒</button></td>
-            </tr>
-        `).join('');
-
-        document.getElementById('sell-list').innerHTML = db.stocks.map(p => `
-            <div class="card" onclick="handleSale(${p.id})">
-                <div style="display:flex; justify-content:space-between;">
-                    <b>${p.nom}</b>
-                    <span style="color:var(--p); font-weight:800;">${p.pv} F</span>
-                </div>
-                <small>Rayon: ${p.cat} | Stock: ${p.stock.toFixed(2)}</small>
-            </div>
-        `).join('');
-
-        document.getElementById('cart-list').innerHTML = cart.map(c => `
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
-                <span>${c.q} x ${c.nom}</span><b>${c.total} F</b>
-            </div>
-        `).join('');
-        document.getElementById('cart-total').innerText = cart.reduce((s,i)=>s+i.total,0).toLocaleString() + " F";
-    }
-    render();
 </script>
+
 </body>
 </html>
