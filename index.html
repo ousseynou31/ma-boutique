@@ -109,23 +109,30 @@
 
 <div id="page-inventaire" style="display:none; margin-top: 20px;">
     <div class="section-title">📊 État des Stocks au <span id="current-time"></span></div>
-    <div id="inventory-list">
+    
+    <div id="inventory-list"></div>
 
-        <div id="table-view" style="display:none; margin-top: 20px; overflow-x: auto;">
-    <table style="width:100%; border-collapse: collapse; background: white; font-size: 0.8rem; border-radius: 10px; overflow: hidden;">
-        <thead style="background: var(--dark); color: white;">
-            <tr>
-                <th style="padding: 10px;">Produit</th>
-                <th style="padding: 10px;">Cat.</th>
-                <th style="padding: 10px;">Stock</th>
-                <th style="padding: 10px;">PA</th>
-                <th style="padding: 10px;">PV</th>
-                <th style="padding: 10px;">Valeur</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
-            </tbody>
-    </table>
+   <div id="table-view" style="display:none; margin-top: 20px; background: white; border-radius: 15px; padding: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    <h4 style="margin-top:0; color: var(--p);">📋 Registre Complet de l'Inventaire</h4>
+    
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table style="width: 100%; min-width: 900px; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+            <thead>
+                <tr style="background: var(--dark); color: white;">
+                    <th style="padding: 12px; border: 1px solid #334155;">Date & Produit</th>
+                    <th style="padding: 12px; border: 1px solid #334155;">Format</th>
+                    <th style="padding: 12px; border: 1px solid #334155;">Stock (Physique)</th>
+                    <th style="padding: 12px; border: 1px solid #334155;">Stock (Total)</th>
+                    <th style="padding: 12px; border: 1px solid #334155;">Achat (PA)</th>
+                    <th style="padding: 12px; border: 1px solid #334155;">Vente (PV)</th>
+                    <th style="padding: 12px; border: 1px solid #334155;">Bénéfice Prévu</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                </tbody>
+        </table>
+    </div>
+    <p style="font-size: 0.7rem; color: #64748b; margin-top: 10px;">👉 Faites glisser le tableau vers la droite pour voir toutes les colonnes.</p>
 </div>
         </div>
 </div>
@@ -344,13 +351,23 @@ function prepareEdit(id) {
     }
 }
 
-    function toggleTable() {
+function toggleTable() {
+    const invPage = document.getElementById('page-inventaire');
     const tableView = document.getElementById('table-view');
+    const invList = document.getElementById('inventory-list');
+
+    // Si la page d'inventaire est cachée, on l'affiche d'abord
+    if (invPage.style.display === 'none') {
+        togglePage('inventaire');
+    }
+
     if (tableView.style.display === 'none') {
         renderTable();
         tableView.style.display = 'block';
+        invList.style.display = 'none'; // On cache les étiquettes pour mieux voir le tableau
     } else {
         tableView.style.display = 'none';
+        invList.style.display = 'block'; // On remet les étiquettes
     }
 }
 
@@ -360,15 +377,47 @@ function renderTable() {
     tbody.innerHTML = "";
 
     db.forEach(p => {
+        // 1. Calcul de conversion physique (Sacs/Bidons + Reste)
+        const nbSacs = Math.floor(p.stockTotal / p.capaciteUnite);
+        const reste = (p.stockTotal % p.capaciteUnite).toFixed(2);
+        
+        // 2. Calculs Financiers
+        const valeurAchatTotal = p.stockTotal * p.pa;
+        const valeurVenteTotal = p.stockTotal * p.pv;
+        const beneficeTotal = valeurVenteTotal - valeurAchatTotal;
+
+        // Labels dynamiques selon le type
+        const unite = p.mode === 'DETAIL' ? 'kg/L' : 'pcs';
+        const contenant = p.mode === 'DETAIL' ? 'sacs/bidons' : 'ctn';
+
         const row = document.createElement('tr');
-        row.style.borderBottom = "1px solid #eee";
+        row.style.borderBottom = "1px solid #e2e8f0";
+        
         row.innerHTML = `
-            <td style="padding: 10px;"><b>${p.nom}</b><br><small>${p.code || '-'}</small></td>
-            <td style="padding: 10px;">${p.cat}</td>
-            <td style="padding: 10px;">${p.stockTotal}</td>
-            <td style="padding: 10px;">${p.pa}</td>
-            <td style="padding: 10px;">${p.pv}</td>
-            <td style="padding: 10px; font-weight:bold;">${(p.stockTotal * p.pa).toLocaleString()}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;">
+                <b style="color:var(--dark);">${p.nom}</b><br>
+                <small style="color:#64748b;">${p.dateAjout}</small>
+            </td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; text-align:center;">
+                ${p.capaciteUnite} ${unite}/unité
+            </td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight:bold; color:var(--p);">
+                ${nbSacs} ${contenant} + ${reste} ${unite}
+            </td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; text-align:center;">
+                ${p.stockTotal.toLocaleString()} ${unite}
+            </td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; text-align:right;">
+                ${parseFloat(p.pa).toLocaleString()} F <br>
+                <small style="color:#94a3b8;">Total: ${valeurAchatTotal.toLocaleString()}</small>
+            </td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; text-align:right;">
+                ${parseFloat(p.pv).toLocaleString()} F <br>
+                <small style="color:#94a3b8;">Total: ${valeurVenteTotal.toLocaleString()}</small>
+            </td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; text-align:right; font-weight:800; color:var(--s);">
+                + ${beneficeTotal.toLocaleString()} F
+            </td>
         `;
         tbody.appendChild(row);
     });
@@ -377,7 +426,6 @@ function renderTable() {
 
 </body>
 </html>
-
 
 
 
