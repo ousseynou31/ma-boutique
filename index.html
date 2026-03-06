@@ -103,12 +103,31 @@
 
 <div style="display: flex; gap: 10px;">
     <button class="btn-save" style="background: var(--dark); flex: 1;" onclick="togglePage('inventaire')">📂 PRODUITS ENREGISTRÉS</button>
+    <button class="btn-save" style="background: #475569; flex: 1;" onclick="toggleTable()">👁️ APERÇU TABLEAU</button>
+    
     <button id="btn-export" class="btn-save" style="background: var(--s); flex: 1; display: none;" onclick="exportToExcel()">📥 EXPORTER EXCEL</button>
 </div>
 
 <div id="page-inventaire" style="display:none; margin-top: 20px;">
     <div class="section-title">📊 État des Stocks au <span id="current-time"></span></div>
     <div id="inventory-list">
+
+        <div id="table-view" style="display:none; margin-top: 20px; overflow-x: auto;">
+    <table style="width:100%; border-collapse: collapse; background: white; font-size: 0.8rem; border-radius: 10px; overflow: hidden;">
+        <thead style="background: var(--dark); color: white;">
+            <tr>
+                <th style="padding: 10px;">Produit</th>
+                <th style="padding: 10px;">Cat.</th>
+                <th style="padding: 10px;">Stock</th>
+                <th style="padding: 10px;">PA</th>
+                <th style="padding: 10px;">PV</th>
+                <th style="padding: 10px;">Valeur</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            </tbody>
+    </table>
+</div>
         </div>
 </div>
     
@@ -325,9 +344,40 @@ function prepareEdit(id) {
         btn.style.background = "var(--w)";
     }
 }
+
+    function toggleTable() {
+    const tableView = document.getElementById('table-view');
+    if (tableView.style.display === 'none') {
+        renderTable();
+        tableView.style.display = 'block';
+    } else {
+        tableView.style.display = 'none';
+    }
+}
+
+function renderTable() {
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = "";
+
+    db.forEach(p => {
+        const row = document.createElement('tr');
+        row.style.borderBottom = "1px solid #eee";
+        row.innerHTML = `
+            <td style="padding: 10px;"><b>${p.nom}</b><br><small>${p.code || '-'}</small></td>
+            <td style="padding: 10px;">${p.cat}</td>
+            <td style="padding: 10px;">${p.stockTotal}</td>
+            <td style="padding: 10px;">${p.pa}</td>
+            <td style="padding: 10px;">${p.pv}</td>
+            <td style="padding: 10px; font-weight:bold;">${(p.stockTotal * p.pa).toLocaleString()}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
 </script>
 
 </body>
 </html>
+
 
 
