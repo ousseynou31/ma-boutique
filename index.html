@@ -148,30 +148,44 @@
         document.getElementById('reader-modal').style.display = 'none';
     }
 
-    function saveToDatabase() {
-        const product = {
-            id: Date.now(),
-            mode: isDetailMode ? 'DETAIL' : 'SIMPLE',
-            code: document.getElementById('p-code').value,
-            nom: document.getElementById('p-nom').value,
-            cat: document.getElementById('p-cat').value,
-            nbContenants: document.getElementById('p-nb-cont').value,
-            capaciteUnite: document.getElementById('p-capa').value,
-            stockTotal: parseFloat(document.getElementById('total-display').innerText.replace(/\s/g, '')),
-            pa: document.getElementById('p-pa').value,
-            pv: document.getElementById('p-pv').value
-        };
+    // Variable globale pour savoir si on modifie un produit
+let editingId = null;
 
-        if(!product.nom || !product.stockTotal) return alert("Veuillez remplir le nom et le stock");
+function saveToDatabase() {
+    // Demander confirmation avant de valider (pour ajout ou modif)
+    const action = editingId ? "modifier" : "enregistrer";
+    if (!confirm(`Voulez-vous vraiment ${action} ce produit ?`)) return;
 
-        let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    const product = {
+        id: editingId ? editingId : Date.now(),
+        dateAjout: editingId ? document.getElementById('current-product-date').value : new Date().toLocaleString('fr-FR'),
+        mode: isDetailMode ? 'DETAIL' : 'SIMPLE',
+        code: document.getElementById('p-code').value,
+        nom: document.getElementById('p-nom').value,
+        cat: document.getElementById('p-cat').value,
+        nbContenants: document.getElementById('p-nb-cont').value,
+        capaciteUnite: document.getElementById('p-capa').value,
+        stockTotal: parseFloat(document.getElementById('total-display').innerText.replace(/\s/g, '')),
+        pa: document.getElementById('p-pa').value,
+        pv: document.getElementById('p-pv').value
+    };
+
+    if(!product.nom || isNaN(product.stockTotal)) return alert("Veuillez remplir le nom et le stock");
+
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+
+    if (editingId) {
+        // Remplacer l'ancien produit par le nouveau
+        db = db.map(p => p.id === editingId ? product : p);
+        editingId = null; // Réinitialiser après modif
+    } else {
         db.unshift(product);
-        localStorage.setItem('diouf_ous_db', JSON.stringify(db));
-
-        alert("Produit enregistré avec succès !");
-        location.reload(); // Réinitialise le formulaire
     }
 
+    localStorage.setItem('diouf_ous_db', JSON.stringify(db));
+    alert("Opération réussie !");
+    location.reload(); 
+}
     // Fonction pour changer de page sans perdre les données
 function togglePage(page) {
     const invPage = document.getElementById('page-inventaire');
@@ -193,14 +207,12 @@ setInterval(() => {
     document.getElementById('current-time').innerText = now.toLocaleDateString() + " " + now.toLocaleTimeString();
 }, 1000);
 
-// Fonction pour afficher l'inventaire avec la reconstitution des sacs
 function renderInventory() {
     let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
     const container = document.getElementById('inventory-list');
     container.innerHTML = "";
 
     db.forEach(p => {
-        // Logique mathématique de reconstitution
         const nbSacsEntiers = Math.floor(p.stockTotal / p.capaciteUnite);
         const resteDetail = (p.stockTotal % p.capaciteUnite).toFixed(2);
         const uniteLabel = p.mode === 'DETAIL' ? 'kg/L' : 'unités';
@@ -208,28 +220,32 @@ function renderInventory() {
 
         const card = document.createElement('div');
         card.className = 'card';
-        card.style.marginBottom = "10px";
-        card.style.borderLeft = "5px solid var(--p)";
+        card.style.borderLeft = "6px solid var(--p)";
         card.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="margin-bottom:10px;">
+                <strong style="font-size:1.1rem; display:block;">${p.nom}</strong>
+                <small style="color:#64748b; font-style:italic;">🕒 Enregistré le : ${p.dateAjout || 'Date inconnue'}</small>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f1f5f9; padding:10px; border-radius:10px;">
                 <div>
-                    <strong style="font-size:1.1rem;">${p.nom}</strong> <br>
-                    <small style="color:#64748b;">Code: ${p.code || 'N/A'} | ${p.cat}</small>
+                    <span style="font-weight:800; font-size:1.1rem; color:var(--dark);">${nbSacsEntiers} ${contenantLabel}</span><br>
+                    <span style="color:var(--p); font-weight:600;">+ ${resteDetail} ${uniteLabel}</span>
                 </div>
-                <div style="text-align:right;">
-                    <span style="font-weight:800; color:var(--p);">${nbSacsEntiers} ${contenantLabel}</span><br>
-                    <span style="color:var(--s);">+ ${resteDetail} ${uniteLabel}</span>
+                <div style="text-align:right; font-size:0.85rem;">
+                    PV: <b>${p.pv} F</b> <br> PA: ${p.pa} F
                 </div>
             </div>
-            <div style="margin-top:10px; font-size:0.8rem; background:#f8fafc; padding:8px; border-radius:8px; display:flex; justify-content:space-between;">
-                <span>PA: ${p.pa} F | PV: ${p.pv} F</span>
-                <strong>Valeur: ${(p.stockTotal * p.pa).toLocaleString()} F</strong>
+
+            <div style="display:flex; gap:10px; margin-top:12px;">
+                <button onclick="prepareEdit(${p.id})" style="flex:1; padding:8px; border:none; background:var(--w); color:white; border-radius:8px; font-weight:700; cursor:pointer;">✏️ MODIFIER</button>
+                <button onclick="confirmDelete(${p.id})" style="flex:1; padding:8px; border:none; background:var(--d); color:white; border-radius:8px; font-weight:700; cursor:pointer;">🗑️ SUPPRIMER</button>
             </div>
+            <input type="hidden" id="current-product-date" value="${p.dateAjout}">
         `;
         container.appendChild(card);
     });
 }
-
 // Fonction d'exportation Excel simplifiée (CSV compatible Excel)
 function exportToExcel() {
     let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
@@ -265,8 +281,53 @@ function exportToExcel() {
     link.click();
     document.body.removeChild(link);
 }
+
+    // Fonction pour supprimer avec confirmation
+function confirmDelete(id) {
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    const product = db.find(p => p.id === id);
+
+    if (confirm(`⚠️ ATTENTION ⚠️\nVoulez-vous vraiment supprimer définitivement le produit "${product.nom}" ?`)) {
+        db = db.filter(p => p.id !== id);
+        localStorage.setItem('diouf_ous_db', JSON.stringify(db));
+        renderInventory(); // Rafraîchir la liste
+        alert("Produit supprimé.");
+    }
+}
+
+// Fonction pour charger les données dans le formulaire
+function prepareEdit(id) {
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    const p = db.find(p => p.id === id);
+    
+    if (confirm(`Voulez-vous modifier les informations de "${p.nom}" ?`)) {
+        editingId = p.id; // On stocke l'ID qu'on modifie
+        
+        // On remplit le formulaire
+        setMode(p.mode === 'DETAIL');
+        document.getElementById('p-code').value = p.code;
+        document.getElementById('p-nom').value = p.nom;
+        document.getElementById('p-cat').value = p.cat;
+        document.getElementById('p-nb-cont').value = p.nbContenants;
+        document.getElementById('p-capa').value = p.capaciteUnite;
+        document.getElementById('p-pa').value = p.pa;
+        document.getElementById('p-pv').value = p.pv;
+        
+        calculateStock();
+        
+        // On remonte en haut de la page
+        window.scrollTo({top: 0, behavior: 'smooth'});
+        togglePage('inventaire'); // Ferme l'inventaire pour montrer le formulaire
+        
+        // Changer l'apparence du bouton de validation
+        const btn = document.querySelector('.btn-save');
+        btn.innerText = "💾 METTRE À JOUR LE PRODUIT";
+        btn.style.background = "var(--w)";
+    }
+}
 </script>
 
 </body>
 </html>
+
 
