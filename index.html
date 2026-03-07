@@ -443,10 +443,23 @@ function renderTable() {
         tbody.appendChild(row);
     });
 }
+    function naviguer(idPage) {
+            document.getElementById('hub-accueil').style.display = 'none';
+            document.getElementById('page-stock').style.display = 'none';
+            document.getElementById('page-vente').style.display = 'none';
+            document.getElementById('page-banque').style.display = 'none';
+
+            document.getElementById(idPage).style.display = 'block';
+
+            if(idPage === 'page-vente') {
+                startScannerVente();
+            }
+        }
 </script>
 
 </body>
 </html>
+
 
 
 
