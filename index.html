@@ -113,7 +113,7 @@
 
 <div style="display: flex; gap: 10px;">
     <button class="btn-save" style="background: var(--dark); flex: 1;" onclick="togglePage('inventaire')">📂 PRODUITS ENREGISTRÉS</button>
-    <button id="btn-export" class="btn-save" style="background: var(--s); flex: 1; display: none;" onclick="exportToExcel()">📥 EXPORTER EXCEL</button>
+    <button id="btn-export" class="btn-save" style="background: #059669; flex: 1; display: none;" onclick="visualiserEtExporter()">📥 VOIR & EXPORTER</button>
 </div>
 <button class="btn-save" style="background: #475569; flex: 1;" onclick="toggleTable()">👁️ APERÇU TABLEAU</button>    
 
@@ -450,10 +450,33 @@ function renderTable() {
     // 2. Affiche la page demandée
     document.getElementById(idPage).style.display = 'block';
 }
+function visualiserEtExporter() {
+    // 1. On affiche d'abord le tableau pour que l'utilisateur voie ce qu'il exporte
+    const tableView = document.getElementById('table-view');
+    const invList = document.getElementById('inventory-list');
+    const invPage = document.getElementById('page-inventaire');
+
+    // On s'assure que la section inventaire est ouverte
+    invPage.style.display = 'block';
+    
+    // On génère et on montre le tableau
+    renderTable();
+    tableView.style.display = 'block';
+    invList.style.display = 'none'; // On cache les cartes simples pour ne voir que le registre
+
+    // 2. On lance l'exportation après un court instant
+    setTimeout(() => {
+        if(confirm("Le registre complet est affiché à l'écran. Voulez-vous télécharger le fichier Excel ?")) {
+            exportToExcel();
+        }
+    }, 500);
+}
+    
 </script>
 
 </body>
 </html>
+
 
 
 
