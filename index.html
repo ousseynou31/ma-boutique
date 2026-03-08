@@ -37,9 +37,16 @@
 </head>
 <body>
 <div id="hub-accueil" style="display: block;">
+    <h2 style="text-align:center; margin-bottom:20px;">MENU PRINCIPAL</h2>
+    <div style="display: grid; gap: 15px;">
+        <button onclick="naviguer('page-stock')" style="padding:25px; background:var(--p); color:white; border-radius:15px; border:none; font-weight:800; cursor:pointer;">📦 GESTION DES STOCKS</button>
+        <button onclick="naviguer('page-vente')" style="padding:25px; background:var(--s); color:white; border-radius:15px; border:none; font-weight:800; cursor:pointer;">🛒 CAISSE DE VENTE</button>
+        <button onclick="naviguer('page-banque')" style="padding:25px; background:#f59e0b; color:white; border-radius:15px; border:none; font-weight:800; cursor:pointer;">📈 BANQUE & PROFITS</button>
+    </div>
         </div>
 
-    <div id="page-stock" style="display: none;">
+    <div id="page-stock" style="display: none;"><button onclick="naviguer('hub-accueil')" style="margin:10px; border:none; background:none; color:var(--p); font-weight:800; cursor:pointer;">🏠 RETOUR ACCUEIL</button>
+        
         <div id="reader-modal">
     <div id="reader" style="flex:1;"></div>
     <button onclick="stopScan()" style="padding:20px; background:var(--d); color:white; border:none; font-weight:800;">FERMER LE SCANNER</button>
@@ -443,22 +450,21 @@ function renderTable() {
         tbody.appendChild(row);
     });
 }
-    function naviguer(idPage) {
-            document.getElementById('hub-accueil').style.display = 'none';
-            document.getElementById('page-stock').style.display = 'none';
-            document.getElementById('page-vente').style.display = 'none';
-            document.getElementById('page-banque').style.display = 'none';
+   function naviguer(idPage) {
+    // 1. Cache toutes les pages
+    document.getElementById('hub-accueil').style.display = 'none';
+    document.getElementById('page-stock').style.display = 'none';
+    document.getElementById('page-vente').style.display = 'none';
+    document.getElementById('page-banque').style.display = 'none';
 
-            document.getElementById(idPage).style.display = 'block';
-
-            if(idPage === 'page-vente') {
-                startScannerVente();
-            }
-        }
+    // 2. Affiche la page demandée
+    document.getElementById(idPage).style.display = 'block';
+}
 </script>
 
 </body>
 </html>
+
 
 
 
