@@ -40,7 +40,7 @@
     <h2 style="text-align:center; margin-bottom:20px;">MENU PRINCIPAL</h2>
     <div style="display: grid; gap: 15px;">
         <button onclick="naviguer('page-stock')" style="padding:25px; background:var(--p); color:white; border-radius:15px; border:none; font-weight:800; cursor:pointer;">📦 GESTION DES STOCKS</button>
-        <button onclick="naviguer('page-vente')" style="padding:25px; background:var(--s); color:white; border-radius:15px; border:none; font-weight:800; cursor:pointer;">🛒 CAISSE DE VENTE</button>
+        <button onclick="naviguer('page-vente'); startScannerVente();" style="padding:25px; background:var(--s); color:white; border-radius:15px; border:none; font-weight:800; cursor:pointer;">🛒 CAISSE DE VENTE</button>
         <button onclick="naviguer('page-banque')" style="padding:25px; background:#f59e0b; color:white; border-radius:15px; border:none; font-weight:800; cursor:pointer;">📈 BANQUE & PROFITS</button>
     </div>
         </div>
@@ -479,14 +479,19 @@ function renderTable() {
         tbody.appendChild(row);
     });
 }
-   function naviguer(idPage) {
-    // 1. Cache toutes les pages
+    function naviguer(idPage) {
+    // 1. On cache tout
     document.getElementById('hub-accueil').style.display = 'none';
     document.getElementById('page-stock').style.display = 'none';
     document.getElementById('page-vente').style.display = 'none';
     document.getElementById('page-banque').style.display = 'none';
 
-    // 2. Affiche la page demandée
+    // 2. Sécurité : Si on n'est PLUS sur la page vente, on arrête la caméra
+    if (idPage !== 'page-vente' && html5QrCodeVente) {
+        html5QrCodeVente.stop().catch(err => console.log(err));
+    }
+
+    // 3. On affiche la page
     document.getElementById(idPage).style.display = 'block';
 }
 function visualiserEtExporter() {
@@ -614,6 +619,7 @@ function calculerRendu() {
 
 </body>
 </html>
+
 
 
 
