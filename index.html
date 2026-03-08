@@ -615,10 +615,43 @@ function calculerRendu() {
     const rendu = recu - total;
     document.getElementById('v-rendu').innerText = (rendu > 0 ? rendu.toLocaleString() : 0) + " F";
 }  
+    function validerVente() {
+    if (panier.length === 0) return alert("Le panier est vide !");
+    
+    const totalVente = parseFloat(document.getElementById('total-panier').innerText.replace(/\s/g, ''));
+    if (!confirm(`Confirmer la vente de ${totalVente} F ?\nCela mettra à jour les stocks.`)) return;
+
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+
+    // Mettre à jour le stock pour chaque item du panier
+    panier.forEach(item => {
+        if (item.visible) {
+            let produitStock = db.find(p => p.id === item.id);
+            if (produitStock) {
+                // On soustrait la quantité (en kg ou en unité selon le mode)
+                produitStock.stockTotal -= item.qte;
+                if (produitStock.stockTotal < 0) produitStock.stockTotal = 0;
+            }
+        }
+    });
+
+    // Sauvegarder dans la base de données
+    localStorage.setItem('diouf_ous_db', JSON.stringify(db));
+
+    // Réinitialiser le panier et l'affichage
+    panier = [];
+    document.getElementById('v-recu').value = "";
+    renderPanier();
+    alert("Vente enregistrée ! Le stock a été mis à jour.");
+    
+    // Retour à l'accueil
+    naviguer('hub-accueil');
+}
 </script>
 
 </body>
 </html>
+
 
 
 
