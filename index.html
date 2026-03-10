@@ -688,8 +688,6 @@ function calculerRendu() {
     let cameraActive = false;
 
 // Déclare la variable UNE SEULE FOIS ici
-let cameraActive = false;
-
 function ouvrirCaisse() {
     naviguer('page-vente');
     renderPanier();
@@ -700,7 +698,6 @@ function ouvrirCaisse() {
     if (champRecherche) champRecherche.value = "";
     if (resultDiv) resultDiv.innerHTML = "";
 }
-
 async function toggleCamera() {
     const btn = document.getElementById('btn-toggle-cam');
     
@@ -724,6 +721,32 @@ async function toggleCamera() {
         cameraActive = false;
         btn.innerText = "📷 ALLUMER LE SCANNER";
         btn.style.background = "var(--s)";
+    }
+}
+    function rechercherManuellement() {
+    const query = document.getElementById('recherche-produit').value.toLowerCase();
+    const resultDiv = document.getElementById('resultats-recherche');
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    
+    if(query.length < 2) { resultDiv.innerHTML = ""; return; }
+
+    const filtered = db.filter(p => p.nom.toLowerCase().includes(query) || p.code.includes(query));
+    
+    resultDiv.innerHTML = filtered.map(p => `
+        <div onclick="ajouterAuPanierDirect('${p.id}')" style="padding:12px; background:white; border-bottom:1px solid #eee; cursor:pointer; display:flex; justify-content:space-between; border-radius:8px; margin-bottom:5px;">
+            <span>${p.nom}</span>
+            <b style="color:var(--s)">${p.pv} F</b>
+        </div>
+    `).join('');
+}
+
+function ajouterAuPanierDirect(id) {
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    let p = db.find(item => item.id == id);
+    if(p) {
+        ajouterAuPanier(p);
+        document.getElementById('recherche-produit').value = "";
+        document.getElementById('resultats-recherche').innerHTML = "";
     }
 }
        function naviguer(idPage) {
@@ -777,6 +800,7 @@ async function stopScannerVente() {
 
 </body>
 </html>
+
 
 
 
