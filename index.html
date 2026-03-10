@@ -723,22 +723,6 @@ async function toggleCamera() {
         btn.style.background = "var(--s)";
     }
 }
-    function rechercherManuellement() {
-    const query = document.getElementById('recherche-produit').value.toLowerCase();
-    const resultDiv = document.getElementById('resultats-recherche');
-    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
-    
-    if(query.length < 2) { resultDiv.innerHTML = ""; return; }
-
-    const filtered = db.filter(p => p.nom.toLowerCase().includes(query) || p.code.includes(query));
-    
-    resultDiv.innerHTML = filtered.map(p => `
-        <div onclick="ajouterAuPanierDirect('${p.id}')" style="padding:12px; background:white; border-bottom:1px solid #eee; cursor:pointer; display:flex; justify-content:space-between; border-radius:8px; margin-bottom:5px;">
-            <span>${p.nom}</span>
-            <b style="color:var(--s)">${p.pv} F</b>
-        </div>
-    `).join('');
-}
 
 function ajouterAuPanierDirect(id) {
     let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
@@ -749,20 +733,7 @@ function ajouterAuPanierDirect(id) {
         document.getElementById('resultats-recherche').innerHTML = "";
     }
 }
-       function naviguer(idPage) {
-    document.getElementById('hub-accueil').style.display = 'none';
-    document.getElementById('page-stock').style.display = 'none';
-    document.getElementById('page-vente').style.display = 'none';
-    document.getElementById('page-banque').style.display = 'none';
-
-    // Sécurité : n'arrête le scanner que si on quitte la page de vente
-    if (idPage !== 'page-vente' && html5QrCodeVente) {
-        html5QrCodeVente.stop().catch(err => console.log("Déjà stoppé"));
-    }
-
-    document.getElementById(idPage).style.display = 'block';
-}
-    // Fonction pour chercher sans scanner
+      // Fonction pour chercher sans scanner
 function rechercherManuellement() {
     const query = document.getElementById('recherche-produit').value.toLowerCase();
     const resultDiv = document.getElementById('resultats-recherche');
@@ -800,6 +771,7 @@ async function stopScannerVente() {
 
 </body>
 </html>
+
 
 
 
