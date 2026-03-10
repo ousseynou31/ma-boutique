@@ -687,11 +687,11 @@ function calculerRendu() {
 }
     let cameraActive = false;
 
-// Déclare la variable UNE SEULE FOIS ici
 function ouvrirCaisse() {
-    naviguer('page-vente');
-    renderPanier();
+    naviguer('page-vente'); // Affiche le bloc HTML de la vente
+    renderPanier();         // Prépare l'affichage du panier (même vide)
     
+    // On vide les champs de recherche par sécurité
     const champRecherche = document.getElementById('recherche-produit');
     const resultDiv = document.getElementById('resultats-recherche');
     
@@ -800,6 +800,7 @@ async function stopScannerVente() {
 
 </body>
 </html>
+
 
 
 
