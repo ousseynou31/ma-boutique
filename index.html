@@ -733,13 +733,31 @@ function ajouterAuPanierDirect(id) {
         document.getElementById('resultats-recherche').innerHTML = "";
     }
 }
-      // Fonction pour chercher sans scanner
-function rechercherManuellement() {
+     
+
+function naviguer(idPage) {
+    // 1. On cache toutes les sections possibles
+    const pages = ['hub-accueil', 'page-stock', 'page-vente', 'page-banque', 'page-inventaire'];
+    pages.forEach(p => {
+        const el = document.getElementById(p);
+        if (el) el.style.display = 'none';
+    });
+
+    // 2. Sécurité : Si on quitte la vente, on éteint la caméra
+    if (idPage !== 'page-vente' && cameraActive) {
+        stopScannerVente();
+    }
+
+    // 3. On affiche la page demandée
+    const target = document.getElementById(idPage);
+    if (target) target.style.display = 'block';
+}
+    function rechercherManuellement() {
     const query = document.getElementById('recherche-produit').value.toLowerCase();
     const resultDiv = document.getElementById('resultats-recherche');
     resultDiv.innerHTML = "";
 
-    if (query.length < 2) return; // On attend 2 lettres avant de chercher
+    if (query.length < 2) return; 
 
     let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
     let filtrés = db.filter(p => p.nom.toLowerCase().includes(query) || p.code.includes(query));
@@ -750,27 +768,32 @@ function rechercherManuellement() {
         item.innerHTML = `<span><b>${p.nom}</b> (${p.pv} F)</span> <span style="color:var(--s); font-weight:800;">+ AJOUTER</span>`;
         item.onclick = () => {
             ajouterAuPanier(p);
-            document.getElementById('recherche-produit').value = ""; // Vider la barre
-            resultDiv.innerHTML = ""; // Vider les résultats
+            document.getElementById('recherche-produit').value = "";
+            resultDiv.innerHTML = "";
         };
         resultDiv.appendChild(item);
     });
 }
 
-// Fonction pour couper proprement la caméra
 async function stopScannerVente() {
     if (html5QrCodeVente) {
-        await html5QrCodeVente.stop();
-        document.getElementById('reader-vente').innerHTML = ""; // On vide la zone noire
+        try {
+            await html5QrCodeVente.stop();
+        } catch (e) { console.log("Scanner déjà arrêté"); }
+        document.getElementById('reader-vente').innerHTML = ""; 
     }
-}
-
-
-    
+    cameraActive = false;
+    const btn = document.getElementById('btn-toggle-cam');
+    if (btn) {
+        btn.innerText = "📷 ALLUMER LE SCANNER";
+        btn.style.background = "var(--s)";
+    }
+}    
 </script>
 
 </body>
 </html>
+
 
 
 
