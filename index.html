@@ -160,39 +160,32 @@
     
         </div>
 
-  <div id="page-vente" style="display: none; padding: 10px;">
+ <div id="page-vente" style="display: none; padding: 10px;">
     <button onclick="naviguer('hub-accueil')" style="margin:10px; border:none; background:none; color:var(--p); font-weight:800; cursor:pointer;">🏠 RETOUR ACCUEIL</button>
     
     <div class="container">
-        <div class="card" style="padding: 10px; margin-bottom: 15px; background: #000; border-radius: 15px; overflow: hidden;">
-            <div id="reader-vente" style="width: 100%; min-height: 200px; background: #111;"></div>
-            <p style="color: #10b981; text-align: center; font-size: 0.75rem; font-weight: 800; margin: 8px 0;">📷 SCANNER DE CAISSE ACTIF</p>
+        <div class="card" style="padding: 10px; margin-bottom: 15px; background: #1e293b; border-radius: 15px;">
+            <div id="reader-vente" style="width: 100%; min-height: 50px; background: #000; border-radius: 10px; overflow: hidden;"></div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="startScannerVente()" style="flex:1; padding:10px; background:var(--s); color:white; border:none; border-radius:8px; font-weight:700;">📷 ALLUMER SCANNER</button>
+                <button onclick="stopScannerVente()" style="flex:1; padding:10px; background:var(--d); color:white; border:none; border-radius:8px; font-weight:700;">🚫 COUPER</button>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 15px;">
+            <label>Recherche manuelle (Nom ou Code)</label>
+            <input type="text" id="recherche-produit" placeholder="Tapez le nom du produit..." oninput="rechercherManuellement()">
+            <div id="resultats-recherche" style="margin-top:10px; max-height: 150px; overflow-y: auto;"></div>
         </div>
 
         <div class="card">
             <div class="section-title">🛒 Panier Client</div>
             <div id="panier-liste" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;">
-                <p id="panier-vide" style="text-align: center; color: #94a3b8; padding: 20px;">Scannez un produit...</p>
+                <p id="panier-vide" style="text-align: center; color: #94a3b8; padding: 20px;">Scannez ou cherchez un produit...</p>
             </div>
-
-            <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 700;">Calculatrice Monnaie</span>
-                    <input type="checkbox" id="check-monnaie" onchange="toggleMonnaie()" style="transform: scale(1.2);">
-                </div>
-                <div id="bloc-monnaie" style="display: none; margin-top: 15px; border-top: 1px solid #e2e8f0; pt: 10px;">
-                    <div class="grid">
-                        <div>
-                            <small>Somme reçue</small>
-                            <input type="number" id="v-recu" placeholder="Ex: 5000" oninput="calculerRendu()">
-                        </div>
-                        <div style="text-align: right;">
-                            <small>À rendre</small>
-                            <div id="v-rendu" style="font-weight: 800; color: var(--d); font-size: 1.2rem;">0 F</div>
-                        </div>
-                    </div>
-                </div>
             </div>
+    </div>
+</div>
 
             <div class="result-banner" style="background: var(--s); font-size: 1.5rem; margin-top: 15px;">
                 TOTAL : <span id="total-panier">0</span> F
@@ -707,11 +700,50 @@ function calculerRendu() {
 
     document.getElementById(idPage).style.display = 'block';
 }
+    // Fonction pour chercher sans scanner
+function rechercherManuellement() {
+    const query = document.getElementById('recherche-produit').value.toLowerCase();
+    const resultDiv = document.getElementById('resultats-recherche');
+    resultDiv.innerHTML = "";
+
+    if (query.length < 2) return; // On attend 2 lettres avant de chercher
+
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    let filtrés = db.filter(p => p.nom.toLowerCase().includes(query) || p.code.includes(query));
+
+    filtrés.forEach(p => {
+        const item = document.createElement('div');
+        item.style = "padding:12px; border-bottom:1px solid #eee; cursor:pointer; display:flex; justify-content:space-between; background:#f8fafc; border-radius:8px; margin-bottom:5px;";
+        item.innerHTML = `<span><b>${p.nom}</b> (${p.pv} F)</span> <span style="color:var(--s); font-weight:800;">+ AJOUTER</span>`;
+        item.onclick = () => {
+            ajouterAuPanier(p);
+            document.getElementById('recherche-produit').value = ""; // Vider la barre
+            resultDiv.innerHTML = ""; // Vider les résultats
+        };
+        resultDiv.appendChild(item);
+    });
+}
+
+// Fonction pour couper proprement la caméra
+async function stopScannerVente() {
+    if (html5QrCodeVente) {
+        await html5QrCodeVente.stop();
+        document.getElementById('reader-vente').innerHTML = ""; // On vide la zone noire
+    }
+}
+
+// Modifier ouvrirCaisse pour ne PAS lancer la caméra automatiquement
+function ouvrirCaisse() {
+    naviguer('page-vente');
+    renderPanier();
+    // On ne lance plus startScannerVente() ici. L'utilisateur le fera s'il veut.
+}
     
 </script>
 
 </body>
 </html>
+
 
 
 
