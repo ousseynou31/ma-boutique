@@ -40,6 +40,12 @@
     background: #111;
     border-radius: 12px;
 }
+        #reader-vente {
+    width: 100% !important;
+    min-height: 200px !important; /* Force la hauteur même si vide */
+    background: #111;
+    border-radius: 12px;
+}
     </style>
 </head>
 <body>
@@ -524,16 +530,38 @@ function visualiserEtExporter() {
 }
   let panier = [];
 let html5QrCodeVente;
+    async function startScannerVente() {
+    // Si un scanner existe déjà, on essaie de l'arrêter proprement avant de recommencer
+    if (html5QrCodeVente) {
+        try {
+            await html5QrCodeVente.stop();
+        } catch (e) {
+            // Déjà arrêté ou pas lancé
+        }
+    }
 
-// Démarrer le scanner dès qu'on arrive sur la page vente
-function startScannerVente() {
-    if (html5QrCodeVente) { html5QrCodeVente.stop(); }
     html5QrCodeVente = new Html5Qrcode("reader-vente");
+    
+    const config = { 
+        fps: 20, 
+        qrbox: { width: 250, height: 150 },
+        aspectRatio: 1.0 
+    };
+
     html5QrCodeVente.start(
         { facingMode: "environment" }, 
-        { fps: 20, qrbox: {width: 250, height: 150} },
-        (txt) => { chargerProduitScanne(txt); }
-    ).catch(err => console.log("Erreur Caméra:", err));
+        config,
+        (txt) => { 
+            chargerProduitScanne(txt); 
+            // Optionnel : ajouter une petite vibration mobile
+            if(navigator.vibrate) navigator.vibrate(100);
+        }
+    ).catch(err => {
+        console.error("Erreur Caméra:", err);
+        // Si erreur, on affiche un message dans la zone caméra
+        document.getElementById('reader-vente').innerHTML = 
+            `<p style="color:white;text-align:center;padding-top:50px;">Erreur caméra : Vérifiez les autorisations.</p>`;
+    });
 }
 
 function chargerProduitScanne(code) {
@@ -666,10 +694,25 @@ function calculerRendu() {
         startScannerVente();
     }, 300);
 }
+    function naviguer(idPage) {
+    document.getElementById('hub-accueil').style.display = 'none';
+    document.getElementById('page-stock').style.display = 'none';
+    document.getElementById('page-vente').style.display = 'none';
+    document.getElementById('page-banque').style.display = 'none';
+
+    // Sécurité : n'arrête le scanner que si on quitte la page de vente
+    if (idPage !== 'page-vente' && html5QrCodeVente) {
+        html5QrCodeVente.stop().catch(err => console.log("Déjà stoppé"));
+    }
+
+    document.getElementById(idPage).style.display = 'block';
+}
+    
 </script>
 
 </body>
 </html>
+
 
 
 
