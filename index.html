@@ -33,6 +33,13 @@
         
         /* Scanner overlay */
         #reader-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: none; flex-direction: column; }
+        #reader-vente { 
+    width: 100% !important; 
+    min-height: 200px; 
+    max-height: 250px; /* On limite la hauteur pour laisser de la place au panier */
+    background: #111;
+    border-radius: 12px;
+}
     </style>
 </head>
 <body>
@@ -40,7 +47,7 @@
     <h2 style="text-align:center; margin-bottom:20px;">MENU PRINCIPAL</h2>
     <div style="display: grid; gap: 15px;">
         <button onclick="naviguer('page-stock')" style="padding:25px; background:var(--p); color:white; border-radius:15px; border:none; font-weight:800; cursor:pointer;">📦 GESTION DES STOCKS</button>
-        <button onclick="naviguer('page-vente'); startScannerVente();" style="padding:25px; background:var(--s); color:white; border-radius:15px; border:none; font-weight:800; cursor:pointer;">🛒 CAISSE DE VENTE</button>
+        <button onclick="ouvrirCaisse()" style="padding:25px; background:var(--s); color:white; border-radius:15px; border:none; font-weight:800; cursor:pointer;">🛒 CAISSE DE VENTE</button>
         <button onclick="naviguer('page-banque')" style="padding:25px; background:#f59e0b; color:white; border-radius:15px; border:none; font-weight:800; cursor:pointer;">📈 BANQUE & PROFITS</button>
     </div>
         </div>
@@ -647,10 +654,23 @@ function calculerRendu() {
     // Retour à l'accueil
     naviguer('hub-accueil');
 }
+    function ouvrirCaisse() {
+    // 1. On affiche d'abord la page (DOM)
+    naviguer('page-vente');
+    
+    // 2. On rafraîchit le panier pour être sûr qu'il est visible
+    renderPanier();
+    
+    // 3. On attend 300ms que la page soit bien stable avant d'allumer la caméra
+    setTimeout(() => {
+        startScannerVente();
+    }, 300);
+}
 </script>
 
 </body>
 </html>
+
 
 
 
