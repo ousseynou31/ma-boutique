@@ -33,33 +33,30 @@
         
         /* Scanner overlay */
         #reader-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: none; flex-direction: column; }
-        #reader-vente { 
-    width: 100% !important; 
-    min-height: 200px; 
-    max-height: 250px; /* On limite la hauteur pour laisser de la place au panier */
-    background: #111;
-    border-radius: 12px;
-}
-   /* Le conteneur du scanner */
+      /* Le conteneur du scanner - Version Unique */
 #reader-vente {
     width: 100% !important;
-    background: transparent;
+    background: transparent; /* Pas de gros bloc noir si éteint */
     border-radius: 12px;
     overflow: hidden;
+    margin-bottom: 0;
 }
 
-/* La vidéo elle-même (générée par la bibliothèque) */
+/* La vidéo elle-même */
 #reader-vente video {
     width: 100% !important;
     height: auto !important;
     border-radius: 10px;
     object-fit: cover;
-    display: block; /* Évite les espaces vides sous la vidéo */
+    display: block;
 }
 
-/* Ajustement pour masquer les textes inutiles de la bibliothèque */
-#reader-vente img { display: none; } 
-#reader-vente b { display: none; }
+/* Nettoyage des éléments parasites de la bibliothèque */
+#reader-vente img, 
+#reader-vente b, 
+#reader-vente span { 
+    display: none !important; 
+}
     </style>
 </head>
 <body>
@@ -690,25 +687,19 @@ function calculerRendu() {
 }
     let cameraActive = false;
 
+// Déclare la variable UNE SEULE FOIS ici
+let cameraActive = false;
+
 function ouvrirCaisse() {
-    // 1. On change de page
     naviguer('page-vente');
-    
-    // 2. On affiche le panier (vide ou en cours)
     renderPanier();
     
-    // 3. On vide proprement les champs de recherche manuelle
     const champRecherche = document.getElementById('recherche-produit');
     const resultDiv = document.getElementById('resultats-recherche');
     
     if (champRecherche) champRecherche.value = "";
     if (resultDiv) resultDiv.innerHTML = "";
-    
-    // Note : On ne lance PAS startScannerVente() ici. 
-    // L'utilisateur cliquera sur le bouton "Allumer" s'il en a besoin.
 }
-
-let cameraActive = false;
 
 async function toggleCamera() {
     const btn = document.getElementById('btn-toggle-cam');
@@ -716,11 +707,12 @@ async function toggleCamera() {
     if (!cameraActive) {
         try {
             btn.innerText = "⌛ DÉMARRAGE...";
-            await startScannerVente(); // Appelle ta fonction de scan existante
+            await startScannerVente(); 
             cameraActive = true;
             btn.innerText = "🚫 ARRÊTER LE SCANNER";
             btn.style.background = "var(--d)";
         } catch (err) {
+            console.error(err);
             btn.innerText = "📷 RÉESSAYER";
             btn.style.background = "var(--s)";
         }
@@ -785,6 +777,7 @@ async function stopScannerVente() {
 
 </body>
 </html>
+
 
 
 
