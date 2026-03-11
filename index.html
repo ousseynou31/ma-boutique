@@ -169,7 +169,7 @@
     <p style="font-size: 0.7rem; color: #64748b; margin-top: 10px;">👉 Faites glisser le tableau vers la droite pour voir toutes les colonnes.</p>
 </div>
     
-        </div>
+</div>
 
 <div id="page-vente" style="display: none; padding: 15px;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
@@ -208,49 +208,64 @@
 
     <div id="page-banque" style="display: none;">
         <button onclick="naviguer('hub-accueil')">🏠 RETOUR</button>
-        </div>
+     </div>
 
+   
 <script>
-    let isDetailMode = false;
-    let html5QrCode;
 
-    function setMode(mode) {
-        isDetailMode = mode;
-        document.getElementById('t-complex').classList.toggle('active', mode);
-        document.getElementById('t-simple').classList.toggle('active', !mode);
-        
-        // Mise à jour des labels selon le mode
-        document.getElementById('label-nb').innerText = mode ? "Nombre de sacs / bidons" : "Nombre de cartons / caisses";
-        document.getElementById('label-capa').innerText = mode ? "Kilos / Litres par sac" : "Unités par carton";
-        document.getElementById('unit-label').innerText = mode ? "Kg/L" : "Unités";
-        calculateStock();
-    }
 
-    function calculateStock() {
-        const nb = parseFloat(document.getElementById('p-nb-cont').value) || 0;
-        const capa = parseFloat(document.getElementById('p-capa').value) || 0;
-        document.getElementById('total-display').innerText = (nb * capa).toLocaleString();
-    }
-
-    function startScan() {
-        document.getElementById('reader-modal').style.display = 'flex';
-        html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-            document.getElementById('p-code').value = txt;
-            stopScan();
-        }).catch(err => console.error(err));
-    }
-
-    async function stopScan() {
-        if(html5QrCode) await html5QrCode.stop();
-        document.getElementById('reader-modal').style.display = 'none';
-    }
-
-    // Variable globale pour savoir si on modifie un produit
+// ==========================================
+// 1. VARIABLES GLOBALES
+// ==========================================
+let isDetailMode = false;
+let html5QrCodeVente = null;
+let html5QrCode = null;
 let editingId = null;
+let panier = [];
+let cameraActive = false;
+
+// ==========================================
+// 2. NAVIGATION ET BOUTON CAISSE (LE FIX EST ICI)
+// ==========================================
+function naviguer(idPage) {
+    const pages = ['hub-accueil', 'page-stock', 'page-vente', 'page-banque', 'page-inventaire'];
+    pages.forEach(id => {
+        const section = document.getElementById(id);
+        if (section) section.style.display = 'none';
+    });
+    const cible = document.getElementById(idPage);
+    if (cible) {
+        cible.style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+}
+
+// C'est cette fonction qui manquait pour ouvrir la caisse !
+function ouvrirCaisse() {
+    naviguer('page-vente');
+    renderPanier();
+}
+
+// ==========================================
+// 3. GESTION DU STOCK
+// ==========================================
+function setMode(mode) {
+    isDetailMode = mode;
+    document.getElementById('t-complex').classList.toggle('active', mode);
+    document.getElementById('t-simple').classList.toggle('active', !mode);
+    document.getElementById('label-nb').innerText = mode ? "Nombre de sacs / bidons" : "Nombre de cartons / caisses";
+    document.getElementById('label-capa').innerText = mode ? "Kilos / Litres par sac" : "Unités par carton";
+    document.getElementById('unit-label').innerText = mode ? "Kg/L" : "Unités";
+    calculateStock();
+}
+
+function calculateStock() {
+    const nb = parseFloat(document.getElementById('p-nb-cont').value) || 0;
+    const capa = parseFloat(document.getElementById('p-capa').value) || 0;
+    document.getElementById('total-display').innerText = (nb * capa).toLocaleString();
+}
 
 function saveToDatabase() {
-    // Demander confirmation avant de valider (pour ajout ou modif)
     const action = editingId ? "modifier" : "enregistrer";
     if (!confirm(`Voulez-vous vraiment ${action} ce produit ?`)) return;
 
@@ -273,9 +288,8 @@ function saveToDatabase() {
     let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
 
     if (editingId) {
-        // Remplacer l'ancien produit par le nouveau
         db = db.map(p => p.id === editingId ? product : p);
-        editingId = null; // Réinitialiser après modif
+        editingId = null;
     } else {
         db.unshift(product);
     }
@@ -284,7 +298,10 @@ function saveToDatabase() {
     alert("Opération réussie !");
     location.reload(); 
 }
-    // Fonction pour changer de page sans perdre les données
+
+// ==========================================
+// 4. INVENTAIRE ET TABLEAU
+// ==========================================
 function togglePage(page) {
     const invPage = document.getElementById('page-inventaire');
     const btnExport = document.getElementById('btn-export');
@@ -299,10 +316,10 @@ function togglePage(page) {
     }
 }
 
-// Mise à jour de l'heure en temps réel
 setInterval(() => {
     const now = new Date();
-    document.getElementById('current-time').innerText = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+    const el = document.getElementById('current-time');
+    if(el) el.innerText = now.toLocaleDateString() + " " + now.toLocaleTimeString();
 }, 1000);
 
 function renderInventory() {
@@ -336,7 +353,7 @@ function renderInventory() {
             </div>
 
             <div style="display:flex; gap:10px; margin-top:12px;">
-                <button onclick="prepareEdit(${p.id})" style="flex:1; padding:8px; border:none; background:var(--w); color:white; border-radius:8px; font-weight:700; cursor:pointer;">✏️ MODIFIER</button>
+                <button onclick="prepareEdit(${p.id})" style="flex:1; padding:8px; border:none; background:var(--dark); color:white; border-radius:8px; font-weight:700; cursor:pointer;">✏️ MODIFIER</button>
                 <button onclick="confirmDelete(${p.id})" style="flex:1; padding:8px; border:none; background:var(--d); color:white; border-radius:8px; font-weight:700; cursor:pointer;">🗑️ SUPPRIMER</button>
             </div>
             <input type="hidden" id="current-product-date" value="${p.dateAjout}">
@@ -344,66 +361,16 @@ function renderInventory() {
         container.appendChild(card);
     });
 }
-// Fonction d'exportation Excel simplifiée (CSV compatible Excel)
-function exportToExcel() {
-    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
-    if(db.length === 0) return alert("Aucune donnée à exporter");
 
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Date;Code;Produit;Categorie;Stock Total;Sacs Entiers;Reste Detail;Prix Achat;Valeur Stock\n";
-
-    db.forEach(p => {
-        const nbSacs = Math.floor(p.stockTotal / p.capaciteUnite);
-        const reste = (p.stockTotal % p.capaciteUnite).toFixed(2);
-        const valeur = p.stockTotal * p.pa;
-        
-        let row = [
-            new Date().toLocaleDateString(),
-            p.code,
-            p.nom,
-            p.cat,
-            p.stockTotal,
-            nbSacs,
-            reste,
-            p.pa,
-            valeur
-        ].join(";");
-        csvContent += row + "\n";
-    });
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "Inventaire_Diouf_Ous_" + new Date().toLocaleDateString() + ".csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-    // Fonction pour supprimer avec confirmation
-function confirmDelete(id) {
-    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
-    const product = db.find(p => p.id === id);
-
-    if (confirm(`⚠️ ATTENTION ⚠️\nVoulez-vous vraiment supprimer définitivement le produit "${product.nom}" ?`)) {
-        db = db.filter(p => p.id !== id);
-        localStorage.setItem('diouf_ous_db', JSON.stringify(db));
-        renderInventory(); // Rafraîchir la liste
-        alert("Produit supprimé.");
-    }
-}
-
-// Fonction pour charger les données dans le formulaire
 function prepareEdit(id) {
     let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
     const p = db.find(p => p.id === id);
     
     if (confirm(`Voulez-vous modifier les informations de "${p.nom}" ?`)) {
-        editingId = p.id; // On stocke l'ID qu'on modifie
+        editingId = p.id; 
         
-        // On remplit le formulaire
         setMode(p.mode === 'DETAIL');
-        document.getElementById('p-code').value = p.code;
+        document.getElementById('p-code').value = p.code || '';
         document.getElementById('p-nom').value = p.nom;
         document.getElementById('p-cat').value = p.cat;
         document.getElementById('p-nb-cont').value = p.nbContenants;
@@ -412,15 +379,24 @@ function prepareEdit(id) {
         document.getElementById('p-pv').value = p.pv;
         
         calculateStock();
-        
-        // On remonte en haut de la page
         window.scrollTo({top: 0, behavior: 'smooth'});
-        togglePage('inventaire'); // Ferme l'inventaire pour montrer le formulaire
+        togglePage('inventaire'); 
         
-        // Changer l'apparence du bouton de validation
         const btn = document.querySelector('.btn-save');
         btn.innerText = "💾 METTRE À JOUR LE PRODUIT";
-        btn.style.background = "var(--w)";
+        btn.style.background = "var(--dark)";
+    }
+}
+
+function confirmDelete(id) {
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    const product = db.find(p => p.id === id);
+
+    if (confirm(`⚠️ ATTENTION ⚠️\nVoulez-vous vraiment supprimer définitivement le produit "${product.nom}" ?`)) {
+        db = db.filter(p => p.id !== id);
+        localStorage.setItem('diouf_ous_db', JSON.stringify(db));
+        renderInventory(); 
+        alert("Produit supprimé.");
     }
 }
 
@@ -429,18 +405,15 @@ function toggleTable() {
     const tableView = document.getElementById('table-view');
     const invList = document.getElementById('inventory-list');
 
-    // Si la page d'inventaire est cachée, on l'affiche d'abord
-    if (invPage.style.display === 'none') {
-        togglePage('inventaire');
-    }
+    if (invPage.style.display === 'none') togglePage('inventaire');
 
     if (tableView.style.display === 'none') {
         renderTable();
         tableView.style.display = 'block';
-        invList.style.display = 'none'; // On cache les étiquettes pour mieux voir le tableau
+        invList.style.display = 'none'; 
     } else {
         tableView.style.display = 'none';
-        invList.style.display = 'block'; // On remet les étiquettes
+        invList.style.display = 'block'; 
     }
 }
 
@@ -450,16 +423,13 @@ function renderTable() {
     tbody.innerHTML = "";
 
     db.forEach(p => {
-        // 1. Calcul de conversion physique (Sacs/Bidons + Reste)
         const nbSacs = Math.floor(p.stockTotal / p.capaciteUnite);
         const reste = (p.stockTotal % p.capaciteUnite).toFixed(2);
         
-        // 2. Calculs Financiers
         const valeurAchatTotal = p.stockTotal * p.pa;
         const valeurVenteTotal = p.stockTotal * p.pv;
         const beneficeTotal = valeurVenteTotal - valeurAchatTotal;
 
-        // Labels dynamiques selon le type
         const unite = p.mode === 'DETAIL' ? 'kg/L' : 'pcs';
         const contenant = p.mode === 'DETAIL' ? 'sacs/bidons' : 'ctn';
 
@@ -495,277 +465,126 @@ function renderTable() {
         tbody.appendChild(row);
     });
 }
-    function naviguer(idPage) {
-    // 1. On cache tout
-    document.getElementById('hub-accueil').style.display = 'none';
-    document.getElementById('page-stock').style.display = 'none';
-    document.getElementById('page-vente').style.display = 'none';
-    document.getElementById('page-banque').style.display = 'none';
 
-    // 2. Sécurité : Si on n'est PLUS sur la page vente, on arrête la caméra
-    if (idPage !== 'page-vente' && html5QrCodeVente) {
-        html5QrCodeVente.stop().catch(err => console.log(err));
-    }
+function exportToExcel() {
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    if(db.length === 0) return alert("Aucune donnée à exporter");
 
-    // 3. On affiche la page
-    document.getElementById(idPage).style.display = 'block';
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Date;Code;Produit;Categorie;Stock Total;Sacs Entiers;Reste Detail;Prix Achat;Valeur Stock\n";
+
+    db.forEach(p => {
+        const nbSacs = Math.floor(p.stockTotal / p.capaciteUnite);
+        const reste = (p.stockTotal % p.capaciteUnite).toFixed(2);
+        const valeur = p.stockTotal * p.pa;
+        
+        let row = [
+            new Date().toLocaleDateString(), p.code, p.nom, p.cat,
+            p.stockTotal, nbSacs, reste, p.pa, valeur
+        ].join(";");
+        csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "Inventaire_Diouf_Ous_" + new Date().toLocaleDateString() + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
+
 function visualiserEtExporter() {
-    // 1. On affiche d'abord le tableau pour que l'utilisateur voie ce qu'il exporte
     const tableView = document.getElementById('table-view');
     const invList = document.getElementById('inventory-list');
     const invPage = document.getElementById('page-inventaire');
 
-    // On s'assure que la section inventaire est ouverte
     invPage.style.display = 'block';
-    
-    // On génère et on montre le tableau
     renderTable();
     tableView.style.display = 'block';
-    invList.style.display = 'none'; // On cache les cartes simples pour ne voir que le registre
+    invList.style.display = 'none'; 
 
-    // 2. On lance l'exportation après un court instant
     setTimeout(() => {
         if(confirm("Le registre complet est affiché à l'écran. Voulez-vous télécharger le fichier Excel ?")) {
             exportToExcel();
         }
     }, 500);
 }
-  let panier = [];
-let html5QrCodeVente;
-    async function startScannerVente() {
-    // Si un scanner existe déjà, on essaie de l'arrêter proprement avant de recommencer
+
+// ==========================================
+// 5. SCANNERS (STOCK ET CAISSE)
+// ==========================================
+function startScan() {
+    document.getElementById('reader-modal').style.display = 'flex';
+    html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+        document.getElementById('p-code').value = txt;
+        stopScan();
+    }).catch(err => console.error(err));
+}
+
+async function stopScan() {
+    if(html5QrCode) await html5QrCode.stop();
+    document.getElementById('reader-modal').style.display = 'none';
+}
+
+async function startScannerVente() {
     if (html5QrCodeVente) {
-        try {
-            await html5QrCodeVente.stop();
-        } catch (e) {
-            // Déjà arrêté ou pas lancé
-        }
+        try { await html5QrCodeVente.stop(); } catch (e) {}
     }
 
     html5QrCodeVente = new Html5Qrcode("reader-vente");
-    
-    const config = { 
-        fps: 20, 
-        qrbox: { width: 250, height: 150 },
-        aspectRatio: 1.0 
-    };
+    const config = { fps: 20, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0 };
 
-    html5QrCodeVente.start(
-        { facingMode: "environment" }, 
-        config,
-        (txt) => { 
-            chargerProduitScanne(txt); 
-            // Optionnel : ajouter une petite vibration mobile
-            if(navigator.vibrate) navigator.vibrate(100);
-        }
-    ).catch(err => {
-        console.error("Erreur Caméra:", err);
-        // Si erreur, on affiche un message dans la zone caméra
-        document.getElementById('reader-vente').innerHTML = 
-            `<p style="color:white;text-align:center;padding-top:50px;">Erreur caméra : Vérifiez les autorisations.</p>`;
+    html5QrCodeVente.start({ facingMode: "environment" }, config, (txt) => { 
+        chargerProduitScanne(txt); 
+        if(navigator.vibrate) navigator.vibrate(100);
+    }).catch(err => {
+        document.getElementById('reader-vente').innerHTML = `<p style="color:white;text-align:center;padding-top:50px;">Erreur caméra</p>`;
     });
+}
+
+function toggleCamera() {
+    const btn = document.getElementById('btn-toggle-cam');
+    if (!cameraActive) {
+        startScannerVente();
+        btn.innerText = "🔴 ÉTEINDRE LE SCANNER";
+        btn.style.background = "var(--d)";
+        cameraActive = true;
+    } else {
+        if (html5QrCodeVente) {
+            html5QrCodeVente.stop().then(() => {
+                btn.innerText = "📷 ALLUMER LE SCANNER";
+                btn.style.background = "var(--s)";
+                cameraActive = false;
+            });
+        }
+    }
 }
 
 function chargerProduitScanne(code) {
     let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
-    let produit = db.find(p => p.code === code);
-
-    if (produit) {
-        ajouterAuPanier(produit);
-        // Petit bip ou vibration si possible (optionnel)
-    } else {
-        alert("Produit inconnu dans le stock !");
-    }
+    let p = db.find(prod => prod.code === code);
+    if (p) ajouterAuPanier(p);
+    else alert("Produit inconnu. Ce code n'est pas dans votre stock : " + code);
 }
 
-function ajouterAuPanier(produit) {
-    // On vérifie si le produit est déjà dans le panier
-    let existant = panier.find(item => item.id === produit.id);
-    if (existant) {
-        existant.qte++;
-    } else {
-        panier.push({
-            id: produit.id,
-            nom: produit.nom,
-            prix: produit.pv,
-            qte: 1,
-            visible: true
-        });
-    }
-    renderPanier();
-}
-
-function renderPanier() {
-    const liste = document.getElementById('panier-liste');
-    const totalDisplay = document.getElementById('total-panier');
-    liste.innerHTML = "";
-    let total = 0;
-
-    if (panier.length === 0) {
-        liste.innerHTML = '<p id="panier-vide" style="text-align: center; color: #94a3b8; font-style: italic;">Scannez un produit...</p>';
-    }
-
-    panier.forEach((item, index) => {
-        if (item.visible) total += (item.prix * item.qte);
-        
-        const div = document.createElement('div');
-        div.style = `display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f1f5f9; ${item.visible ? '' : 'opacity: 0.3;'}`;
-        div.innerHTML = `
-            <div style="flex: 1;">
-                <b style="font-size: 0.9rem;">${item.nom}</b><br>
-                <small>${item.prix} F x ${item.qte}</small>
-            </div>
-            <div style="display: flex; gap: 5px; align-items: center;">
-                <button onclick="modifierQte(${index}, -1)" style="padding: 5px 10px; border-radius: 5px; border:none; background:#e2e8f0;">-</button>
-                <span style="font-weight:800; min-width: 20px; text-align:center;">${item.qte}</span>
-                <button onclick="modifierQte(${index}, 1)" style="padding: 5px 10px; border-radius: 5px; border:none; background:#e2e8f0;">+</button>
-                <button onclick="toggleVisibilite(${index})" style="margin-left:10px; border:none; background:none; cursor:pointer;">${item.visible ? '👁️' : '🙈'}</button>
-            </div>
-        `;
-        liste.appendChild(div);
-    });
-
-    totalDisplay.innerText = total.toLocaleString();
-    //calculerRendu(); // Met à jour la monnaie si le total change
-}
-
-function modifierQte(index, delta) {
-    panier[index].qte += delta;
-    if (panier[index].qte <= 0) panier.splice(index, 1);
-    renderPanier();
-}
-
-function toggleVisibilite(index) {
-    panier[index].visible = !panier[index].visible;
-    renderPanier();
-}
-
-// Fonctions de Monnaie
-function toggleMonnaie() {
-    const isChecked = document.getElementById('check-monnaie').checked;
-    document.getElementById('bloc-monnaie').style.display = isChecked ? 'block' : 'none';
-}
-
-function calculerRendu() {
-    const total = parseFloat(document.getElementById('total-panier').innerText.replace(/\s/g, '')) || 0;
-    const recu = parseFloat(document.getElementById('v-recu').value) || 0;
-    const rendu = recu - total;
-    document.getElementById('v-rendu').innerText = (rendu > 0 ? rendu.toLocaleString() : 0) + " F";
-}  
-    function validerVente() {
-    if (panier.length === 0) return alert("Le panier est vide !");
-    
-    const totalVente = parseFloat(document.getElementById('total-panier').innerText.replace(/\s/g, ''));
-    if (!confirm(`Confirmer la vente de ${totalVente} F ?\nCela mettra à jour les stocks.`)) return;
-
-    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
-
-    // Mettre à jour le stock pour chaque item du panier
-    panier.forEach(item => {
-        if (item.visible) {
-            let produitStock = db.find(p => p.id === item.id);
-            if (produitStock) {
-                // On soustrait la quantité (en kg ou en unité selon le mode)
-                produitStock.stockTotal -= item.qte;
-                if (produitStock.stockTotal < 0) produitStock.stockTotal = 0;
-            }
-        }
-    });
-
-    // Sauvegarder dans la base de données
-    localStorage.setItem('diouf_ous_db', JSON.stringify(db));
-
-    // Réinitialiser le panier et l'affichage
-    panier = [];
-    document.getElementById('v-recu').value = "";
-    renderPanier();
-    alert("Vente enregistrée ! Le stock a été mis à jour.");
-    
-    // Retour à l'accueil
-    naviguer('hub-accueil');
-}
-    let cameraActive = false;
-
-function ouvrirCaisse() {
-    naviguer('page-vente'); // Affiche le bloc HTML de la vente
-    renderPanier();         // Prépare l'affichage du panier (même vide)
-    
-    // On vide les champs de recherche par sécurité
-    const champRecherche = document.getElementById('recherche-produit');
-    const resultDiv = document.getElementById('resultats-recherche');
-    
-    if (champRecherche) champRecherche.value = "";
-    if (resultDiv) resultDiv.innerHTML = "";
-}
-async function toggleCamera() {
-    const btn = document.getElementById('btn-toggle-cam');
-    
-    if (!cameraActive) {
-        try {
-            btn.innerText = "⌛ DÉMARRAGE...";
-            await startScannerVente(); 
-            cameraActive = true;
-            btn.innerText = "🚫 ARRÊTER LE SCANNER";
-            btn.style.background = "var(--d)";
-        } catch (err) {
-            console.error(err);
-            btn.innerText = "📷 RÉESSAYER";
-            btn.style.background = "var(--s)";
-        }
-    } else {
-        if (html5QrCodeVente) {
-            await html5QrCodeVente.stop();
-        }
-        document.getElementById('reader-vente').innerHTML = "";
-        cameraActive = false;
-        btn.innerText = "📷 ALLUMER LE SCANNER";
-        btn.style.background = "var(--s)";
-    }
-}
-
-function ajouterAuPanierDirect(id) {
-    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
-    let p = db.find(item => item.id == id);
-    if(p) {
-        ajouterAuPanier(p);
-        document.getElementById('recherche-produit').value = "";
-        document.getElementById('resultats-recherche').innerHTML = "";
-    }
-}
-     
-
-function naviguer(idPage) {
-    // 1. On cache toutes les sections possibles
-    const pages = ['hub-accueil', 'page-stock', 'page-vente', 'page-banque', 'page-inventaire'];
-    pages.forEach(p => {
-        const el = document.getElementById(p);
-        if (el) el.style.display = 'none';
-    });
-
-    // 2. Sécurité : Si on quitte la vente, on éteint la caméra
-    if (idPage !== 'page-vente' && cameraActive) {
-        stopScannerVente();
-    }
-
-    // 3. On affiche la page demandée
-    const target = document.getElementById(idPage);
-    if (target) target.style.display = 'block';
-}
-    function rechercherManuellement() {
+// ==========================================
+// 6. MODULE CAISSE & PANIER
+// ==========================================
+function rechercherManuellement() {
     const query = document.getElementById('recherche-produit').value.toLowerCase();
     const resultDiv = document.getElementById('resultats-recherche');
     resultDiv.innerHTML = "";
-
-    if (query.length < 2) return; 
+    if (query.length < 2) return;
 
     let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
-    let filtrés = db.filter(p => p.nom.toLowerCase().includes(query) || p.code.includes(query));
+    let filtres = db.filter(p => p.nom.toLowerCase().includes(query) || (p.code && p.code.includes(query)));
 
-    filtrés.forEach(p => {
+    filtres.forEach(p => {
         const item = document.createElement('div');
-        item.style = "padding:12px; border-bottom:1px solid #eee; cursor:pointer; display:flex; justify-content:space-between; background:#f8fafc; border-radius:8px; margin-bottom:5px;";
-        item.innerHTML = `<span><b>${p.nom}</b> (${p.pv} F)</span> <span style="color:var(--s); font-weight:800;">+ AJOUTER</span>`;
+        item.style = "padding:12px; border-bottom:1px solid #eee; cursor:pointer; background:#f8fafc; margin-bottom:5px; border-radius:8px; color:var(--dark); display:flex; justify-content:space-between;";
+        item.innerHTML = `<b>${p.nom}</b> <span style="color:var(--s); font-weight:bold;">+ AJOUTER</span>`;
         item.onclick = () => {
             ajouterAuPanier(p);
             document.getElementById('recherche-produit').value = "";
@@ -775,24 +594,71 @@ function naviguer(idPage) {
     });
 }
 
-async function stopScannerVente() {
-    if (html5QrCodeVente) {
-        try {
-            await html5QrCodeVente.stop();
-        } catch (e) { console.log("Scanner déjà arrêté"); }
-        document.getElementById('reader-vente').innerHTML = ""; 
+function ajouterAuPanier(p) {
+    let existant = panier.find(item => item.id === p.id);
+    if (existant) existant.qte++;
+    else panier.push({ id: p.id, nom: p.nom, prix: p.pv, qte: 1 });
+    renderPanier();
+}
+
+function renderPanier() {
+    const liste = document.getElementById('panier-liste');
+    const totalDisplay = document.getElementById('total-panier');
+    if(!liste || !totalDisplay) return;
+
+    liste.innerHTML = "";
+    let total = 0;
+
+    if (panier.length === 0) {
+        liste.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">Panier vide</p>';
     }
-    cameraActive = false;
-    const btn = document.getElementById('btn-toggle-cam');
-    if (btn) {
-        btn.innerText = "📷 ALLUMER LE SCANNER";
-        btn.style.background = "var(--s)";
-    }
-}    
+
+    panier.forEach((item, index) => {
+        total += (parseFloat(item.prix) * item.qte);
+        const d = document.createElement('div');
+        d.style = "display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee; color:var(--dark);";
+        d.innerHTML = `
+            <div style="flex:1"><b>${item.nom}</b><br><small>${item.prix} F</small></div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button onclick="modifierQtePanier(${index},-1)" style="width:30px;height:30px;border-radius:5px;border:none;background:#e2e8f0;font-weight:bold;">-</button>
+                <b style="min-width:20px;text-align:center;">${item.qte}</b>
+                <button onclick="modifierQtePanier(${index},1)" style="width:30px;height:30px;border-radius:5px;border:none;background:#e2e8f0;font-weight:bold;">+</button>
+            </div>`;
+        liste.appendChild(d);
+    });
+    totalDisplay.innerText = total.toLocaleString();
+}
+
+function modifierQtePanier(index, delta) {
+    panier[index].qte += delta;
+    if (panier[index].qte <= 0) panier.splice(index, 1);
+    renderPanier();
+}
+
+function validerVente() {
+    if (panier.length === 0) return alert("Le panier est vide !");
+    if (!confirm("Confirmer la vente ? Le stock sera mis à jour.")) return;
+
+    let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
+    
+    panier.forEach(item => {
+        let p = db.find(prod => prod.id === item.id);
+        if (p) p.stockTotal = parseFloat(p.stockTotal) - item.qte;
+    });
+
+    localStorage.setItem('diouf_ous_db', JSON.stringify(db));
+    panier = [];
+    renderPanier();
+    alert("Vente enregistrée avec succès !");
+    naviguer('hub-accueil');
+}
+
+
 </script>
 
 </body>
 </html>
+
 
 
 
