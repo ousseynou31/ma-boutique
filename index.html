@@ -511,29 +511,42 @@ function genererPDF() {
 let html5QrCode;
 
 function startScan() {
-    // 1. Afficher le conteneur du scanner
     document.getElementById('reader-container').style.display = 'block';
     
-    html5QrCode = new Html5Qrcode("reader");
-    
-    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+    // Configuration pour supporter TOUS les types de codes-barres de produits
+    const formatsToSupport = [
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.UPC_A
+    ];
 
-    // 2. Démarrer la caméra arrière
+    html5QrCode = new Html5Qrcode("reader", { 
+        formatsToSupport: formatsToSupport,
+        verbose: false 
+    });
+    
+    const config = { 
+        fps: 20, // Plus d'images par seconde pour plus de réactivité
+        qrbox: { width: 280, height: 180 }, // Zone de lecture plus large pour les codes longs
+        aspectRatio: 1.0
+    };
+
     html5QrCode.start(
         { facingMode: "environment" }, 
         config,
         (decodedText) => {
-            // Si le scan réussit :
             document.getElementById('p-code').value = decodedText;
-            stopScan(); // On arrête la caméra
-            vibratePhone(); // Petit retour tactile
+            stopScan();
+            if (navigator.vibrate) navigator.vibrate(200);
+            
+            // OPTIONNEL : Recherche automatique du nom si le code existe déjà
+            chercherProduitParCode(decodedText);
         },
-        (errorMessage) => {
-            // On ignore les erreurs de lecture continue
-        }
+        (errorMessage) => { /* Scan en cours... */ }
     ).catch((err) => {
-        alert("Erreur caméra : Assurez-vous d'avoir autorisé l'accès.");
-        console.error(err);
+        console.error("Erreur d'initialisation : ", err);
     });
 }
 
@@ -552,6 +565,16 @@ function vibratePhone() {
     if (navigator.vibrate) navigator.vibrate(100);
 }
 
+    function chercherProduitParCode(code) {
+    const produitExistant = db.find(p => p.code === code);
+    if (produitExistant) {
+        document.getElementById('p-nom').value = produitExistant.nom;
+        document.getElementById('p-pa').value = produitExistant.pa;
+        document.getElementById('p-pv').value = produitExistant.pv;
+        document.getElementById('p-cat').value = produitExistant.cat;
+        alert("Produit reconnu : " + produitExistant.nom);
+    }
+}
 // Les fonctions de scan et de caisse restent identiques à votre version V25
 function ouvrirCaisse() { alert("Caisse prête (identique à votre V25)"); }
 
@@ -603,4 +626,5 @@ function ouvrirCaisse() { alert("Caisse prête (identique à votre V25)"); }
 </div>
 </body>
 </html>
+
 
