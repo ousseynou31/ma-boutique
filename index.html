@@ -96,6 +96,10 @@
             <div style="display:flex; gap:10px;">
                 <input type="text" id="p-code" placeholder="Code-barres">
                 <button onclick="startScan()" style="background:var(--p); border:none; padding:10px 15px; border-radius:12px; color:white;">📷</button>
+                <div id="reader-container" style="display:none; margin-top:10px; border-radius:15px; overflow:hidden; border:2px solid var(--p);">
+    <div id="reader" style="width:100%;"></div>
+    <button onclick="stopScan()" style="width:100%; background:var(--d); color:white; border:none; padding:10px; font-weight:800;">ANNULER LE SCAN</button>
+</div>
             </div>
             <input type="text" id="p-nom" placeholder="Nom du produit" style="margin-top:10px;">
             
@@ -504,7 +508,49 @@ function genererPDF() {
     });
 }
 
+let html5QrCode;
 
+function startScan() {
+    // 1. Afficher le conteneur du scanner
+    document.getElementById('reader-container').style.display = 'block';
+    
+    html5QrCode = new Html5Qrcode("reader");
+    
+    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+
+    // 2. Démarrer la caméra arrière
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        config,
+        (decodedText) => {
+            // Si le scan réussit :
+            document.getElementById('p-code').value = decodedText;
+            stopScan(); // On arrête la caméra
+            vibratePhone(); // Petit retour tactile
+        },
+        (errorMessage) => {
+            // On ignore les erreurs de lecture continue
+        }
+    ).catch((err) => {
+        alert("Erreur caméra : Assurez-vous d'avoir autorisé l'accès.");
+        console.error(err);
+    });
+}
+
+function stopScan() {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            document.getElementById('reader-container').style.display = 'none';
+        }).catch(err => console.error(err));
+    } else {
+        document.getElementById('reader-container').style.display = 'none';
+    }
+}
+
+// Optionnel : Vibration si disponible sur le téléphone
+function vibratePhone() {
+    if (navigator.vibrate) navigator.vibrate(100);
+}
 
 // Les fonctions de scan et de caisse restent identiques à votre version V25
 function ouvrirCaisse() { alert("Caisse prête (identique à votre V25)"); }
@@ -557,3 +603,4 @@ function ouvrirCaisse() { alert("Caisse prête (identique à votre V25)"); }
 </div>
 </body>
 </html>
+
