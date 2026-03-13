@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diouf Ous V32 - Intégral Dark Edition</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <title>Diouf Ous V32 - CLOUD FINAL EDITION</title>
     
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+
     <style>
         :root { 
             --p: #6366f1; --s: #10b981; --d: #ef4444; 
             --bg: #000000; --card: #111111; --text: #ffffff; --border: #ffffff;
         }
-
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
         .container { max-width: 600px; margin: auto; }
-
+        
+        /* BOUTONS 3D */
         .btn-3d {
             width: 100%; padding: 22px; margin-bottom: 15px; border-radius: 16px;
             border: 2px solid var(--border); background: #1a1a1a; color: white;
@@ -28,291 +29,210 @@
         .btn-3d:active { top: 4px; box-shadow: 0 2px 0px 0px rgba(255, 255, 255, 0.2); }
         
         .card { background: var(--card); border-radius: 20px; padding: 20px; border: 1px solid #333; margin-bottom: 20px; }
-        .section-title { font-weight: 800; font-size: 1.2rem; margin-bottom: 20px; color: var(--p); display: flex; align-items: center; gap: 10px; }
-        
         .type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
         .t-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #333; font-weight: 700; cursor: pointer; text-align: center; color: #888; }
         .t-btn.active { border-color: var(--p); color: var(--p); background: #1e1b4b; }
-
-        label { display: block; font-size: 0.8rem; font-weight: 700; margin-top: 15px; margin-bottom: 5px; color: #aaa; }
-        input, select { width: 100%; padding: 14px; background: #000; border: 1px solid #444; border-radius: 12px; color: white; outline: none; }
         
-        .calc-box { background: #000; padding: 15px; border-radius: 15px; border: 1px solid #333; margin-top: 10px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .result-banner { background: #fff; color: #000; padding: 15px; border-radius: 12px; text-align: center; margin-top: 15px; font-weight: 800; }
-        
+        input, select { width: 100%; padding: 14px; background: #000; border: 1px solid #444; border-radius: 12px; color: white; outline: none; margin-top: 5px; }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; display: none; margin-bottom: 10px; border: 2px solid var(--p); }
         .full-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; display: none; overflow-y: auto; padding: 20px; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; color: white; font-size: 0.8rem; }
-        th { background: #222; padding: 10px; text-align: left; border: 1px solid #333; }
-        td { padding: 10px; border: 1px solid #333; }
-
-        @keyframes clignotement-rouge {
-            0% { background-color: #450a0a; }
-            50% { background-color: #ef4444; color: white; }
-            100% { background-color: #450a0a; }
-        }
-        .stock-critique { animation: clignotement-rouge 1.5s infinite; font-weight: 800; }
-
-        /* Style pour le scanner */
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-bottom: 15px; border: 2px solid var(--p); display: none; }
+        table { width: 100%; border-collapse: collapse; color: white; font-size: 0.8rem; }
+        th, td { padding: 10px; border: 1px solid #333; text-align: center; }
+        
+        .sync-badge { position: fixed; bottom: 10px; right: 10px; font-size: 0.7rem; padding: 5px 10px; border-radius: 20px; background: #222; color: var(--s); }
     </style>
 </head>
 <body>
 
-<div id="hub-accueil" style="display: block;">
-    <h2 style="text-align:center; margin: 30px 0; font-weight: 800;">MENU PRINCIPAL V32</h2>
+<div id="hub-accueil">
+    <h2 style="text-align:center; margin: 30px 0; font-weight: 800;">DIOUF OUS V32 <span style="color:var(--s)">●</span> CLOUD</h2>
     <div class="container">
         <button class="btn-3d" onclick="naviguer('page-stock')"><span>📦</span> GESTION DES STOCKS</button>
-        <button class="btn-3d" onclick="ouvrirCaisse()"><span>🛒</span> CAISSE DE VENTE</button>
-        <button class="btn-3d" onclick="naviguer('page-banque')"><span>📈</span> BANQUE & PROFITS</button>
+        <button class="btn-3d" onclick="alert('Caisse Activée')"><span>🛒</span> CAISSE DE VENTE</button>
+        <button class="btn-3d" onclick="naviguer('screen-historique')"><span>📜</span> HISTORIQUE & PROFITS</button>
         <button class="btn-3d" onclick="naviguer('page-depenses')"><span>💸</span> DÉPENSES EFFECTUÉES</button>
-        <button class="btn-3d" onclick="naviguer('page-infos-travail')"><span>📝</span> INFOS APRÈS TRAVAIL</button>
-        <button class="btn-3d" style="border-color:var(--d); color:var(--d); margin-top:20px;" onclick="reinitialiserTout()"><span>⚠️</span> RÉINITIALISER LE STOCK</button>
+        <button class="btn-3d" style="border-color:var(--d); color:var(--d); margin-top:40px;" onclick="reinitialiserTout()"><span>⚠️</span> RESET TOTAL</button>
     </div>
 </div>
 
 <div id="page-stock" class="full-page">
-    <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px; cursor:pointer; margin-bottom:20px;">🏠 RETOUR ACCUEIL</button>
+    <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px; margin-bottom:20px;">🏠 RETOUR</button>
     
     <div class="container">
         <div class="card">
-            <div class="section-title">📦 Nouvel Enregistrement</div>
-            
-            <label>Type de produit</label>
+            <div id="reader"></div>
             <div class="type-selector">
-                <div id="t-simple" class="t-btn active" onclick="setMode(false)">SIMPLE<br><small>(Unité/Paquet)</small></div>
-                <div id="t-complex" class="t-btn" onclick="setMode(true)">AU DÉTAIL<br><small>(Kilo/Litre)</small></div>
+                <div id="t-simple" class="t-btn active" onclick="setMode(false)">SIMPLE</div>
+                <div id="t-complex" class="t-btn" onclick="setMode(true)">AU DÉTAIL</div>
             </div>
 
-            <label>Identification</label>
-            <div id="reader"></div> <div style="display:flex; gap:10px;">
+            <div style="display:flex; gap:10px;">
                 <input type="text" id="p-code" placeholder="Code-barres">
-                <button onclick="startScan()" id="btn-scan" style="background:var(--p); border:none; padding:10px 15px; border-radius:12px; color:white;">📷</button>
+                <button onclick="startScan()" style="background:var(--p); border:none; padding:15px; border-radius:12px; color:white; cursor:pointer;">📷</button>
             </div>
             
-            <input type="text" id="p-nom" placeholder="Nom du produit" style="margin-top:10px;">
-            
-            <select id="p-cat" style="margin-top:10px;">
-                <option value="">Sélectionner une catégorie</option>
+            <input type="text" id="p-nom" placeholder="Nom du produit">
+            <select id="p-cat">
                 <option value="Alimentaire">Alimentaire</option>
                 <option value="Boisson">Boisson</option>
-                <option value="Hygiène">Hygiène</option>
-                <option value="Entretien">Entretien</option>
+                <option value="Divers">Divers</option>
             </select>
 
-            <label>Inventaire de l'arrivage</label>
-            <div class="calc-box">
-                <div class="grid">
-                    <div><small id="label-nb">Nombre de cartons</small><input type="number" id="p-nb-cont" oninput="calculateStock()"></div>
-                    <div><small id="label-capa">Unités par carton</small><input type="number" id="p-capa" oninput="calculateStock()"></div>
-                </div>
-                <div class="result-banner">STOCK TOTAL : <span id="total-display">0</span> <span id="unit-label">unités</span></div>
-            </div>
-
-            <label>Configuration des prix</label>
-            <div class="grid">
-                <div><small>Prix Achat (PA)</small><input type="number" id="p-pa" placeholder="PA"></div>
-                <div><small>Prix Vente (PV)</small><input type="number" id="p-pv" placeholder="PV"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
+                <input type="number" id="p-nb-cont" placeholder="Qte Colis" oninput="calculate()">
+                <input type="number" id="p-capa" placeholder="Unités/Colis" oninput="calculate()">
             </div>
             
-            <button id="btn-main-save" class="btn-3d" style="background:var(--p); border:none; margin-top:20px; justify-content:center;" onclick="saveToDatabase()">VALIDER L'ENREGISTREMENT</button>
-            <button id="btn-cancel-edit" class="btn-3d" style="background:#444; border:none; display:none; justify-content:center;">❌ ANNULER LA MODIFICATION</button>
-        </div>
+            <div style="background:#fff; color:#000; padding:15px; border-radius:12px; text-align:center; margin:15px 0; font-weight:800;">
+                STOCK TOTAL : <span id="total-display">0</span>
+            </div>
 
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-3d" style="flex:1; font-size:0.8rem;" onclick="toggleInventaire()">📂 LISTE PRODUITS</button>
-            <button class="btn-3d" style="flex:1; font-size:0.8rem; border-color:var(--s);" onclick="ouvrirHistorique()">📜 HISTORIQUE</button>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <input type="number" id="p-pa" placeholder="Prix Achat">
+                <input type="number" id="p-pv" placeholder="Prix Vente">
+            </div>
+            
+            <button id="btn-save" class="btn-3d" style="background:var(--s); border:none; margin-top:20px; justify-content:center;" onclick="saveData()">SAUVEGARDER AU CLOUD</button>
         </div>
     </div>
 </div>
 
-<script>
-let isDetailMode = false;
-let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
-let html5QrCode = null;
-
-// --- NAVIGATION ---
-function naviguer(id) {
-    document.getElementById('hub-accueil').style.display = 'none';
-    document.querySelectorAll('.full-page').forEach(p => p.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    if (id !== 'page-stock' && html5QrCode) stopScan();
-}
-
-// --- SCANNER (CORRECTION CAMERA) ---
-function startScan() {
-    const readerDiv = document.getElementById('reader');
-    readerDiv.style.display = 'block';
+<div id="screen-historique" class="full-page">
+    <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px; margin-bottom:20px;">🏠 RETOUR</button>
+    <button onclick="genererPDF()" style="background:var(--p); color:white; padding:10px; border-radius:10px; float:right;">📄 PDF</button>
     
-    if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode("reader");
-    }
-
-    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-    
-    html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-        document.getElementById('p-code').value = decodedText;
-        stopScan();
-        alert("Produit détecté !");
-    }).catch(err => {
-        console.error("Erreur Caméra:", err);
-        alert("Impossible d'ouvrir la caméra. Vérifiez les autorisations.");
-    });
-}
-
-function stopScan() {
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-            document.getElementById('reader').style.display = 'none';
-        });
-    }
-}
-
-// --- LOGIQUE STOCK ---
-function setMode(mode) {
-    isDetailMode = mode;
-    document.getElementById('t-complex').classList.toggle('active', mode);
-    document.getElementById('t-simple').classList.toggle('active', !mode);
-    document.getElementById('label-nb').innerText = mode ? "Nombre de sacs / bidons" : "Nombre de cartons / caisses";
-    document.getElementById('label-capa').innerText = mode ? "Kilos / Litres par sac" : "Unités par carton";
-    document.getElementById('unit-label').innerText = mode ? "détails" : "unités";
-    calculateStock();
-}
-
-function calculateStock() {
-    const nb = parseFloat(document.getElementById('p-nb-cont').value) || 0;
-    const capa = parseFloat(document.getElementById('p-capa').value) || 0;
-    document.getElementById('total-display').innerText = (nb * capa).toLocaleString();
-}
-
-function saveToDatabase() {
-    const nom = document.getElementById('p-nom').value;
-    const stockTotal = parseFloat(document.getElementById('total-display').innerText.replace(/\s/g, ''));
-    
-    if(!nom || !stockTotal) return alert("Veuillez remplir le nom et les quantités.");
-
-    const p = {
-        id: Date.now(),
-        dateAjout: new Date().toLocaleString('fr-FR'),
-        nom: nom,
-        code: document.getElementById('p-code').value,
-        cat: document.getElementById('p-cat').value,
-        nb: document.getElementById('p-nb-cont').value,
-        capa: document.getElementById('p-capa').value,
-        stockTotal: stockTotal,
-        pa: document.getElementById('p-pa').value || 0,
-        pv: document.getElementById('p-pv').value || 0
-    };
-
-    db.unshift(p);
-    localStorage.setItem('diouf_ous_db', JSON.stringify(db));
-    alert("Produit enregistré avec succès !");
-    restaurerBoutonInitial();
-}
-
-function restaurerBoutonInitial() {
-    document.querySelectorAll('input').forEach(i => i.value = "");
-    document.getElementById('total-display').innerText = "0";
-    const btnSave = document.getElementById('btn-main-save');
-    btnSave.innerText = "VALIDER L'ENREGISTREMENT";
-    btnSave.style.background = "var(--p)";
-    btnSave.onclick = saveToDatabase;
-    document.getElementById('btn-cancel-edit').style.display = "none";
-}
-
-function reinitialiserTout() {
-    if(confirm("⚠️ ATTENTION : Cela effacera tout votre stock. Confirmer ?")) {
-        localStorage.clear();
-        location.reload();
-    }
-}
-
-// --- LES ÉCRANS PLEINS (STOCKS & HISTORIQUE) ---
-function toggleInventaire() {
-    const screen = document.getElementById('full-stock-screen');
-    const container = document.getElementById('container-fiches-full');
-    container.innerHTML = "";
-    screen.style.display = "block";
-
-    db.forEach(p => {
-        const gain = (p.pv - p.pa) * p.stockTotal;
-        container.innerHTML += `
-            <div class="card">
-                <small style="color:var(--p)">${p.dateAjout}</small>
-                <h3>${p.nom} <span style="font-size:0.7rem; background:#333; padding:3px 7px; border-radius:5px;">${p.cat}</span></h3>
-                <div class="grid">
-                    <div><small>STOCK TOTAL</small><br><b style="color:var(--s); font-size:1.2rem;">${p.stockTotal}</b></div>
-                    <div><small>GAIN PRÉVU</small><br><b style="color:#fbbf24;">+${gain.toLocaleString()} F</b></div>
-                </div>
-                <div style="margin-top:15px; display:flex; gap:10px;">
-                    <button onclick="supprimerProduit(${p.id})" style="flex:1; padding:10px; background:none; border:1px solid var(--d); color:var(--d); border-radius:10px;">Supprimer</button>
-                </div>
-            </div>`;
-    });
-}
-
-function ouvrirHistorique() {
-    const screen = document.getElementById('screen-historique');
-    const tbody = document.getElementById('body-historique');
-    tbody.innerHTML = "";
-    screen.style.display = "block";
-    
-    let totalBenefice = 0;
-    db.forEach(p => {
-        const benef = (p.pv - p.pa) * p.stockTotal;
-        totalBenefice += benef;
-        tbody.innerHTML += `
-            <tr style="border-bottom:1px solid #222;">
-                <td>${p.dateAjout}</td>
-                <td>${p.nom}</td>
-                <td>${p.code || '---'}</td>
-                <td>${p.stockTotal}</td>
-                <td>${p.pa} F</td>
-                <td>${p.pv} F</td>
-                <td style="color:#fbbf24; font-weight:800;">${benef.toLocaleString()} F</td>
-            </tr>`;
-    });
-}
-
-function supprimerProduit(id) {
-    if(confirm("Supprimer ce produit ?")) {
-        db = db.filter(p => p.id !== id);
-        localStorage.setItem('diouf_ous_db', JSON.stringify(db));
-        toggleInventaire();
-    }
-}
-
-function ouvrirCaisse() { alert("Caisse prête (identique à votre version de référence)"); }
-</script>
-
-<div id="full-stock-screen" class="full-page" style="z-index: 2000;">
-    <button onclick="document.getElementById('full-stock-screen').style.display='none'" class="btn-3d" style="background:var(--d); border:none; justify-content:center;">FERMER ×</button>
-    <div id="container-fiches-full"></div>
-</div>
-
-<div id="screen-historique" class="full-page" style="z-index: 3000;">
-    <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-        <h2 style="color:var(--p)">📜 HISTORIQUE</h2>
-        <button onclick="document.getElementById('screen-historique').style.display='none'" style="background:var(--d); border:none; color:white; padding:10px 20px; border-radius:10px;">X</button>
-    </div>
-    <div style="overflow-x:auto; background:#111; border-radius:15px; padding:10px;">
-        <table>
+    <div style="overflow-x:auto;">
+        <table id="table-hist">
             <thead>
-                <tr>
-                    <th>Date</th>
+                <tr style="background:#222;">
                     <th>Produit</th>
-                    <th>Code</th>
                     <th>Stock</th>
-                    <th>PA</th>
                     <th>PV</th>
-                    <th>Bénéfice</th>
+                    <th>Profit</th>
+                    <th>Action</th>
                 </tr>
             </thead>
-            <tbody id="body-historique"></tbody>
+            <tbody id="body-hist"></tbody>
         </table>
     </div>
 </div>
 
+<div id="sync-status" class="sync-badge">☁️ Cloud Connecté</div>
+
+<script>
+    // CONFIGURATION CLOUD (Firebase Simplifié)
+    const CLOUD_URL = "https://diouf-ous-v32-default-rtdb.firebaseio.com/stock.json"; 
+
+    let db = [];
+    let html5QrCode = null;
+    let isDetail = false;
+
+    // NAVIGATION
+    function naviguer(id) {
+        document.getElementById('hub-accueil').style.display = 'none';
+        document.querySelectorAll('.full-page').forEach(p => p.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+        if(id === 'screen-historique') renderTable();
+    }
+
+    // CAMERA SCANNER (FIX)
+    function startScan() {
+        document.getElementById('reader').style.display = 'block';
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
+        (text) => {
+            document.getElementById('p-code').value = text;
+            html5QrCode.stop();
+            document.getElementById('reader').style.display = 'none';
+        });
+    }
+
+    // CALCULS
+    function setMode(m) {
+        isDetail = m;
+        document.getElementById('t-complex').classList.toggle('active', m);
+        document.getElementById('t-simple').classList.toggle('active', !m);
+    }
+
+    function calculate() {
+        let n = parseFloat(document.getElementById('p-nb-cont').value) || 0;
+        let c = parseFloat(document.getElementById('p-capa').value) || 0;
+        document.getElementById('total-display').innerText = n * c;
+    }
+
+    // CLOUD : SAUVEGARDE
+    async function saveData() {
+        const item = {
+            id: Date.now(),
+            nom: document.getElementById('p-nom').value,
+            code: document.getElementById('p-code').value,
+            stock: document.getElementById('total-display').innerText,
+            pa: document.getElementById('p-pa').value,
+            pv: document.getElementById('p-pv').value,
+            date: new Date().toLocaleDateString()
+        };
+
+        if(!item.nom) return alert("Nom vide");
+
+        db.unshift(item);
+        
+        document.getElementById('sync-status').innerText = "⏳ Synchronisation...";
+        try {
+            await fetch(CLOUD_URL, { method: 'PUT', body: JSON.stringify(db) });
+            document.getElementById('sync-status').innerText = "✅ Synchronisé";
+            alert("Enregistré dans le Cloud !");
+            naviguer('hub-accueil');
+        } catch(e) {
+            alert("Erreur Cloud - Sauvegarde Locale uniquement");
+            localStorage.setItem('db_local', JSON.stringify(db));
+        }
+    }
+
+    // CLOUD : CHARGEMENT
+    async function loadData() {
+        try {
+            let res = await fetch(CLOUD_URL);
+            db = await res.json() || [];
+            renderTable();
+        } catch(e) {
+            db = JSON.parse(localStorage.getItem('db_local')) || [];
+        }
+    }
+
+    function renderTable() {
+        const body = document.getElementById('body-hist');
+        body.innerHTML = "";
+        db.forEach((p, index) => {
+            let profit = (p.pv - p.pa) * p.stock;
+            body.innerHTML += `<tr>
+                <td>${p.nom}</td>
+                <td>${p.stock}</td>
+                <td>${p.pv} F</td>
+                <td style="color:var(--s)">+${profit}</td>
+                <td><button onclick="deleteItem(${index})" style="background:var(--d); border:none; color:white; border-radius:5px;">🗑️</button></td>
+            </tr>`;
+        });
+    }
+
+    async function deleteItem(i) {
+        if(confirm("Supprimer ?")) {
+            db.splice(i, 1);
+            await fetch(CLOUD_URL, { method: 'PUT', body: JSON.stringify(db) });
+            renderTable();
+        }
+    }
+
+    function genererPDF() {
+        const el = document.getElementById('table-hist');
+        html2pdf().from(el).save('Stock_Diouf_Ous.pdf');
+    }
+
+    function reinitialiserTout() {
+        if(confirm("🚨 RESET TOTAL ?")) { db = []; saveData(); }
+    }
+
+    window.onload = loadData;
+</script>
 </body>
 </html>
