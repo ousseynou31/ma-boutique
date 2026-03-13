@@ -66,7 +66,53 @@
     </style>
 </head>
 <body>
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+  // Configuration (À remplir avec vos infos de l'Étape 3)
+  const firebaseConfig = {
+    apiKey: "VOTRE_API_KEY",
+    authDomain: "gestion-boutiques-diouf.firebaseapp.com",
+    projectId: "gestion-boutiques-diouf",
+    storageBucket: "gestion-boutiques-diouf.appspot.com",
+    messagingSenderId: "VOTRE_SENDER_ID",
+    appId: "VOTRE_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // FONCTION 1 : CRÉER UN COMPTE (Pour Fatou ou Moussa)
+  window.creerBoutique = async (email, password) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      alert("Boutique créée avec succès ! ID : " + userCredential.user.uid);
+    } catch (error) {
+      alert("Erreur : " + error.message);
+    }
+  };
+
+  // FONCTION 2 : ENREGISTRER UN PRODUIT (Sera lié à l'utilisateur connecté)
+  window.scannerProduitCloud = async (nom, prix) => {
+    const user = auth.currentUser;
+    if (user) {
+      await addDoc(collection(db, "stocks"), {
+        nom: nom,
+        prix: prix,
+        boutique_id: user.uid, // ✅ C'est ce qui sépare les données !
+        date: new Date()
+      });
+    }
+  };
+</script>
+    
+
+
+
+    
 <div id="hub-accueil" style="display: block;">
     <h2 style="text-align:center; margin: 30px 0; font-weight: 800;">MENU PRINCIPAL V32</h2>
     <div class="container">
@@ -637,6 +683,7 @@ function ouvrirCaisse() { alert("Caisse prête (identique à votre V25)"); }
 </div>
 </body>
 </html>
+
 
 
 
