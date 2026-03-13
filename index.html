@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diouf Ous V32 - Cloud Intégral</title>
+    <title>Diouf Ous V32 - Cloud Edition</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         :root { --p: #6366f1; --s: #10b981; --d: #ef4444; --bg: #000000; --card: #111111; --text: #ffffff; --border: #ffffff; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -32,12 +33,12 @@
 </head>
 <body>
 
-<div id="auth-screen" class="container" style="margin-top: 50px;">
+<div id="auth-screen" class="container" style="margin-top: 50px; display: block;">
     <div class="card" style="border-color: #fbbf24; text-align: center;">
-        <h2 style="font-weight: 900; margin-bottom: 20px;">CONNEXION DIOUF OUS</h2>
+        <h2 style="font-weight: 900;">ACCÈS RÉSERVÉ</h2>
         <input type="email" id="email_input" placeholder="Email">
         <input type="password" id="pass_input" placeholder="Mot de passe">
-        <button onclick="login()" class="btn-3d" style="background:var(--p); border:none; justify-content:center;">ENTRER DANS LA BOUTIQUE</button>
+        <button onclick="login()" class="btn-3d" style="background:var(--p); border:none; justify-content:center;">SE CONNECTER AU CLOUD</button>
     </div>
 </div>
 
@@ -56,7 +57,7 @@
         <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px; cursor:pointer; margin-bottom:20px;">🏠 RETOUR</button>
         <div class="container">
             <div class="card">
-                <div class="section-title" id="form-title">📦 Nouvel Enregistrement</div>
+                <div class="section-title">📦 Nouvel Enregistrement</div>
                 <div class="type-selector">
                     <div id="t-simple" class="t-btn active" onclick="setMode(false)">SIMPLE</div>
                     <div id="t-complex" class="t-btn" onclick="setMode(true)">AU DÉTAIL</div>
@@ -73,17 +74,17 @@
                 </select>
                 <div class="calc-box">
                     <div class="grid">
-                        <div><small id="label-nb">Nb Cartons</small><input type="number" id="p-nb-cont" oninput="calculateStock()"></div>
-                        <div><small id="label-capa">Unités/Carton</small><input type="number" id="p-capa" oninput="calculateStock()"></div>
+                        <div><small>Nb Cartons</small><input type="number" id="p-nb-cont" oninput="calculateStock()"></div>
+                        <div><small>Unités/Carton</small><input type="number" id="p-capa" oninput="calculateStock()"></div>
                     </div>
                     <div class="result-banner">STOCK TOTAL : <span id="total-display">0</span></div>
                 </div>
                 <div class="grid" style="margin-top:15px;">
-                    <div><small>Prix Achat (PA)</small><input type="number" id="p-pa" placeholder="PA"></div>
-                    <div><small>Prix Vente (PV)</small><input type="number" id="p-pv" placeholder="PV"></div>
+                    <div><small>PA</small><input type="number" id="p-pa" placeholder="Prix Achat"></div>
+                    <div><small>PV</small><input type="number" id="p-pv" placeholder="Prix Vente"></div>
                 </div>
-                <button id="btn-main-save" class="btn-3d" style="background:var(--p); border:none; margin-top:20px; justify-content:center;" onclick="saveToDatabase()">VALIDER L'ENREGISTREMENT</button>
-                <button id="btn-cancel-edit" class="btn-3d" style="background:#444; border:none; display:none; justify-content:center;" onclick="restaurerBoutonInitial()">❌ ANNULER MODIFICATION</button>
+                <button id="btn-main-save" class="btn-3d" style="background:var(--p); border:none; margin-top:20px; justify-content:center;" onclick="saveToCloud()">VALIDER SUR GOOGLE CLOUD</button>
+                <button id="btn-cancel-edit" class="btn-3d" style="background:#444; border:none; display:none; justify-content:center;" onclick="restaurerBoutonInitial()">❌ ANNULER</button>
             </div>
             <div style="display: flex; gap: 10px;">
                 <button class="btn-3d" style="flex:1; font-size:0.8rem;" onclick="toggleInventaire()">📂 LISTE PRODUITS</button>
@@ -106,25 +107,17 @@
         <h2 style="color:var(--p); font-size:1.2rem;">📜 HISTORIQUE CLOUD</h2>
         <div style="display:flex; gap:5px;">
             <button onclick="genererPDF()" style="background:var(--p); color:white; border:none; padding:10px; border-radius:8px;">PDF</button>
-            <button onclick="genererCSV()" style="background:var(--s); color:white; border:none; padding:10px; border-radius:8px;">EXCEL</button>
             <button onclick="document.getElementById('screen-historique').style.display='none'" style="background:var(--d); border:none; color:white; padding:10px; border-radius:8px;">×</button>
         </div>
     </div>
-    <div style="overflow-x:auto;">
-        <table id="table-historique">
-            <thead>
-                <tr style="background:#222; color:var(--p);">
-                    <th>DATE</th><th>NOM</th><th>CODE</th><th>TOTAL</th><th>PA</th><th>PV</th><th>GAIN</th>
-                </tr>
-            </thead>
-            <tbody id="body-historique"></tbody>
-        </table>
-    </div>
-</div>
-
-<div id="reader-container" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:20000;">
-    <div id="reader" style="width:100%; height:100%;"></div>
-    <button onclick="stopScan()" style="position:absolute; bottom:30px; width:80%; left:10%; background:var(--d); color:white; padding:18px; border-radius:15px; font-weight:800;">ANNULER</button>
+    <table id="table-historique">
+        <thead>
+            <tr style="background:#222; color:var(--p);">
+                <th>DATE</th><th>NOM</th><th>TOTAL</th><th>PV</th><th>GAIN</th>
+            </tr>
+        </thead>
+        <tbody id="body-historique"></tbody>
+    </table>
 </div>
 
 <script type="module">
@@ -145,10 +138,11 @@
     const auth = getAuth(app);
     const dbCloud = getFirestore(app);
 
-    // 1. CONNEXION
+    // CONNEXION
     window.login = () => {
-        signInWithEmailAndPassword(auth, document.getElementById('email_input').value, document.getElementById('pass_input').value)
-        .catch(e => alert("Accès refusé"));
+        const email = document.getElementById('email_input').value;
+        const pass = document.getElementById('pass_input').value;
+        signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Erreur d'accès"));
     };
     window.deconnexion = () => signOut(auth);
 
@@ -156,46 +150,46 @@
         if(user) {
             document.getElementById('auth-screen').style.display='none';
             document.getElementById('main-app').style.display='block';
-            ecouterChangements();
+            ecouterCloud();
         } else {
             document.getElementById('auth-screen').style.display='block';
             document.getElementById('main-app').style.display='none';
         }
     });
 
-    // 2. ÉCOUTE DU CLOUD (Remplis votre variable db)
-    function ecouterChangements() {
+    // SYNCHRONISATION TEMPS RÉEL
+    function ecouterCloud() {
         const q = query(collection(dbCloud, "stocks"), where("ownerId", "==", auth.currentUser.uid));
         onSnapshot(q, (snaps) => {
             window.db = snaps.docs.map(d => ({ id: d.id, ...d.data() }));
-            console.log("Données Cloud synchronisées");
+            console.log("Cloud Sync OK");
         });
     }
 
-    // 3. FONCTION VALIDER (CLOUD)
-    window.saveToDatabase = async () => {
+    // SAUVEGARDE CLOUD (Remplace votre saveToDatabase locale)
+    window.saveToCloud = async () => {
         const nom = document.getElementById('p-nom').value;
-        if(!nom) return alert("Veuillez saisir un nom");
-        
-        const p = {
+        if(!nom) return alert("Nom manquant");
+
+        const data = {
             nom: nom,
             code: document.getElementById('p-code').value,
             cat: document.getElementById('p-cat').value,
-            nb: document.getElementById('p-nb-cont').value,
-            capa: document.getElementById('p-capa').value,
+            nb: parseFloat(document.getElementById('p-nb-cont').value) || 0,
+            capa: parseFloat(document.getElementById('p-capa').value) || 0,
             stockTotal: parseFloat(document.getElementById('total-display').innerText.replace(/\s/g, '')),
-            pa: document.getElementById('p-pa').value,
-            pv: document.getElementById('p-pv').value,
+            pa: parseFloat(document.getElementById('p-pa').value) || 0,
+            pv: parseFloat(document.getElementById('p-pv').value) || 0,
             dateAjout: new Date().toLocaleString(),
             ownerId: auth.currentUser.uid
         };
 
         try {
             if(window.currentEditId) {
-                await updateDoc(doc(dbCloud, "stocks", window.currentEditId), p);
+                await updateDoc(doc(dbCloud, "stocks", window.currentEditId), data);
                 window.currentEditId = null;
             } else {
-                await addDoc(collection(dbCloud, "stocks"), p);
+                await addDoc(collection(dbCloud, "stocks"), data);
             }
             alert("✅ Enregistré sur Google !");
             restaurerBoutonInitial();
@@ -203,30 +197,19 @@
     };
 
     window.supprimerProduit = async (id) => {
-        if(confirm("Confirmer suppression Cloud ?")) {
-            await deleteDoc(doc(dbCloud, "stocks", id));
-            toggleInventaire();
-        }
+        if(confirm("Supprimer du Cloud ?")) await deleteDoc(doc(dbCloud, "stocks", id));
     };
 </script>
 
 <script>
-    // --- VOS FONCTIONS DE LOGIQUE INTERNE (V32) ---
+    // --- LOGIQUE MÉTIER ---
     window.db = [];
     window.currentEditId = null;
-    let isDetailMode = false;
 
     function naviguer(id) {
         document.getElementById('hub-accueil').style.display='none';
         document.querySelectorAll('.full-page').forEach(p => p.style.display='none');
         document.getElementById(id).style.display='block';
-    }
-
-    function setMode(mode) {
-        isDetailMode = mode;
-        document.getElementById('t-complex').classList.toggle('active', mode);
-        document.getElementById('t-simple').classList.toggle('active', !mode);
-        calculateStock();
     }
 
     function calculateStock() {
@@ -235,28 +218,30 @@
         document.getElementById('total-display').innerText = (nb * capa).toLocaleString();
     }
 
+    function setMode(mode) {
+        document.getElementById('t-complex').classList.toggle('active', mode);
+        document.getElementById('t-simple').classList.toggle('active', !mode);
+        calculateStock();
+    }
+
     function toggleInventaire() {
-        const screen = document.getElementById('full-stock-screen');
         const container = document.getElementById('container-fiches-full');
         container.innerHTML = "";
-        screen.style.display = 'block';
+        document.getElementById('full-stock-screen').style.display='block';
         
         window.db.forEach(p => {
             const gain = (p.pv - p.pa) * p.stockTotal;
             container.innerHTML += `
                 <div class="card" style="border-left:5px solid var(--p)">
-                    <small style="color:var(--p)">${p.dateAjout}</small>
+                    <small>${p.dateAjout}</small>
                     <h3>${p.nom}</h3>
                     <div class="grid">
-                        <div style="background:#000; padding:5px;">Physique: ${p.nb}x${p.capa}</div>
-                        <div style="background:#000; padding:5px; color:var(--s)">Total: ${p.stockTotal}</div>
+                        <div style="background:#000; padding:10px;">Stock: ${p.stockTotal}</div>
+                        <div style="background:#000; padding:10px; color:#fbbf24">Gain: +${gain}F</div>
                     </div>
-                    <div style="margin-top:10px; font-size:0.8rem; display:flex; justify-content:space-between;">
-                        <span>PA: ${p.pa}F</span><span>PV: ${p.pv}F</span><b style="color:#fbbf24">+${gain}F</b>
-                    </div>
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <button onclick="preparerModification('${p.id}')" style="flex:1; background:#fbbf24; border:none; padding:8px; border-radius:5px; font-weight:800;">MODIFIER</button>
-                        <button onclick="supprimerProduit('${p.id}')" style="flex:1; background:none; border:1px solid var(--d); color:var(--d); padding:8px; border-radius:5px;">SUPPRIMER</button>
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button onclick="preparerModification('${p.id}')" style="flex:1; background:#fbbf24; border:none; padding:10px; border-radius:8px; font-weight:800;">MODIFIER</button>
+                        <button onclick="supprimerProduit('${p.id}')" style="flex:1; background:none; border:1px solid var(--d); color:var(--d); padding:10px; border-radius:8px;">SUPPRIMER</button>
                     </div>
                 </div>`;
         });
@@ -265,19 +250,13 @@
     function ouvrirHistorique() {
         const tbody = document.getElementById('body-historique');
         tbody.innerHTML = "";
-        document.getElementById('screen-historique').style.display = 'block';
-        let totalGain = 0;
-
+        document.getElementById('screen-historique').style.display='block';
         window.db.forEach(p => {
-            const gain = (p.pv - p.pa) * p.stockTotal;
-            totalGain += gain;
             const alerte = (p.stockTotal < 10) ? 'class="stock-critique"' : '';
             tbody.innerHTML += `<tr ${alerte}>
-                <td>${p.dateAjout.split(' ')[0]}</td><td>${p.nom}</td><td>${p.code}</td>
-                <td>${p.stockTotal}</td><td>${p.pa}</td><td>${p.pv}</td><td>${gain}</td>
+                <td>${p.dateAjout.split(' ')[0]}</td><td>${p.nom}</td><td>${p.stockTotal}</td><td>${p.pv}</td><td>${(p.pv-p.pa)*p.stockTotal}</td>
             </tr>`;
         });
-        tbody.innerHTML += `<tr style="background:#fbbf24; color:black; font-weight:900;"><td colspan="6">TOTAL PRÉVU</td><td>${totalGain.toLocaleString()} F</td></tr>`;
     }
 
     function preparerModification(id) {
@@ -291,50 +270,26 @@
         document.getElementById('p-pa').value = p.pa;
         document.getElementById('p-pv').value = p.pv;
         calculateStock();
-        const btn = document.getElementById('btn-main-save');
-        btn.innerText = "💾 METTRE À JOUR LE PRODUIT";
-        btn.style.background = "#fbbf24";
-        btn.style.color = "#000";
+        document.getElementById('btn-main-save').innerText = "💾 METTRE À JOUR";
+        document.getElementById('btn-main-save').style.background = "#fbbf24";
         document.getElementById('btn-cancel-edit').style.display = "block";
     }
 
     function restaurerBoutonInitial() {
         window.currentEditId = null;
-        const btn = document.getElementById('btn-main-save');
-        btn.innerText = "VALIDER L'ENREGISTREMENT";
-        btn.style.background = "var(--p)";
-        btn.style.color = "white";
+        document.getElementById('btn-main-save').innerText = "VALIDER SUR GOOGLE CLOUD";
+        document.getElementById('btn-main-save').style.background = "var(--p)";
         document.getElementById('btn-cancel-edit').style.display = "none";
         document.querySelectorAll('input').forEach(i => i.value = "");
         calculateStock();
     }
 
-    // SCANNER
-    let html5QrCode;
-    window.startScan = () => {
-        document.getElementById('reader-container').style.display='block';
-        html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-            document.getElementById('p-code').value = text;
-            stopScan();
-        });
-    };
-    window.stopScan = () => { if(html5QrCode) html5QrCode.stop().then(() => document.getElementById('reader-container').style.display='none'); };
-
-    // PDF / EXCEL
-    window.genererPDF = () => {
+    function genererPDF() {
         const element = document.getElementById('table-historique');
-        html2pdf().from(element).set({ margin: 5, filename: 'Diouf_Stocks.pdf', jsPDF: { orientation: 'landscape' } }).save();
-    };
+        html2pdf().from(element).save();
+    }
 
-    window.genererCSV = () => {
-        let csv = "\uFEFFDATE;NOM;CODE;STOCK;PA;PV;GAIN\n";
-        window.db.forEach(p => { csv += `${p.dateAjout};${p.nom};${p.code};${p.stockTotal};${p.pa};${p.pv};${(p.pv-p.pa)*p.stockTotal}\n`; });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Stocks_Diouf.csv"; link.click();
-    };
-
-    function ouvrirCaisse() { alert("Caisse V25 connectée au Cloud"); }
+    function ouvrirCaisse() { alert("Caisse Cloud active"); }
 </script>
 </body>
 </html>
