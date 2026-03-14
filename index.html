@@ -496,10 +496,23 @@ function deconnexion() {
     }
 }
 
-window.onload = launchApp;
+window.onload = () => {
+    console.log("Démarrage forcé...");
+    
+    // On essaie de lancer la version normale
+    launchApp().catch(err => {
+        console.error("Erreur critique :", err);
+        // Si ça plante, on force l'affichage de l'écran PIN après 2 secondes
+        setTimeout(() => {
+            document.getElementById('license-gate').style.display = 'flex';
+            document.querySelector('#cloud-text').innerText = "MODE HORS-LIGNE";
+        }, 2000);
+    });
+};
 </script>
 </body>
 </html>
+
 
 
 
