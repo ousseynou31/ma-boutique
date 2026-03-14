@@ -352,25 +352,26 @@ function naviguer(id) {
 
 // --- LANCEMENT SÉCURISÉ ---
 async function launchApp() {
-    // Étape 1 : Vérifier si l'appareil est banni sur le Cloud
-    const banni = await checkBanStatus();
-    if (banni) return; // On arrête tout ici, l'écran 🚫 reste affiché
+    // 1. ON VÉRIFIE LE BAN D'ABORD (IMPORTANT)
+    const isBanned = await checkBanStatus(); 
+    if (isBanned) {
+        // On cache tout le reste pour être sûr
+        document.getElementById('hub-accueil').style.display = 'none';
+        document.getElementById('license-gate').style.display = 'none';
+        document.getElementById('banned-screen').style.display = 'flex';
+        return; // ON ARRÊTE TOUT ICI
+    }
 
-    // Étape 2 : Vérifier si le code PIN a été entré (Stockage local)
+    // 2. SI PAS BANNI, ON VÉRIFIE LE PIN
     const active = localStorage.getItem('v32_active') === 'true';
-    
-    // On cache toutes les protections par défaut
     document.querySelectorAll('.gate').forEach(g => g.style.display = 'none');
 
     if (!active) {
-        // Afficher l'écran de verrouillage PIN
         document.getElementById('license-gate').style.display = 'flex';
     } else {
-        // Afficher le menu principal
         document.getElementById('hub-accueil').style.display = 'block';
     }
 }
-
 // --- CORRECTION DU BOUTON FERMER DE L'ADMIN ---
 // Assurez-vous que le bouton "FERMER" dans votre HTML appelle bien :
 // onclick="naviguer('hub-accueil')"
@@ -446,6 +447,7 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
 
 
