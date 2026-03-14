@@ -283,26 +283,17 @@ const ADMIN_PASS = "0000"; // Modifiez ce mot de passe si besoin
 // 1. VÉRIFICATION DU STATUT DE BANNISSEMENT
 async function checkBanStatus() {
     try {
-        const snap = await database.ref('blacklist/' + currentId).once('value');
-        const isBanned = snap.val();
-        
-        if (isBanned === true) {
-            // ON FORCE L'AFFICHAGE DU BLOCAGE
-            document.body.innerHTML = `
-                <div style="height:100vh; background:#000; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family:sans-serif;">
-                    <h1 style="font-size:100px; margin:0;">🚫</h1>
-                    <h2 style="font-size:30px;">ACCÈS RÉVOQUÉ</h2>
-                    <p style="color:#666;">ID Appareil : ${currentId}</p>
-                    <p style="margin-top:20px; border:1px solid #333; padding:10px; border-radius:10px;">Contactez Diouf Ous pour réactiver.</p>
-                </div>`;
+        // On met un délai de sécurité (timeout) pour ne pas bloquer indéfiniment
+        const snapshot = await database.ref('blacklist/' + currentId).once('value');
+        if (snapshot.exists() && snapshot.val() === true) {
+            document.getElementById('banned-screen').style.display = 'flex';
             return true;
         }
     } catch (e) {
-        console.error("Erreur Cloud:", e);
+        console.log("Erreur ou ID inexistant, on continue...");
     }
-    return false;
+    return false; // Si l'ID n'existe pas, il n'est pas banni
 }
-
 // 2. DÉTECTION DE L'APPUI LONG (3 SECONDES) SUR LE TITRE
 let adminTimer;
 const adminTrigger = document.getElementById('admin-trigger');
@@ -485,6 +476,7 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
 
 
