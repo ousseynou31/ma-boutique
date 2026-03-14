@@ -156,22 +156,29 @@ const CLIENT_URL = `${BASE_URL}${currentId}.json`;
 document.getElementById('display-device-id').innerText = currentId;
 
 // 2. VÉRIFICATION DE LICENCE
+// --- SYSTÈME DE SÉCURITÉ NUMÉRIQUE V32 ---
+const SECRET_KEY = 7391; // Votre code secret mathématique
+
 function verifierLicence() {
-    // On récupère l'ID et on le force en MAJUSCULES pour le calcul
     const idAffiche = document.getElementById('display-device-id').innerText.trim().toUpperCase();
-    const input = document.getElementById('input-license').value.trim().toUpperCase();
+    const input = document.getElementById('input-license').value.trim();
     
-    // On calcule la clé toujours en majuscules
-    const SECRET = "DIOUF_2026";
-    const correctKey = btoa(idAffiche + SECRET).substring(0, 12).toUpperCase();
+    // ALGORITHME NUMÉRIQUE : On transforme l'ID en chiffres
+    let hash = 0;
+    for (let i = 0; i < idAffiche.length; i++) {
+        hash = ((hash << 5) - hash) + idAffiche.charCodeAt(i);
+        hash |= 0; 
+    }
     
-    if(input === correctKey) {
+    // Génération de la clé finale (8 chiffres positifs)
+    const codeFinal = Math.abs(hash + SECRET_KEY).toString().substring(0, 8);
+
+    if(input === codeFinal) {
         localStorage.setItem('v32_active', 'true');
-        // On enregistre l'ID en majuscules pour la base de données
         localStorage.setItem('diouf_device_id', idAffiche); 
         launchApp();
     } else {
-        alert("❌ CLÉ REFUSÉE\n\nID : " + idAffiche + "\nVérifiez la clé saisie.");
+        alert("❌ CODE INCORRECT\n\nPour l'ID " + idAffiche + "\nVeuillez entrer le code à 8 chiffres.");
     }
 }
 async function launchApp() {
@@ -308,6 +315,7 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
 
 
