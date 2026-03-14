@@ -64,8 +64,7 @@
         <button class="btn-3d" onclick="naviguer('page-stock')"><span>📦</span> GESTION DES STOCKS</button>
         <button class="btn-3d" onclick="alert('Caisse active')"><span>🛒</span> CAISSE DE VENTE</button>
         <button class="btn-3d" onclick="naviguer('page-banque')"><span>📈</span> BANQUE & PROFITS</button>
-        
-        <button class="btn-3d" style="border-color:var(--d); color:var(--d); margin-top:30px;" onclick="deconnexion()"><span>🔒</span> DÉCONNEXION SÉCURISÉE</button>
+        <button class="btn-3d" style="border-color:var(--d); color:var(--d); margin-top:40px;" onclick="deconnexion()"><span>🔒</span> DÉCONNEXION</button>
     </div>
 </div>
 
@@ -153,21 +152,29 @@ async function enregistrerProfil() {
     }
 }
 
-function launchApp() {
+async function launchApp() {
     const active = localStorage.getItem('v32_active') === 'true';
     const reg = localStorage.getItem('v32_registered') === 'true';
 
-    document.querySelectorAll('.gate').forEach(g => g.style.display = 'none');
-    
-    if(!active) {
-        document.getElementById('license-gate').style.display = 'flex';
-    } else if(!reg) {
-        document.getElementById('registration-gate').style.display = 'flex';
-    } else {
-        document.getElementById('hub-accueil').style.display = 'block';
+    // 🔴 VÉRIFICATION DU BANNISSEMENT (CLOUD)
+    const snapshot = await database.ref('blacklist/' + currentId).once('value');
+    if (snapshot.val() === true) {
+        document.body.innerHTML = `
+            <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:#000; color:white; padding:20px;">
+                <h1 style="color:#ef4444; font-size:4rem;">⚠️</h1>
+                <h2 style="font-weight:800;">ACCÈS RÉVOQUÉ</h2>
+                <p style="color:#666;">Votre appareil (${currentId}) a été désactivé par l'administrateur Diouf Ous.</p>
+                <a href="https://wa.me/VOTRE_NUMERO" style="color:#6366f1; text-decoration:none; font-weight:bold; margin-top:20px;">Contacter le support</a>
+            </div>`;
+        return;
     }
-}
 
+    // Si pas banni, on continue normalement
+    document.querySelectorAll('.gate').forEach(g => g.style.display = 'none');
+    if(!active) document.getElementById('license-gate').style.display = 'flex';
+    else if(!reg) document.getElementById('registration-gate').style.display = 'flex';
+    else document.getElementById('hub-accueil').style.display = 'block';
+}
 // --- LOGIQUE STOCK (VOTRE CODE ADAPTÉ) ---
 let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
 
@@ -258,3 +265,4 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
