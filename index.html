@@ -203,8 +203,13 @@ const SECRET_KEY = 7391;
 function getDeviceId() {
     let id = localStorage.getItem('diouf_device_id');
     if(!id) {
-        id = Math.random().toString(36).substr(2, 8).toUpperCase();
-        localStorage.setItem('diouf_device_id', id);
+        // On crée un ID basé sur des critères un peu plus stables
+        id = "D-" + Math.random().toString(36).substr(2, 6).toUpperCase();
+        try {
+            localStorage.setItem('diouf_device_id', id);
+        } catch(e) {
+            console.log("Stockage restreint");
+        }
     }
     return id;
 }
@@ -258,11 +263,23 @@ const ADMIN_PASS = "0000"; // Modifiez ce mot de passe si besoin
 
 // 1. VÉRIFICATION DU STATUT DE BANNISSEMENT
 async function checkBanStatus() {
-    const snap = await database.ref('blacklist/' + currentId).once('value');
-    if (snap.val() === true) {
-        document.getElementById('banned-screen').style.display = 'flex';
-        document.getElementById('ban-id-display').innerText = "ID: " + currentId;
-        return true; // L'utilisateur est banni
+    try {
+        const snap = await database.ref('blacklist/' + currentId).once('value');
+        const isBanned = snap.val();
+        
+        if (isBanned === true) {
+            // ON FORCE L'AFFICHAGE DU BLOCAGE
+            document.body.innerHTML = `
+                <div style="height:100vh; background:#000; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family:sans-serif;">
+                    <h1 style="font-size:100px; margin:0;">🚫</h1>
+                    <h2 style="font-size:30px;">ACCÈS RÉVOQUÉ</h2>
+                    <p style="color:#666;">ID Appareil : ${currentId}</p>
+                    <p style="margin-top:20px; border:1px solid #333; padding:10px; border-radius:10px;">Contactez Diouf Ous pour réactiver.</p>
+                </div>`;
+            return true;
+        }
+    } catch (e) {
+        console.error("Erreur Cloud:", e);
     }
     return false;
 }
@@ -447,6 +464,7 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
 
 
