@@ -331,28 +331,51 @@ async function toggleBan(userId, currentStatus) {
 }
 
 // MODIFIER VOTRE FONCTION launchApp EXISTANTE :
-async function launchApp() {
-    // Vérifier d'abord si l'utilisateur est banni
-    const isBanned = await checkBanStatus();
-    if(isBanned) return; 
+// --- SYSTÈME DE NAVIGATION UNIFIÉ ---
+function naviguer(id) {
+    // 1. Masquer le menu principal
+    const hub = document.getElementById('hub-accueil');
+    if (hub) hub.style.display = 'none';
 
+    // 2. Masquer toutes les pages plein écran (Stock, Admin, Banque, etc.)
+    document.querySelectorAll('.full-page').forEach(page => {
+        page.style.display = 'none';
+    });
+
+    // 3. Afficher la page ciblée
+    const target = document.getElementById(id);
+    if (target) {
+        // Si on retourne au hub, on utilise 'block', sinon pour les pages c'est 'block' aussi
+        target.style.display = 'block';
+    }
+}
+
+// --- LANCEMENT SÉCURISÉ ---
+async function launchApp() {
+    // Étape 1 : Vérifier si l'appareil est banni sur le Cloud
+    const banni = await checkBanStatus();
+    if (banni) return; // On arrête tout ici, l'écran 🚫 reste affiché
+
+    // Étape 2 : Vérifier si le code PIN a été entré (Stockage local)
     const active = localStorage.getItem('v32_active') === 'true';
-    document.querySelectorAll('.gate').forEach(g => g.style.display = 'none');
     
-    if(!active) {
+    // On cache toutes les protections par défaut
+    document.querySelectorAll('.gate').forEach(g => g.style.display = 'none');
+
+    if (!active) {
+        // Afficher l'écran de verrouillage PIN
         document.getElementById('license-gate').style.display = 'flex';
     } else {
+        // Afficher le menu principal
         document.getElementById('hub-accueil').style.display = 'block';
     }
 }
+
+// --- CORRECTION DU BOUTON FERMER DE L'ADMIN ---
+// Assurez-vous que le bouton "FERMER" dans votre HTML appelle bien :
+// onclick="naviguer('hub-accueil')"
 // --- LOGIQUE MÉTIER ---
 let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
-
-function naviguer(id) {
-    document.getElementById('hub-accueil').style.display = 'none';
-    document.querySelectorAll('.full-page').forEach(p => p.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-}
 
 function setMode(mode) {
     document.getElementById('t-complex').classList.toggle('active', mode);
@@ -423,4 +446,5 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
