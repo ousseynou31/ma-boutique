@@ -381,22 +381,46 @@ function naviguer(id) {
 
 // --- LANCEMENT SÉCURISÉ ---
 async function launchApp() {
-    // 1. ON VÉRIFIE LE BAN D'ABORD (IMPORTANT)
-    const isBanned = await checkBanStatus(); 
-    if (isBanned) {
-        // On cache tout le reste pour être sûr
-        document.getElementById('hub-accueil').style.display = 'none';
-        document.getElementById('license-gate').style.display = 'none';
-        document.getElementById('banned-screen').style.display = 'flex';
-        return; // ON ARRÊTE TOUT ICI
+    console.log("Démarrage de l'application...");
+
+    // 1. Délai de sécurité : Si après 4 secondes rien ne se passe, on force l'entrée
+    const forceTimeout = setTimeout(() => {
+        console.log("Timeout atteint : Forçage de l'affichage.");
+        afficherEcranNormal();
+    }, 4000);
+
+    try {
+        // 2. Vérifier le bannissement (avec une limite de temps)
+        const isBanned = await checkBanStatus();
+        
+        if (isBanned === true) {
+            clearTimeout(forceTimeout);
+            document.getElementById('banned-screen').style.display = 'flex';
+            document.getElementById('hub-accueil').style.display = 'none';
+            document.getElementById('license-gate').style.display = 'none';
+            return;
+        }
+    } catch (e) {
+        console.log("Erreur lors du check de ban, poursuite du chargement...");
     }
 
-    // 2. SI PAS BANNI, ON VÉRIFIE LE PIN
+    // 3. Si on arrive ici, on annule le timeout et on affiche l'écran normal
+    clearTimeout(forceTimeout);
+    afficherEcranNormal();
+}
+
+function afficherEcranNormal() {
     const active = localStorage.getItem('v32_active') === 'true';
+    const reg = localStorage.getItem('v32_registered') === 'true';
+
+    // Cacher tous les écrans de chargement/gates
     document.querySelectorAll('.gate').forEach(g => g.style.display = 'none');
 
     if (!active) {
         document.getElementById('license-gate').style.display = 'flex';
+    } else if (!reg) {
+        // Si vous avez supprimé les comptes Firebase, il faut se réenregistrer
+        document.getElementById('registration-gate').style.display = 'flex';
     } else {
         document.getElementById('hub-accueil').style.display = 'block';
     }
@@ -476,6 +500,7 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
 
 
