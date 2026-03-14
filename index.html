@@ -192,6 +192,8 @@
     </div>
 </div>
 <script>
+    // Au début du script, on vérifie si on a un numéro enregistré
+let currentId = localStorage.getItem('user_tel_id') || getDeviceId();
 // --- CONFIGURATION FIREBASE ---
 const firebaseConfig = { databaseURL: "https://gestion-boutiques-diouf-default-rtdb.firebaseio.com" };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -248,17 +250,34 @@ function verifierLicence() {
 
 async function enregistrerProfil() {
     const nom = document.getElementById('reg-nom').value.trim();
-    const tel = document.getElementById('reg-tel').value.trim();
+    const tel = document.getElementById('reg-tel').value.trim(); // Le numéro devient l'ID
+    
     if(!nom || !tel) return alert("Champs incomplets");
-    try {
-        await database.ref('clients/' + currentId + '/infos_client').set({
-            nom, tel, device: currentId, date: new Date().toLocaleString()
-        });
-        localStorage.setItem('v32_registered', 'true');
-        launchApp();
-    } catch(e) { alert("Erreur Cloud : Vérifiez votre connexion."); }
-}
+    
+    // Nettoyage du numéro (on garde que les chiffres pour éviter les erreurs d'ID)
+    const cleanTel = tel.replace(/\D/g,''); 
 
+    try {
+        // 1. On enregistre les infos sans toucher à la blacklist
+        await database.ref('clients/' + cleanTel + '/infos_client').set({
+            nom: nom,
+            tel: cleanTel,
+            date_inscription: new Date().toLocaleString(),
+            last_device: currentId // On garde une trace de l'appareil
+        });
+
+        // 2. On lie l'ID de l'appareil au numéro de téléphone localement
+        localStorage.setItem('user_tel_id', cleanTel);
+        localStorage.setItem('v32_registered', 'true');
+        
+        // On met à jour la variable globale pour que le reste de l'app utilise le tel
+        currentId = cleanTel; 
+        
+        launchApp();
+    } catch(e) { 
+        alert("Erreur Cloud : Vérifiez votre connexion."); 
+    }
+}
 const ADMIN_PASS = "0000"; // Modifiez ce mot de passe si besoin
 
 // 1. VÉRIFICATION DU STATUT DE BANNISSEMENT
@@ -337,14 +356,16 @@ async function loadUsers() {
     } catch(e) { list.innerHTML = "Erreur de chargement."; }
 }
 
-async function toggleBan(userId, currentStatus) {
-    if(userId === currentId) return alert("Interdit : Vous ne pouvez pas vous bloquer vous-même.");
-    const confirmMsg = currentStatus ? "Débloquer cet utilisateur ?" : "BLOQUER cet utilisateur immédiatement ?";
-    
-    if(confirm(confirmMsg)) {
-        await database.ref('blacklist/' + userId).set(!currentStatus);
-        loadUsers(); // Rafraîchir la liste
-    }
+// Fonction à utiliser dans votre bouton BLOQUER
+async function toggleBan(idUser) {
+    // On pointe directement la valeur "isBanned" dans un dossier séparé
+    // de "infos_client" pour éviter les accidents
+    const ref = database.ref('blacklist/' + idUser);
+    const snap = await ref.once('value');
+    const status = snap.val() === true;
+
+    await ref.set(!status); // Bascule entre true et false
+    loadUsers();
 }
 
 // MODIFIER VOTRE FONCTION launchApp EXISTANTE :
@@ -464,6 +485,7 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
 
 
