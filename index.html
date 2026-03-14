@@ -62,6 +62,9 @@
             <button class="btn-3d" onclick="naviguer('page-depenses')"><span>💸</span> DÉPENSES EFFECTUÉES</button>
             <button class="btn-3d" onclick="naviguer('page-infos-travail')"><span>📝</span> INFOS APRÈS TRAVAIL</button>
             <button class="btn-3d" style="border-color:var(--d); color:var(--d); margin-top:20px;" onclick="reinitialiserTout()"><span>⚠️</span> RÉINITIALISER LE STOCK CLOUD</button>
+            <button class="btn-3d" style="border-color:var(--d); color:var(--d);" onclick="deconnexion()">
+    🔒 VERROUILLER L'APP
+</button>
         </div>
     </div>
 
@@ -288,8 +291,15 @@ function restaurerBoutonInitial() {
     document.getElementById('p-pv').value = "";
     calculateStock();
 }
+function deconnexion() {
+    if(confirm("Voulez-vous verrouiller l'accès et effacer la licence de ce téléphone ?")) {
+        localStorage.removeItem('v32_active'); // On supprime l'autorisation
+        location.reload(); // On redémarre l'app
+    }
+}
 
 window.onload = launchApp;
 </script>
 </body>
 </html>
+
