@@ -134,6 +134,13 @@
     </div>
 </div>
 
+<div id="cloud-status" style="position: fixed; top: 10px; right: 10px; z-index: 1000; display: flex; align-items: center; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px; font-family: sans-serif; font-size: 12px; color: white;">
+    <span id="cloud-dot" style="height: 10px; width: 10px; background-color: #bbb; border-radius: 50%; display: inline-block; margin-right: 8px;"></span>
+    <span id="cloud-text">Initialisation...</span>
+</div>
+
+
+    
 <script>
 // --- CONFIGURATION SÉCURITÉ & CLOUD ---
 const SECRET = "DIOUF_2026";
@@ -185,7 +192,9 @@ async function launchApp() {
     if(localStorage.getItem('v32_active') === 'true') {
         document.getElementById('license-gate').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
-        await loadFromCloud();
+        
+        surveillerConnexion(); // Activer le voyant vert/rouge
+        await loadFromCloud(); // Charger votre stock
     }
 }
 
@@ -310,11 +319,36 @@ function deconnexion() {
         location.reload(); // On redémarre l'app
     }
 }
+// --- SURVEILLANCE DU CLOUD ---
+function updateCloudStatus(online, message) {
+    const dot = document.getElementById('cloud-dot');
+    const text = document.getElementById('cloud-text');
+    
+    if (online) {
+        dot.style.backgroundColor = "#4ade80"; // Vert brillant
+        text.innerText = "Cloud Connecté";
+    } else {
+        dot.style.backgroundColor = "#f87171"; // Rouge
+        text.innerText = message || "Hors-ligne";
+    }
+}
 
+// Fonction à appeler dans votre launchApp() ou après la configuration Firebase
+function surveillerConnexion() {
+    const connectedRef = firebase.database().ref(".info/connected");
+    connectedRef.on("value", (snap) => {
+        if (snap.val() === true) {
+            updateCloudStatus(true);
+        } else {
+            updateCloudStatus(false, "Déconnecté");
+        }
+    });
+}
 window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
 
 
