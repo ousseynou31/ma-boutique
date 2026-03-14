@@ -157,25 +157,21 @@ document.getElementById('display-device-id').innerText = currentId;
 
 // 2. VÉRIFICATION DE LICENCE
 function verifierLicence() {
-    // 1. On récupère l'ID qui est REELLEMENT affiché à l'écran pour être sûr
-    const idAffiche = document.getElementById('display-device-id').innerText.trim();
-    const input = document.getElementById('input-license').value.trim();
+    // On récupère l'ID et on le force en MAJUSCULES pour le calcul
+    const idAffiche = document.getElementById('display-device-id').innerText.trim().toUpperCase();
+    const input = document.getElementById('input-license').value.trim().toUpperCase();
     
-    // 2. On recalcule la clé avec l'ID affiché
-    // On utilise un nettoyage strict pour éviter les espaces invisibles
-    const cleBrute = idAffiche + SECRET;
-    const correctKey = btoa(cleBrute).substring(0, 12).toUpperCase();
+    // On calcule la clé toujours en majuscules
+    const SECRET = "DIOUF_2026";
+    const correctKey = btoa(idAffiche + SECRET).substring(0, 12).toUpperCase();
     
-    console.log("ID utilisé:", idAffiche);
-    console.log("Clé attendue:", correctKey);
-
-    if(input.toUpperCase() === correctKey) {
+    if(input === correctKey) {
         localStorage.setItem('v32_active', 'true');
-        // On enregistre aussi l'ID valide pour éviter les changements futurs
+        // On enregistre l'ID en majuscules pour la base de données
         localStorage.setItem('diouf_device_id', idAffiche); 
         launchApp();
     } else {
-        alert("❌ ÉCHEC : La clé ne correspond pas à l'ID " + idAffiche);
+        alert("❌ CLÉ REFUSÉE\n\nID : " + idAffiche + "\nVérifiez la clé saisie.");
     }
 }
 async function launchApp() {
@@ -312,5 +308,6 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
 
