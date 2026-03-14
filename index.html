@@ -16,13 +16,14 @@
         body { background: var(--bg); margin: 0; padding: 20px; color: var(--text); overflow-x: hidden; }
         .container { max-width: 600px; margin: auto; }
         
-        /* BOUTONS 3D DIOUF OUS */
-        .btn-3d { width: 100%; padding: 20px; margin-bottom: 15px; border-radius: 16px; border: 2px solid var(--border); background: #1a1a1a; color: white; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 15px; position: relative; transition: all 0.1s; box-shadow: 0 6px 0px 0px rgba(255, 255, 255, 0.2); justify-content: flex-start; }
+        /* STYLE BOUTONS 3D */
+        .btn-3d { width: 100%; padding: 20px; margin-bottom: 15px; border-radius: 16px; border: 2px solid var(--border); background: #1a1a1a; color: white; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 15px; position: relative; transition: all 0.1s; box-shadow: 0 6px 0px 0px rgba(255, 255, 255, 0.2); justify-content: center; }
         .btn-3d:active { top: 4px; box-shadow: 0 2px 0px 0px rgba(255, 255, 255, 0.2); }
+        .btn-3d:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .card { background: var(--card); border-radius: 20px; padding: 20px; border: 1px solid #333; margin-bottom: 20px; }
-        input, select { width: 100%; padding: 14px; background: #000; border: 1px solid #444; border-radius: 12px; color: white; outline: none; margin-bottom: 10px; }
-        label { display: block; font-size: 0.75rem; font-weight: 700; color: #888; margin-bottom: 5px; text-transform: uppercase; }
+        input { width: 100%; padding: 14px; background: #000; border: 1px solid #444; border-radius: 12px; color: white; outline: none; margin-bottom: 15px; text-align: center; }
+        label { display: block; font-size: 0.75rem; font-weight: 700; color: #888; margin-bottom: 5px; text-transform: uppercase; text-align: left; }
 
         /* ÉCRANS */
         .gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
@@ -31,15 +32,13 @@
         /* VOYANT CLOUD */
         #cloud-status { position: fixed; top: 10px; right: 10px; z-index: 10000; display: flex; align-items: center; background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 20px; font-size: 11px; border: 1px solid #333; }
         #cloud-dot { height: 8px; width: 8px; border-radius: 50%; margin-right: 8px; background: #555; }
-        
-        #reader { width: 100%; max-width: 400px; margin: 10px auto; border-radius: 15px; overflow: hidden; display: none; border: 2px solid var(--p); }
     </style>
 </head>
 <body>
 
 <div id="cloud-status">
     <div id="cloud-dot"></div>
-    <span id="cloud-text">Initialisation...</span>
+    <span id="cloud-text">Cloud...</span>
 </div>
 
 <div id="license-gate" class="gate">
@@ -49,29 +48,33 @@
             <small style="color:#666;">ID MATÉRIEL UNIQUE :</small><br>
             <b id="display-device-id" style="color:#4ade80; font-family:monospace; font-size:1.2rem;"></b>
         </div>
-        <input type="number" id="input-license" placeholder="Entrez le Code PIN 8 chiffres">
-        <button class="btn-3d" style="background:#fbbf24; color:black; border:none; justify-content:center;" onclick="verifierLicence()">ACTIVER LE SYSTÈME</button>
-        <p style="font-size:0.7rem; color:#555;">Contactez Diouf Ous pour votre licence.</p>
+        <input type="number" id="input-license" placeholder="Code PIN 8 chiffres">
+        <button class="btn-3d" style="background:#fbbf24; color:black; border:none;" onclick="verifierLicence()">ACTIVER LE SYSTÈME</button>
     </div>
 </div>
 
 <div id="registration-gate" class="gate">
     <div class="card" style="width:100%; max-width:400px; border-color:var(--p);">
         <h2 style="color:var(--p); text-align:center; margin-top:0;">INSCRIPTION CLOUD</h2>
-        <label>Votre Prénom & Nom</label>
-        <input type="text" id="reg-nom" placeholder="Ex: Modou Fall">
-        <label>Votre Numéro WhatsApp</label>
-        <input type="tel" id="reg-tel" placeholder="Ex: 77 000 00 00">
-        <button class="btn-3d" style="background:var(--p); color:white; border:none; justify-content:center; margin-top:10px;" onclick="enregistrerProfil()">CRÉER MON COMPTE</button>
+        <p style="font-size:0.8rem; color:#666; text-align:center;">Enregistrez-vous pour activer la sauvegarde.</p>
+        
+        <label>Prénom & Nom</label>
+        <input type="text" id="reg-nom" placeholder="Ex: Moussa Diop">
+        
+        <label>Téléphone WhatsApp</label>
+        <input type="tel" id="reg-tel" placeholder="Ex: 77 123 45 67">
+        
+        <button id="btn-reg" class="btn-3d" style="background:var(--p); color:white; border:none;" onclick="enregistrerProfil()">
+            CRÉER MON COMPTE CLOUD
+        </button>
     </div>
 </div>
 
 <div id="main-app" style="display:none;">
-    <h2 style="text-align:center; margin: 40px 0 20px 0; font-weight: 800;">DIOUF OUS V32</h2>
+    <h2 style="text-align:center; margin: 40px 0; font-weight: 800;">DIOUF OUS V32</h2>
     <div class="container">
         <button class="btn-3d" onclick="naviguer('page-stock')"><span>📦</span> GESTION DES STOCKS</button>
-        <button class="btn-3d" onclick="alert('Caisse en cours de config...')"><span>🛒</span> CAISSE DE VENTE</button>
-        <button class="btn-3d" style="border-color:var(--d); color:var(--d); margin-top:30px;" onclick="deconnexion()">🔒 VERROUILLER / CHANGER COMPTE</button>
+        <button class="btn-3d" style="border-color:var(--d); color:var(--d); margin-top:40px;" onclick="deconnexion()">🔒 VERROUILLER</button>
     </div>
 </div>
 
@@ -79,51 +82,27 @@
     <button onclick="naviguer('main-app')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px; margin-bottom:20px;">🏠 RETOUR</button>
     <div class="container">
         <div class="card">
-            <h3 style="color:var(--p); margin-top:0;">Ajouter au Cloud</h3>
-            <div id="reader"></div>
-            
-            <label>Code Produit</label>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="p-code" placeholder="Scanner ou taper">
-                <button onclick="startScan()" style="background:var(--p); border:none; padding:12px; border-radius:12px; color:white; height:46px;">📷</button>
-            </div>
-
-            <label>Nom de l'article</label>
-            <input type="text" id="p-nom" placeholder="Ex: Café Touba">
-            
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <div><label>Quantité</label><input type="number" id="p-qte" oninput="calculerTotal()"></div>
-                <div><label>Unités/Lot</label><input type="number" id="p-unite" oninput="calculerTotal()"></div>
-            </div>
-            
-            <div style="background:#000; padding:15px; border-radius:12px; text-align:center; margin:10px 0; border:1px solid #333;">
-                STOCK TOTAL : <b id="total-view" style="color:var(--s); font-size:1.2rem;">0</b>
-            </div>
-
-            <button class="btn-3d" style="background:var(--s); border:none; justify-content:center; margin-top:10px;" onclick="saveToCloud()">ENREGISTRER SUR LE CLOUD</button>
+            <label>Nom du produit</label>
+            <input type="text" id="p-nom">
+            <label>Quantité en stock</label>
+            <input type="number" id="p-qte">
+            <button class="btn-3d" style="background:var(--s); border:none;" onclick="saveToCloud()">VALIDER SUR LE CLOUD</button>
         </div>
-        <button class="btn-3d" style="border-color:var(--p);" onclick="toggleInventaire()">📂 VOIR MON STOCK COMPLET</button>
     </div>
-</div>
-
-<div id="full-stock-screen" class="full-page" style="z-index:2000;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="color:var(--s); margin:0;">VOTRE CLOUD</h2>
-        <button onclick="document.getElementById('full-stock-screen').style.display='none'" style="background:var(--d); color:white; border:none; padding:10px 15px; border-radius:10px;">FERMER</button>
-    </div>
-    <div id="container-fiches"></div>
 </div>
 
 <script>
-// --- ⚙️ CONFIGURATION ---
+// --- ⚙️ INITIALISATION FIREBASE ---
 const firebaseConfig = { databaseURL: "https://diouf-ous-v32-default-rtdb.firebaseio.com" };
-firebase.initializeApp(firebaseConfig);
+
+// On initialise seulement si non déjà fait
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const database = firebase.database();
-const SECRET_KEY = 7391; 
 
-let db = [];
-
-// --- 🆔 GESTION ID ---
+// --- ⚙️ CONFIGURATION SÉCURITÉ ---
+const SECRET_KEY = 7391;
 function getDeviceId() {
     let id = localStorage.getItem('diouf_device_id');
     if(!id) {
@@ -135,7 +114,7 @@ function getDeviceId() {
 const currentId = getDeviceId();
 document.getElementById('display-device-id').innerText = currentId;
 
-// --- 🔑 LICENCE ---
+// --- 🔑 LOGIQUE LICENCE ---
 function verifierLicence() {
     const input = document.getElementById('input-license').value.trim();
     let hash = 0;
@@ -154,31 +133,53 @@ function verifierLicence() {
     }
 }
 
-// --- 📝 INSCRIPTION ---
+// --- 📝 LOGIQUE INSCRIPTION (CORRIGÉE) ---
 async function enregistrerProfil() {
+    const btn = document.getElementById('btn-reg');
     const nom = document.getElementById('reg-nom').value.trim();
     const tel = document.getElementById('reg-tel').value.trim();
-    if(nom.length < 3 || tel.length < 8) return alert("Infos incomplètes");
 
-    const profil = { proprio: nom, contact: tel, date: new Date().toLocaleString(), device: currentId };
+    if(nom.length < 3 || tel.length < 8) {
+        alert("Veuillez remplir les informations.");
+        return;
+    }
+
+    // Désactiver le bouton pendant l'envoi
+    btn.disabled = true;
+    btn.innerText = "Synchronisation...";
+
+    const profil = {
+        proprio: nom,
+        contact: tel,
+        date: new Date().toLocaleString(),
+        id: currentId
+    };
+
     try {
+        // Envoi direct à Firebase
         await database.ref('clients/' + currentId + '/infos_client').set(profil);
+        
         localStorage.setItem('v32_registered', 'true');
+        alert("✅ Bienvenue " + nom + " !");
         launchApp();
-    } catch(e) { alert("Erreur Cloud"); }
+    } catch (e) {
+        alert("Erreur Cloud : " + e.message);
+        btn.disabled = false;
+        btn.innerText = "CRÉER MON COMPTE CLOUD";
+    }
 }
 
-// --- 📱 NAVIGATION ---
+// --- 📱 LOGIQUE NAVIGATION & DÉMARRAGE ---
 function launchApp() {
     const active = localStorage.getItem('v32_active') === 'true';
     const registered = localStorage.getItem('v32_registered') === 'true';
 
-    if(active && registered) {
+    if (active && registered) {
         document.querySelectorAll('.gate').forEach(g => g.style.display = 'none');
         document.getElementById('main-app').style.display = 'block';
         surveillerConnexion();
-        loadFromCloud();
-    } else if(active && !registered) {
+    } else if (active && !registered) {
+        document.getElementById('license-gate').style.display = 'none';
         document.getElementById('registration-gate').style.display = 'flex';
     } else {
         document.getElementById('license-gate').style.display = 'flex';
@@ -191,81 +192,31 @@ function naviguer(id) {
     document.getElementById(id).style.display = 'block';
 }
 
-// --- ☁️ CLOUD DATA ---
 function surveillerConnexion() {
     database.ref(".info/connected").on("value", (snap) => {
         const dot = document.getElementById('cloud-dot');
-        const text = document.getElementById('cloud-text');
         dot.style.background = snap.val() ? "#4ade80" : "#f87171";
-        text.innerText = snap.val() ? "Cloud Connecté" : "Hors-ligne";
+        document.getElementById('cloud-text').innerText = snap.val() ? "Connecté" : "Hors-ligne";
     });
 }
 
 async function saveToCloud() {
     const nom = document.getElementById('p-nom').value;
-    const total = document.getElementById('total-view').innerText;
+    const qte = document.getElementById('p-qte').value;
     if(!nom) return alert("Nom manquant");
 
-    const item = {
-        id: Date.now(),
-        nom: nom,
-        code: document.getElementById('p-code').value,
-        stock: total,
-        date: new Date().toLocaleDateString()
-    };
-
-    db.unshift(item);
-    await database.ref('clients/' + currentId + '/stock').set(db);
-    alert("✅ Synchronisé !");
-    document.getElementById('p-nom').value = "";
-    document.getElementById('p-code').value = "";
-    document.getElementById('p-qte').value = "";
-}
-
-function loadFromCloud() {
-    database.ref('clients/' + currentId + '/stock').on('value', (snap) => {
-        db = snap.val() || [];
-    });
-}
-
-// --- 🛠 OUTILS ---
-function calculerTotal() {
-    const q = parseFloat(document.getElementById('p-qte').value) || 0;
-    const u = parseFloat(document.getElementById('p-unite').value) || 1;
-    document.getElementById('total-view').innerText = (q * u).toLocaleString();
-}
-
-function startScan() {
-    const reader = document.getElementById('reader');
-    reader.style.display = "block";
-    const scanner = new Html5Qrcode("reader");
-    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-        document.getElementById('p-code').value = txt;
-        scanner.stop();
-        reader.style.display = "none";
-    });
-}
-
-function toggleInventaire() {
-    const cont = document.getElementById('container-fiches');
-    cont.innerHTML = "";
-    document.getElementById('full-stock-screen').style.display = "block";
-    db.forEach(p => {
-        cont.innerHTML += `<div class="card">
-            <small>${p.date}</small>
-            <h3 style="margin:5px 0;">${p.nom}</h3>
-            <b>STOCK : ${p.stock}</b>
-        </div>`;
-    });
+    await database.ref('clients/' + currentId + '/stock').push({ nom, qte });
+    alert("Produit ajouté !");
 }
 
 function deconnexion() {
-    if(confirm("Effacer la licence de ce téléphone ?")) {
+    if(confirm("Verrouiller l'accès ?")) {
         localStorage.clear();
         location.reload();
     }
 }
 
+// Lancement
 window.onload = launchApp;
 </script>
 </body>
