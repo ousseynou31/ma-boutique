@@ -61,6 +61,40 @@
 
         @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         .stock-critique { animation: pulse-red 1s infinite; color: var(--d) !important; }
+
+        /* ÉCRAN DE BANNISSEMENT */
+#banned-screen { 
+    flex-direction: column; 
+    text-align: center; 
+    background: #000;
+}
+
+/* INTERFACE ADMIN */
+.user-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 15px; 
+    border-bottom: 1px solid #222; 
+}
+
+.badge-ban { 
+    padding: 8px 12px; 
+    border-radius: 8px; 
+    font-size: 0.7rem; 
+    font-weight: 800;
+    cursor: pointer; 
+    border: none;
+    color: white;
+}
+
+#admin-trigger { 
+    cursor: pointer; 
+    user-select: none; 
+    transition: transform 0.2s;
+}
+
+#admin-trigger:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -137,7 +171,26 @@
     </div>
     <div id="container-fiches-full"></div>
 </div>
+    <div id="banned-screen" class="gate">
+    <h1 style="color:var(--d); font-size: 5rem;">🚫</h1>
+    <h2 style="font-weight:800;">ACCÈS RÉVOQUÉ</h2>
+    <p style="color:#666;">Cet appareil a été désactivé par l'administrateur.</p>
+    <p id="ban-id-display" style="font-size:0.7rem; color:var(--p); opacity:0.5;"></p>
+</div>
 
+<div id="page-admin" class="full-page">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+        <h2 style="color:var(--p); margin:0;">🛡️ CONTRÔLE ADMIN</h2>
+        <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px; cursor:pointer;">FERMER</button>
+    </div>
+    
+    <div class="card">
+        <h3 style="margin-top:0; font-size:0.9rem; color:var(--s);">UTILISATEURS ENREGISTRÉS</h3>
+        <div id="admin-user-list">
+            <p style="text-align:center; color:#444;">Chargement de la base Cloud...</p>
+        </div>
+    </div>
+</div>
 <script>
 // --- CONFIGURATION FIREBASE ---
 const firebaseConfig = { databaseURL: "https://gestion-boutiques-diouf-default-rtdb.firebaseio.com" };
@@ -201,30 +254,97 @@ async function enregistrerProfil() {
     } catch(e) { alert("Erreur Cloud : Vérifiez votre connexion."); }
 }
 
-async function launchApp() {
-    const active = localStorage.getItem('v32_active') === 'true';
-    const reg = localStorage.getItem('v32_registered') === 'true';
+const ADMIN_PASS = "0000"; // Modifiez ce mot de passe si besoin
 
-    // 🔴 VÉRIFICATION DU BANNISSEMENT (CLOUD)
-    const snapshot = await database.ref('blacklist/' + currentId).once('value');
-    if (snapshot.val() === true) {
-        document.body.innerHTML = `
-            <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:#000; color:white; padding:20px;">
-                <h1 style="color:#ef4444; font-size:4rem;">⚠️</h1>
-                <h2 style="font-weight:800;">ACCÈS RÉVOQUÉ</h2>
-                <p style="color:#666;">Votre appareil (${currentId}) a été désactivé par l'administrateur Diouf Ous.</p>
-                <a href="https://wa.me/VOTRE_NUMERO" style="color:#6366f1; text-decoration:none; font-weight:bold; margin-top:20px;">Contacter le support</a>
-            </div>`;
-        return;
+// 1. VÉRIFICATION DU STATUT DE BANNISSEMENT
+async function checkBanStatus() {
+    const snap = await database.ref('blacklist/' + currentId).once('value');
+    if (snap.val() === true) {
+        document.getElementById('banned-screen').style.display = 'flex';
+        document.getElementById('ban-id-display').innerText = "ID: " + currentId;
+        return true; // L'utilisateur est banni
     }
-
-    // Si pas banni, on continue normalement
-    document.querySelectorAll('.gate').forEach(g => g.style.display = 'none');
-    if(!active) document.getElementById('license-gate').style.display = 'flex';
-    else if(!reg) document.getElementById('registration-gate').style.display = 'flex';
-    else document.getElementById('hub-accueil').style.display = 'block';
+    return false;
 }
 
+// 2. DÉTECTION DE L'APPUI LONG (3 SECONDES) SUR LE TITRE
+let adminTimer;
+const adminTrigger = document.getElementById('admin-trigger');
+
+if(adminTrigger) {
+    adminTrigger.addEventListener('mousedown', () => adminTimer = setTimeout(openAdmin, 3000));
+    adminTrigger.addEventListener('touchstart', () => adminTimer = setTimeout(openAdmin, 3000));
+    adminTrigger.addEventListener('mouseup', () => clearTimeout(adminTimer));
+    adminTrigger.addEventListener('touchend', () => clearTimeout(adminTimer));
+}
+
+function openAdmin() {
+    const code = prompt("ENTRER LE MOT DE PASSE ADMIN :");
+    if(code === ADMIN_PASS) {
+        naviguer('page-admin');
+        loadUsers();
+    } else if (code !== null) {
+        alert("Mot de passe incorrect");
+    }
+}
+
+// 3. CHARGEMENT ET BLOCAGE DES UTILISATEURS
+async function loadUsers() {
+    const list = document.getElementById('admin-user-list');
+    list.innerHTML = "<p style='text-align:center;'>Connexion Cloud...</p>";
+    
+    try {
+        const usersSnap = await database.ref('clients').once('value');
+        const blackSnap = await database.ref('blacklist').once('value');
+        const blacklisted = blackSnap.val() || {};
+        
+        list.innerHTML = "";
+        usersSnap.forEach(u => {
+            const data = u.val().infos_client;
+            if(!data) return;
+            const isBanned = blacklisted[u.key] === true;
+            
+            list.innerHTML += `
+                <div class="user-row">
+                    <div>
+                        <b style="font-size:0.9rem;">${data.nom}</b><br>
+                        <small style="color:#666;">ID: ${u.key}</small>
+                    </div>
+                    <button class="badge-ban" 
+                            style="background:${isBanned ? '#10b981' : '#ef4444'}" 
+                            onclick="toggleBan('${u.key}', ${isBanned})">
+                        ${isBanned ? 'DÉBLOQUER' : 'BLOQUER'}
+                    </button>
+                </div>`;
+        });
+    } catch(e) { list.innerHTML = "Erreur de chargement."; }
+}
+
+async function toggleBan(userId, currentStatus) {
+    if(userId === currentId) return alert("Interdit : Vous ne pouvez pas vous bloquer vous-même.");
+    const confirmMsg = currentStatus ? "Débloquer cet utilisateur ?" : "BLOQUER cet utilisateur immédiatement ?";
+    
+    if(confirm(confirmMsg)) {
+        await database.ref('blacklist/' + userId).set(!currentStatus);
+        loadUsers(); // Rafraîchir la liste
+    }
+}
+
+// MODIFIER VOTRE FONCTION launchApp EXISTANTE :
+async function launchApp() {
+    // Vérifier d'abord si l'utilisateur est banni
+    const isBanned = await checkBanStatus();
+    if(isBanned) return; 
+
+    const active = localStorage.getItem('v32_active') === 'true';
+    document.querySelectorAll('.gate').forEach(g => g.style.display = 'none');
+    
+    if(!active) {
+        document.getElementById('license-gate').style.display = 'flex';
+    } else {
+        document.getElementById('hub-accueil').style.display = 'block';
+    }
+}
 // --- LOGIQUE MÉTIER ---
 let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
 
@@ -303,3 +423,4 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
