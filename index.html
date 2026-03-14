@@ -2,354 +2,132 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diouf Ous V32 - BUSINESS PRO</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-    
-    <style>
-        /* TOUS VOS STYLES ORIGINAUX CONSERVÉS */
-        :root { --p: #6366f1; --s: #10b981; --d: #ef4444; --bg: #000000; --card: #111111; --text: #ffffff; --border: #ffffff; }
-        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
-        .container { max-width: 600px; margin: auto; }
-        .btn-3d { width: 100%; padding: 22px; margin-bottom: 15px; border-radius: 16px; border: 2px solid var(--border); background: #1a1a1a; color: white; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 15px; position: relative; top: 0; transition: all 0.1s; box-shadow: 0 6px 0px 0px rgba(255, 255, 255, 0.2); }
-        .btn-3d:active { top: 4px; box-shadow: 0 2px 0px 0px rgba(255, 255, 255, 0.2); }
-        .card { background: var(--card); border-radius: 20px; padding: 20px; border: 1px solid #333; margin-bottom: 20px; }
-        .section-title { font-weight: 800; font-size: 1.2rem; margin-bottom: 20px; color: var(--p); display: flex; align-items: center; gap: 10px; }
-        .type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
-        .t-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #333; font-weight: 700; cursor: pointer; text-align: center; color: #888; }
-        .t-btn.active { border-color: var(--p); color: var(--p); background: #1e1b4b; }
-        label { display: block; font-size: 0.8rem; font-weight: 700; margin-top: 15px; margin-bottom: 5px; color: #aaa; }
-        input, select { width: 100%; padding: 14px; background: #000; border: 1px solid #444; border-radius: 12px; color: white; outline: none; }
-        .calc-box { background: #000; padding: 15px; border-radius: 15px; border: 1px solid #333; margin-top: 10px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .result-banner { background: #fff; color: #000; padding: 15px; border-radius: 12px; text-align: center; margin-top: 15px; font-weight: 800; }
-        .full-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; display: none; overflow-y: auto; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; color: white; font-size: 0.8rem; }
-        th { background: #222; padding: 10px; text-align: left; border: 1px solid #333; }
-        td { padding: 10px; border: 1px solid #333; }
-        @keyframes clignotement-rouge { 0% { background-color: #450a0a; } 50% { background-color: #ef4444; color: white; } 100% { background-color: #450a0a; } }
-        .stock-critique { animation: clignotement-rouge 1.5s infinite; font-weight: 800; }
-        
-        /* NOUVEAU STYLE : GATE DE LICENCE */
-        #license-gate { position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; display:flex; align-items:center; justify-content:center; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIOUF OUS V32 PRO</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
-<body>
+<body style="background:#111; color:white; font-family:sans-serif;">
 
-<div id="license-gate">
-    <div class="card" style="width:90%; max-width:400px; text-align:center; border:2px solid #fbbf24;">
-        <h2 style="color:#fbbf24;">V32 BUSINESS PRO</h2>
-        <div style="background:#1a1a1a; padding:15px; border-radius:10px; margin:20px 0; border:1px dashed #444;">
-            <small style="color:#666;">ID MATÉRIEL UNIQUE :</small><br>
-            <b id="display-device-id" style="color:white; font-family:monospace; font-size:1.2rem;"></b>
-        </div>
-        <input type="text" id="input-license" placeholder="Clé d'activation" style="text-align:center;">
-        <button class="btn-3d" style="background:#fbbf24; color:black; border:none; justify-content:center;" onclick="verifierLicence()">ACTIVER LE SYSTÈME</button>
-        <p style="font-size:0.7rem; color:#555;">Contactez Diouf Ous pour votre licence.</p>
+    <div id="cloud-status" style="position: fixed; top: 10px; right: 10px; z-index: 1000; display: flex; align-items: center; background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 20px; font-size: 12px; border: 1px solid #333;">
+        <span id="cloud-dot" style="height: 10px; width: 10px; background-color: #bbb; border-radius: 50%; display: inline-block; margin-right: 8px;"></span>
+        <span id="cloud-text">Cloud...</span>
     </div>
-</div>
 
-<div id="main-app" style="display:none;">
-    <div id="hub-accueil">
-        <h2 style="text-align:center; margin: 30px 0; font-weight: 800;">MENU PRINCIPAL V32</h2>
-        <div class="container">
-            <button class="btn-3d" onclick="naviguer('page-stock')"><span>📦</span> GESTION DES STOCKS</button>
-            <button class="btn-3d" onclick="ouvrirCaisse()"><span>🛒</span> CAISSE DE VENTE</button>
-            <button class="btn-3d" onclick="naviguer('page-banque')"><span>📈</span> BANQUE & PROFITS</button>
-            <button class="btn-3d" onclick="naviguer('page-depenses')"><span>💸</span> DÉPENSES EFFECTUÉES</button>
-            <button class="btn-3d" onclick="naviguer('page-infos-travail')"><span>📝</span> INFOS APRÈS TRAVAIL</button>
-            <button class="btn-3d" style="border-color:var(--d); color:var(--d); margin-top:20px;" onclick="reinitialiserTout()"><span>⚠️</span> RÉINITIALISER LE STOCK CLOUD</button>
-            <button class="btn-3d" style="border-color:var(--d); color:var(--d);" onclick="deconnexion()">
-    🔒 VERROUILLER L'APP
-</button>
+    <div id="license-gate" style="display:none; height:100vh; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+        <h2 style="color:#fbbf24;">DIOUF OUS V32</h2>
+        <p>ID MATÉRIEL UNIQUE :<br><span id="display-device-id" style="font-weight:bold; font-size:1.4rem; color:#4ade80;">...</span></p>
+        <input type="number" id="input-license" placeholder="Entrez le Code PIN" style="padding:15px; border-radius:10px; border:none; width:80%; margin:20px 0; text-align:center; font-size:1.2rem;">
+        <button onclick="verifierLicence()" style="padding:15px 40px; background:#fbbf24; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">VALIDER LA LICENCE</button>
+    </div>
+
+    <div id="main-app" style="display:none; padding:20px;">
+        <h1 style="color:#fbbf24;">Mon Stock Cloud</h1>
+        
+        <div style="background:#222; padding:15px; border-radius:15px; margin-bottom:20px; text-align:center;">
+            <video id="video-preview" style="width:100%; max-width:300px; border-radius:10px; display:none; margin-bottom:10px;" autoplay playsinline></video>
+            <button onclick="ouvrirCamera()" style="padding:10px 20px; background:#444; color:white; border:none; border-radius:8px;">📷 OUVRIR LA CAMÉRA</button>
+        </div>
+
+        <div id="zone-donnees">
+            <p>Chargement des données en cours...</p>
         </div>
     </div>
 
-    <div id="page-stock" class="full-page">
-        <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px; cursor:pointer; margin-bottom:20px;">🏠 RETOUR ACCUEIL</button>
-        <div class="container">
-            <div class="card">
-                <div class="section-title">📦 Nouvel Enregistrement Cloud</div>
-                <label>Type de produit</label>
-                <div class="type-selector">
-                    <div id="t-simple" class="t-btn active" onclick="setMode(false)">SIMPLE</div>
-                    <div id="t-complex" class="t-btn" onclick="setMode(true)">AU DÉTAIL</div>
-                </div>
-                <label>Identification</label>
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="p-code" placeholder="Code-barres">
-                    <button onclick="startScan()" style="background:var(--p); border:none; padding:10px 15px; border-radius:12px; color:white;">📷</button>
-                </div>
-                <input type="text" id="p-nom" placeholder="Nom du produit" style="margin-top:10px;">
-                <select id="p-cat" style="margin-top:10px;">
-                    <option value="Alimentaire">Alimentaire</option><option value="Boisson">Boisson</option>
-                    <option value="Hygiène">Hygiène</option><option value="Entretien">Entretien</option>
-                </select>
-                <div class="calc-box">
-                    <div class="grid">
-                        <div><small id="label-nb">Nombre cartons</small><input type="number" id="p-nb-cont" oninput="calculateStock()"></div>
-                        <div><small id="label-capa">Unités/Carton</small><input type="number" id="p-capa" oninput="calculateStock()"></div>
-                    </div>
-                    <div class="result-banner">STOCK : <span id="total-display">0</span> <span id="unit-label">unités</span></div>
-                </div>
-                <div class="grid">
-                    <div><small>Prix Achat</small><input type="number" id="p-pa"></div>
-                    <div><small>Prix Vente</small><input type="number" id="p-pv"></div>
-                </div>
-                <button id="btn-main-save" class="btn-3d" style="background:var(--p); border:none; margin-top:20px; justify-content:center;" onclick="saveToCloud()">VALIDER SUR LE CLOUD</button>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-3d" style="flex:1;" onclick="toggleInventaire()">📂 LISTE PRODUITS</button>
-                <button class="btn-3d" style="flex:1; border-color:var(--s);" onclick="ouvrirHistorique()">📜 HISTORIQUE</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="full-stock-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; overflow-y:auto; padding:20px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:15px; margin-bottom:20px;">
-        <h2 style="color:var(--s); margin:0;">📊 RÉCAPITULATIF GLOBAL</h2>
-        <button onclick="document.getElementById('full-stock-screen').style.display='none'" style="background:var(--d); color:white; border:none; padding:10px 20px; border-radius:12px; cursor:pointer;">FERMER ×</button>
-    </div>
-    <div id="container-fiches-full"></div>
-</div>
-
-<div id="screen-historique" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10000; overflow:auto; padding:10px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:15px; border-radius:15px; margin-bottom:15px;">
-        <h2 style="color:var(--p); margin:0;">📜 HISTORIQUE CLOUD</h2>
-        <button onclick="document.getElementById('screen-historique').style.display='none'" style="background:var(--d); color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">FERMER ×</button>
-    </div>
-    <div style="background:#111; border-radius:15px; overflow-x:auto;">
-        <table id="table-historique" style="min-width:1200px;">
-            <thead>
-                <tr style="background:#222; color:var(--p);">
-                    <th>DATE</th><th>NOM</th><th>CODE</th><th>UNITÉS</th><th>CAPACITÉ</th><th>STOCK TOTAL</th><th>PA</th><th>PV</th><th>BÉNÉFICE</th>
-                </tr>
-            </thead>
-            <tbody id="body-historique"></tbody>
-        </table>
-    </div>
-</div>
-
-<div id="cloud-status" style="position: fixed; top: 10px; right: 10px; z-index: 1000; display: flex; align-items: center; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px; font-family: sans-serif; font-size: 12px; color: white;">
-    <span id="cloud-dot" style="height: 10px; width: 10px; background-color: #bbb; border-radius: 50%; display: inline-block; margin-right: 8px;"></span>
-    <span id="cloud-text">Initialisation...</span>
-</div>
-
-
-    
 <script>
-// --- CONFIGURATION SÉCURITÉ & CLOUD ---
-const SECRET = "DIOUF_2026";
-const BASE_URL = "https://diouf-ous-v32-default-rtdb.firebaseio.com/clients/";
-let db = [];
-let isDetailMode = false;
+// --- CONFIGURATION ---
+const SECRET_KEY = 7391;
+const firebaseConfig = {
+    databaseURL: "https://diouf-ous-v32-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
-// 1. GESTION DE L'ID APPAREIL UNIQUE
+// --- GESTION ID UNIQUE ---
 function getDeviceId() {
     let id = localStorage.getItem('diouf_device_id');
     if(!id) {
-        id = Math.random().toString(36).substr(2, 6).toUpperCase();
+        id = Math.random().toString(36).substr(2, 8).toUpperCase();
         localStorage.setItem('diouf_device_id', id);
     }
     return id;
 }
-
 const currentId = getDeviceId();
-const CLIENT_URL = `${BASE_URL}${currentId}.json`;
 document.getElementById('display-device-id').innerText = currentId;
 
-// 2. VÉRIFICATION DE LICENCE
-// --- SYSTÈME DE SÉCURITÉ NUMÉRIQUE V32 ---
-const SECRET_KEY = 7391; // Votre code secret mathématique
-
+// --- SÉCURITÉ : VÉRIFICATION LICENCE ---
 function verifierLicence() {
-    const idAffiche = document.getElementById('display-device-id').innerText.trim().toUpperCase();
     const input = document.getElementById('input-license').value.trim();
     
-    // ALGORITHME NUMÉRIQUE : On transforme l'ID en chiffres
+    // Algorithme fidèle à notre logique numérique
     let hash = 0;
-    for (let i = 0; i < idAffiche.length; i++) {
-        hash = ((hash << 5) - hash) + idAffiche.charCodeAt(i);
-        hash |= 0; 
+    for (let i = 0; i < currentId.length; i++) {
+        hash = ((hash << 5) - hash) + currentId.charCodeAt(i);
+        hash |= 0;
     }
-    
-    // Génération de la clé finale (8 chiffres positifs)
-    const codeFinal = Math.abs(hash + SECRET_KEY).toString().substring(0, 8);
+    const codeAttendu = Math.abs(hash + SECRET_KEY).toString().substring(0, 8);
 
-    if(input === codeFinal) {
+    if(input === codeAttendu) {
         localStorage.setItem('v32_active', 'true');
-        localStorage.setItem('diouf_device_id', idAffiche); 
         launchApp();
     } else {
-        alert("❌ CODE INCORRECT\n\nPour l'ID " + idAffiche + "\nVeuillez entrer le code à 8 chiffres.");
+        alert("❌ CODE INCORRECT\nL'ID est : " + currentId);
     }
 }
+
+// --- DÉMARRAGE DE L'APP ---
 async function launchApp() {
     if(localStorage.getItem('v32_active') === 'true') {
         document.getElementById('license-gate').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         
-        surveillerConnexion(); // Activer le voyant vert/rouge
-        await loadFromCloud(); // Charger votre stock
+        surveillerConnexion(); // Allume le voyant Cloud
+        loadFromCloud(); // Charge les données
+    } else {
+        document.getElementById('license-gate').style.display = 'flex';
     }
 }
 
-// 3. CHIRURGIE DES FONCTIONS DE STOCKAGE (Fidèle à votre logique)
-async function saveToCloud() {
-    const nom = document.getElementById('p-nom').value;
-    const stock = parseFloat(document.getElementById('total-display').innerText.replace(/\s/g, ''));
-    if(!nom) return alert("Nom manquant");
-
-    const p = {
-        id: Date.now(),
-        dateAjout: new Date().toLocaleString(),
-        nom: nom,
-        code: document.getElementById('p-code').value,
-        cat: document.getElementById('p-cat').value,
-        nb: document.getElementById('p-nb-cont').value,
-        capa: document.getElementById('p-capa').value,
-        stockTotal: stock,
-        pa: document.getElementById('p-pa').value,
-        pv: document.getElementById('p-pv').value
-    };
-
-    db.unshift(p);
-    
-    // Sauvegarde sur le serveur au lieu du LocalStorage
-    try {
-        await fetch(CLIENT_URL, { method: 'PUT', body: JSON.stringify(db) });
-        alert("✅ Synchronisé sur le Cloud !");
-        restaurerBoutonInitial();
-    } catch(e) {
-        alert("Erreur Cloud. Données stockées localement temporairement.");
-        localStorage.setItem('diouf_ous_db', JSON.stringify(db));
-    }
-}
-
-async function loadFromCloud() {
-    try {
-        let r = await fetch(CLIENT_URL);
-        db = await r.json() || [];
-    } catch(e) {
-        db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
-    }
-}
-
-// --- VOS FONCTIONS MÉTIER (STRICTEMENT IDENTIQUES) ---
-function naviguer(id) {
-    document.getElementById('hub-accueil').style.display = 'none';
-    document.querySelectorAll('.full-page').forEach(p => p.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-}
-
-function setMode(mode) {
-    isDetailMode = mode;
-    document.getElementById('t-complex').classList.toggle('active', mode);
-    document.getElementById('t-simple').classList.toggle('active', !mode);
-    document.getElementById('label-nb').innerText = mode ? "Nombre de sacs / bidons" : "Nombre de cartons / caisses";
-    document.getElementById('label-capa').innerText = mode ? "Kilos / Litres par sac" : "Unités par carton";
-    document.getElementById('unit-label').innerText = mode ? "détails" : "unités";
-    calculateStock();
-}
-
-function calculateStock() {
-    const nb = parseFloat(document.getElementById('p-nb-cont').value) || 0;
-    const capa = parseFloat(document.getElementById('p-capa').value) || 0;
-    document.getElementById('total-display').innerText = (nb * capa).toLocaleString();
-}
-
-function toggleInventaire() {
-    const screen = document.getElementById('full-stock-screen');
-    const container = document.getElementById('container-fiches-full');
-    container.innerHTML = "";
-    screen.style.display = "block";
-
-    db.forEach(p => {
-        const profitTotal = (parseFloat(p.pv || 0) - parseFloat(p.pa || 0)) * parseFloat(p.stockTotal || 0);
-        container.innerHTML += `
-            <div class="card" style="border:1px solid #333; margin-bottom:20px; background:#111;">
-                <div style="font-size: 0.75rem; color: var(--p); font-weight: 800; margin-bottom: 8px;">📅 ${p.dateAjout}</div>
-                <h3 style="margin:5px 0;">${p.nom}</h3>
-                <div class="grid" style="margin-bottom:10px;">
-                    <div style="background:#000; padding:10px; border-radius:10px;">
-                        <small>PHYSIQUE</small><br><b>${p.nb} x ${p.capa}</b>
-                    </div>
-                    <div style="background:#000; padding:10px; border-radius:10px; border:1px solid var(--s);">
-                        <small>TOTAL</small><br><b style="color:var(--s)">${p.stockTotal}</b>
-                    </div>
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
-                    <button onclick="supprimerProduit(${p.id})" style="background:none; border:1px solid var(--d); color:var(--d); padding:12px; border-radius:10px; font-weight:800; cursor:pointer;">🗑️ SUPPRIMER</button>
-                </div>
-            </div>`;
-    });
-}
-
-async function supprimerProduit(id) {
-    if(confirm("Supprimer du Cloud ?")) {
-        db = db.filter(p => p.id !== id);
-        await fetch(CLIENT_URL, { method: 'PUT', body: JSON.stringify(db) });
-        toggleInventaire();
-    }
-}
-
-async function reinitialiserTout() {
-    if(confirm("⚠️ EFFACER TOUTES VOS DONNÉES CLOUD ?")) {
-        db = [];
-        await fetch(CLIENT_URL, { method: 'DELETE' });
-        location.reload();
-    }
-}
-
-function restaurerBoutonInitial() {
-    document.getElementById('p-nom').value = "";
-    document.getElementById('p-nb-cont').value = "";
-    document.getElementById('p-capa').value = "";
-    document.getElementById('p-pa').value = "";
-    document.getElementById('p-pv').value = "";
-    calculateStock();
-}
-function deconnexion() {
-    if(confirm("Voulez-vous verrouiller l'accès et effacer la licence de ce téléphone ?")) {
-        localStorage.removeItem('v32_active'); // On supprime l'autorisation
-        location.reload(); // On redémarre l'app
-    }
-}
-// --- SURVEILLANCE DU CLOUD ---
-function updateCloudStatus(online, message) {
+// --- LOGIQUE CLOUD ---
+function surveillerConnexion() {
     const dot = document.getElementById('cloud-dot');
     const text = document.getElementById('cloud-text');
     
-    if (online) {
-        dot.style.backgroundColor = "#4ade80"; // Vert brillant
-        text.innerText = "Cloud Connecté";
-    } else {
-        dot.style.backgroundColor = "#f87171"; // Rouge
-        text.innerText = message || "Hors-ligne";
-    }
-}
-
-// Fonction à appeler dans votre launchApp() ou après la configuration Firebase
-function surveillerConnexion() {
-    const connectedRef = firebase.database().ref(".info/connected");
-    connectedRef.on("value", (snap) => {
+    database.ref(".info/connected").on("value", (snap) => {
         if (snap.val() === true) {
-            updateCloudStatus(true);
+            dot.style.backgroundColor = "#4ade80";
+            text.innerText = "Cloud Connecté";
         } else {
-            updateCloudStatus(false, "Déconnecté");
+            dot.style.backgroundColor = "#f87171";
+            text.innerText = "Hors-ligne";
         }
     });
 }
+
+function loadFromCloud() {
+    // Fidèle à la logique : On charge uniquement le dossier de l'ID actuel
+    database.ref('clients/' + currentId).on('value', (snapshot) => {
+        const data = snapshot.val();
+        console.log("Données reçues :", data);
+        document.getElementById('zone-donnees').innerHTML = data ? "✅ Données synchronisées" : "☁️ Cloud vide (Prêt)";
+    });
+}
+
+// --- LOGIQUE CAMÉRA ---
+async function ouvrirCamera() {
+    const video = document.getElementById('video-preview');
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.style.display = "inline-block";
+        video.srcObject = stream;
+    } catch (err) {
+        alert("Caméra bloquée. Vérifiez que vous êtes bien en HTTPS.");
+    }
+}
+
+// Lancement au chargement de la page
 window.onload = launchApp;
+
 </script>
 </body>
 </html>
-
-
-
-
-
