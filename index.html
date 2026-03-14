@@ -157,17 +157,27 @@ document.getElementById('display-device-id').innerText = currentId;
 
 // 2. VÉRIFICATION DE LICENCE
 function verifierLicence() {
+    // 1. On récupère l'ID qui est REELLEMENT affiché à l'écran pour être sûr
+    const idAffiche = document.getElementById('display-device-id').innerText.trim();
     const input = document.getElementById('input-license').value.trim();
-    const correctKey = btoa(currentId + SECRET).substring(0, 12).toUpperCase();
     
-    if(input === correctKey) {
+    // 2. On recalcule la clé avec l'ID affiché
+    // On utilise un nettoyage strict pour éviter les espaces invisibles
+    const cleBrute = idAffiche + SECRET;
+    const correctKey = btoa(cleBrute).substring(0, 12).toUpperCase();
+    
+    console.log("ID utilisé:", idAffiche);
+    console.log("Clé attendue:", correctKey);
+
+    if(input.toUpperCase() === correctKey) {
         localStorage.setItem('v32_active', 'true');
+        // On enregistre aussi l'ID valide pour éviter les changements futurs
+        localStorage.setItem('diouf_device_id', idAffiche); 
         launchApp();
     } else {
-        alert("Clé Invalide pour cet appareil.");
+        alert("❌ ÉCHEC : La clé ne correspond pas à l'ID " + idAffiche);
     }
 }
-
 async function launchApp() {
     if(localStorage.getItem('v32_active') === 'true') {
         document.getElementById('license-gate').style.display = 'none';
@@ -302,4 +312,5 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
