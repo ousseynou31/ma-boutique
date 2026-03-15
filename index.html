@@ -580,28 +580,43 @@ function toggleInventaire() {
     // Optionnel : Si vous voulez afficher le nombre de résultats trouvés
     // Il faudrait avoir un petit élément HTML dédié pour afficher "count"
 }
+    async function deleteClient(idUser) {
+    // BARRIÈRE 1 : Demande de confirmation simple
+    const confirmationInitiale = confirm("⚠️ VOULEZ-VOUS VRAIMENT SUPPRIMER CE CLIENT ?\n(Cette action est définitive)");
+    
+    if (confirmationInitiale) {
+        // BARRIÈRE 2 : Demande de confirmation technique (le stock)
+        const confirmationStock = confirm("🛑 ATTENTION :\nCela effacera aussi tout son STOCK de marchandises et ses ventes.\n\nÊtes-vous certain de vouloir continuer ?");
+        
+        if (confirmationStock) {
+            // BARRIÈRE 3 : Le code de sécurité final
+            const codeSecurite = prompt("🔒 ACTION CRITIQUE\nTapez le mot 'SUPPRIMER' pour confirmer l'effacement définitif :");
 
- async function deleteClient(idUser) {
-    // Double confirmation pour plus de sécurité
-    const confirm1 = confirm("⚠️ Voulez-vous vraiment lancer la procédure 'DELETE' ?");
-    if(confirm1) {
-        const confirm2 = confirm("🛑 ACTION IRRÉVERSIBLE : Les données et le stock de ce client seront supprimés de Firebase. Confirmer ?");
-        if(confirm2) {
-            try {
-                // Suppression totale du dossier client
-                await database.ref('clients/' + idUser).remove();
-                // Nettoyage de la blacklist
-                await database.ref('blacklist/' + idUser).remove();
-                
-                alert("Client 'DELETE' avec succès.");
-                loadUsers(); // Rafraîchir l'affichage
-            } catch(e) {
-                alert("Erreur lors de l'opération DELETE.");
+            if (codeSecurite === "SUPPRIMER") {
+                try {
+                    // Suppression des données sur Firebase
+                    await database.ref('clients/' + idUser).remove();
+                    
+                    // Suppression de la blacklist (au cas où il était banni)
+                    await database.ref('blacklist/' + idUser).remove();
+                    
+                    alert("✅ OPÉRATION RÉUSSIE : Le client et ses données ont été effacés.");
+                    
+                    // Rafraîchir la liste Admin
+                    loadUsers();
+                    
+                } catch (error) {
+                    alert("❌ ERREUR : Impossible de supprimer le client. Vérifiez votre connexion.");
+                    console.error("Erreur Delete:", error);
+                }
+            } else {
+                alert("🚫 Action annulée : Le mot de confirmation est incorrect.");
             }
         }
     }
-}   
-function deconnexion() {
+}
+
+ function deconnexion() {
     if(confirm("Verrouiller ?")) {
         localStorage.removeItem('v32_active');
         location.reload();
