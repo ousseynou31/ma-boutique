@@ -546,16 +546,19 @@ function toggleInventaire() {
         }
     }
 }
-    function calculerJours(dateInsc) {
-    if(!dateInsc) return 0;
-    // On transforme la date "JJ/MM/AAAA, HH:MM:SS" en format date JS
-    const parts = dateInsc.split(',')[0].split('/');
-    const dateCreation = new Date(parts[2], parts[1] - 1, parts[0]);
-    const aujourdhui = new Date();
+   function calculerJours(dateInscription) {
+    if (!dateInscription || dateInscription === "") return 0; // Si vide, on met 0j
+
+    const dateInit = new Date(dateInscription);
+    const dateAuj = new Date();
     
-    const diffTime = Math.abs(aujourdhui - dateCreation);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-    return diffDays;
+    // Vérification si la date est valide
+    if (isNaN(dateInit.getTime())) return 0; 
+
+    const diffInterne = dateAuj - dateInit;
+    const jours = Math.floor(diffInterne / (1000 * 60 * 60 * 24));
+    
+    return jours < 0 ? 0 : jours; // Empêche les nombres négatifs
 }
 
   function filtrerClients() {
