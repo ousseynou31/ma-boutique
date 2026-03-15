@@ -533,20 +533,24 @@ function toggleInventaire() {
     return diffDays;
 }
 
-    function filtrerClients() {
+  function filtrerClients() {
     const searchVal = document.getElementById('admin-search').value.toLowerCase();
     const rows = document.querySelectorAll('.user-row');
+    let count = 0; // On crée un compteur
 
     rows.forEach(row => {
-        // On récupère le texte à l'intérieur de la ligne (nom et ID/tel)
         const text = row.innerText.toLowerCase();
         
         if (text.includes(searchVal)) {
-            row.style.display = "flex"; // On affiche
+            row.style.display = "flex";
+            count++; // On ajoute 1 si le client est trouvé
         } else {
-            row.style.display = "none"; // On cache
+            row.style.display = "none";
         }
     });
+
+    // Optionnel : Si vous voulez afficher le nombre de résultats trouvés
+    // Il faudrait avoir un petit élément HTML dédié pour afficher "count"
 }
 function deconnexion() {
     if(confirm("Verrouiller ?")) {
@@ -559,6 +563,7 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
 
 
