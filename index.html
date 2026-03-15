@@ -408,18 +408,27 @@ function naviguer(id) {
 }
 
 async function launchApp() {
-    console.log("Vérification des accès...");
+    console.log("Démarrage de l'application...");
 
-    // 1. Récupérer les infos du client sur le Cloud
+    // --- CORRECTION : AFFICHER L'ID IMMÉDIATEMENT ---
+    const deviceId = getDeviceId();
+    const displayElement = document.getElementById('display-device-id');
+    if(displayElement) displayElement.innerText = deviceId;
+    // -----------------------------------------------
+
     let joursUtilisation = 0;
     try {
-        const snap = await database.ref('clients/' + currentId + '/infos_client').once('value');
+        // On vérifie si on a un numéro de téléphone enregistré pour ce client
+        const savedTel = localStorage.getItem('user_tel_id');
+        const idToSearch = savedTel || deviceId;
+
+        const snap = await database.ref('clients/' + idToSearch + '/infos_client').once('value');
         if (snap.exists()) {
             joursUtilisation = calculerJours(snap.val().date_inscription);
         }
-    } catch (e) { console.log("Erreur de lecture date"); }
+    } catch (e) { console.log("Erreur de lecture date ou hors-ligne"); }
 
-    // 2. VÉRIFICATION DU BANNISSEMENT MANUEL (Ton bouton actuel)
+    // 2. VÉRIFICATION DU BANNISSEMENT
     const banni = await checkBanStatus();
     if (banni) return;
 
@@ -427,26 +436,29 @@ async function launchApp() {
     if (joursUtilisation >= 35) {
         document.getElementById('banned-screen').style.display = 'flex';
         document.getElementById('ban-id-display').innerText = "ABONNEMENT EXPIRÉ (" + joursUtilisation + " jours)";
-        // On change le message pour que le client sache pourquoi il est bloqué
         document.querySelector('#banned-screen h2').innerText = "DÉLAI DE PAIEMENT DÉPASSÉ";
         return;
     }
 
-    // 4. SI TOUT EST OK, ON AFFICHE L'ÉCRAN NORMAL
+    // 4. LOGIQUE D'AFFICHAGE DES ÉCRANS (GATES)
     const active = localStorage.getItem('v32_active') === 'true';
     const reg = localStorage.getItem('v32_registered') === 'true';
 
+    // On cache tout par défaut
     document.querySelectorAll('.gate').forEach(g => g.style.display = 'none');
+    document.getElementById('hub-accueil').style.display = 'none';
 
     if (!active) {
+        // Si pas de licence, on montre l'écran du PIN (L'ID sera bien visible maintenant)
         document.getElementById('license-gate').style.display = 'flex';
     } else if (!reg) {
+        // Si activé mais pas de profil Cloud
         document.getElementById('registration-gate').style.display = 'flex';
     } else {
+        // Si tout est OK
         document.getElementById('hub-accueil').style.display = 'block';
     }
 }
-
 // --- LOGIQUE MÉTIER STOCK ---
 let db = JSON.parse(localStorage.getItem('diouf_ous_db')) || [];
 
