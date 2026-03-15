@@ -218,13 +218,13 @@
         <h3 style="margin-top:0; font-size:0.9rem; color:var(--s);">UTILISATEURS ENREGISTRÉS</h3>
         <div style="margin-bottom: 15px;">
     
-</div>
-        <div id="admin-filters" style="display:flex; gap:5px; margin-bottom:15px; overflow-x:auto; padding-bottom:5px;">
-    <button onclick="filtrerVue('TOUT')" class="filter-btn">TOUT</button>
-    <button onclick="filtrerVue('A')" class="filter-btn" style="border-color:#ffd700;">CAT A</button>
-    <button onclick="filtrerVue('B')" class="filter-btn" style="border-color:#c0c0c0;">CAT B</button>
-    <button onclick="filtrerVue('C')" class="filter-btn" style="border-color:#cd7f32;">CAT C</button>
-    <button onclick="genererPDF()" class="filter-btn" style="background:#444;">📄 PDF</button>
+<div id="admin-filters" style="display:flex; gap:5px; margin-bottom:15px; overflow-x:auto; padding-bottom:5px;">
+    <button onclick="loadUsers('TOUT')" class="filter-btn">TOUT</button>
+    <button onclick="loadUsers('A')" class="filter-btn" style="border-color:#ffd700;">CAT A</button>
+    <button onclick="loadUsers('B')" class="filter-btn" style="border-color:#c0c0c0;">CAT B</button>
+    <button onclick="loadUsers('C')" class="filter-btn" style="border-color:#cd7f32;">CAT C</button>
+    
+    <button onclick="imprimerListe()" class="filter-btn" style="background:#444;">📄 PDF</button>
     <button onclick="genererCSV()" class="filter-btn" style="background:#444;">📊 EXCEL</button>
 </div>
         <div id="admin-user-list">
