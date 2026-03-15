@@ -327,47 +327,70 @@ function openAdmin() {
 
 async function loadUsers() {
     const list = document.getElementById('admin-user-list');
-    list.innerHTML = "Chargement...";
+    list.innerHTML = "<p style='text-align:center;'>Connexion au Cloud...</p>";
+    
     try {
         const usersSnap = await database.ref('clients').once('value');
         const blackSnap = await database.ref('blacklist').once('value');
         const blacklisted = blackSnap.val() || {};
-        list.innerHTML = "";
+        
+        let clientsArray = [];
 
+        // 1. On transforme les données Firebase en liste triable
         usersSnap.forEach(u => {
             const data = u.val().infos_client;
-            if(!data) return;
-            
-            const jours = calculerJours(data.date_inscription);
-            const isBanned = blacklisted[u.key] === true;
+            if(data) {
+                clientsArray.push({
+                    id: u.key,
+                    nom: data.nom,
+                    date: data.date_inscription,
+                    jours: calculerJours(data.date_inscription),
+                    isBanned: blacklisted[u.key] === true
+                });
+            }
+        });
 
-            // Déterminer la classe de couleur
+        // 2. Tri automatique : les plus urgents (rouges) en haut
+        clientsArray.sort((a, b) => b.jours - a.jours);
+
+        // 3. AFFICHAGE DU COMPTEUR TOTAL (On vide et on écrit le titre)
+        list.innerHTML = `
+            <p style="font-size:0.75rem; color:var(--p); margin-bottom:15px; font-weight:800; text-align:center; border-bottom:1px solid #222; padding-bottom:10px;">
+                📊 TOTAL : ${clientsArray.length} CLIENTS ENREGISTRÉS
+            </p>`;
+
+        // 4. BOUCLE D'AFFICHAGE DES CLIENTS (On ajoute chaque ligne)
+        clientsArray.forEach(c => {
             let colorClass = "status-ok";
-            if(jours >= 26) colorClass = "status-warning";
-            if(jours >= 30) colorClass = "status-danger";
+            if(c.jours >= 26) colorClass = "status-warning";
+            if(c.jours >= 30) colorClass = "status-danger";
 
             list.innerHTML += `
-                <div class="user-row" style="gap:10px;">
-                    <div class="stats-circle ${colorClass}">
-                        ${jours}j
+                <div class="user-row" style="gap:10px; border-bottom: 1px solid #222; padding: 12px 0; display:flex; align-items:center;">
+                    <div class="stats-circle ${colorClass}" style="flex-shrink:0;">
+                        ${c.jours}j
                     </div>
 
-                    <div style="flex:1">
-                        <b style="font-size:0.9rem;">${data.nom}</b><br>
-                        <small style="font-size:0.6rem; color:#666;">${u.key}</small>
+                    <div style="flex:1; min-width:0;">
+                        <b style="font-size:0.9rem; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${c.nom}</b>
+                        <small style="font-size:0.65rem; color:#666;">TEL: ${c.id}</small>
                     </div>
 
-                    <div style="display:flex; flex-direction:column; gap:5px;">
-                        <button class="pay-btn" onclick="validerPaiement('${u.key}')">💰 PAYÉ</button>
+                    <div style="display:flex; flex-direction:column; gap:5px; flex-shrink:0;">
+                        <button class="pay-btn" onclick="validerPaiement('${c.id}')" style="padding:6px; font-size:0.6rem;">💰 PAYÉ</button>
                         <button class="badge-ban" 
-                                style="background:${isBanned ? '#10b981' : '#ef4444'}; padding:5px; font-size:0.6rem;" 
-                                onclick="toggleBan('${u.key}')">
-                            ${isBanned ? 'RÉACTIVER' : 'SUSPENDRE'}
+                                style="background:${c.isBanned ? '#10b981' : '#ef4444'}; padding:6px; font-size:0.6rem; border-radius:5px; border:none; color:white; cursor:pointer;" 
+                                onclick="toggleBan('${c.id}')">
+                            ${c.isBanned ? 'RÉACTIVER' : 'SUSPENDRE'}
                         </button>
                     </div>
                 </div>`;
         });
-    } catch(e) { list.innerHTML = "Erreur."; }
+
+    } catch(e) { 
+        list.innerHTML = "<p style='color:red; text-align:center;'>Erreur de synchronisation.</p>"; 
+        console.error("Erreur LoadUsers:", e);
+    }
 }
 async function toggleBan(idUser) {
     const ref = database.ref('blacklist/' + idUser);
@@ -534,6 +557,7 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
 
 
