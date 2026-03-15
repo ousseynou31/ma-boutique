@@ -250,7 +250,24 @@
     <div class="card">
         <h3 style="margin-top:0; font-size:0.9rem; color:var(--s);">UTILISATEURS ENREGISTRÉS</h3>
         <div style="margin-bottom: 15px;">
-    
+    <div id="admin-prices-config" style="background:#111; padding:15px; border-radius:10px; border:1px solid #333; margin-bottom:20px;">
+    <h4 style="margin:0 0 10px 0; font-size:0.8rem; color:var(--p);">⚙️ RÉGLAGE DES TARIFS (mensuels)</h4>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:80px;">
+            <label style="font-size:0.6rem; color:gray; display:block;">CAT A</label>
+            <input type="number" id="price-A" value="5000" style="width:100%; background:#222; color:white; border:1px solid #444; padding:5px; border-radius:4px;">
+        </div>
+        <div style="flex:1; min-width:80px;">
+            <label style="font-size:0.6rem; color:gray; display:block;">CAT B</label>
+            <input type="number" id="price-B" value="3000" style="width:100%; background:#222; color:white; border:1px solid #444; padding:5px; border-radius:4px;">
+        </div>
+        <div style="flex:1; min-width:80px;">
+            <label style="font-size:0.6rem; color:gray; display:block;">CAT C</label>
+            <input type="number" id="price-C" value="1500" style="width:100%; background:#222; color:white; border:1px solid #444; padding:5px; border-radius:4px;">
+        </div>
+        <button onclick="sauvegarderTarifs()" style="background:var(--p); border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">💾 OK</button>
+    </div>
+</div>
 <div id="admin-filters" style="display:flex; gap:5px; margin-bottom:15px; overflow-x:auto; padding-bottom:5px;">
     <button onclick="loadUsers('TOUT')" class="filter-btn">TOUT</button>
     <button onclick="loadUsers('A')" class="filter-btn" style="border-color:#ffd700;">CAT A</button>
@@ -707,67 +724,129 @@ function toggleInventaire() {
     }
 }
 // --- CONFIGURATION FINANCIÈRE ---
-const TARIFS = { 
-    'A': 5000, 
-    'B': 3000, 
-    'C': 1500 
+// --- GESTION DYNAMIQUE DES TARIFS ---
+
+// Fonction pour récupérer les tarifs (soit sauvegardés, soit par défaut)
+function obtenirTarifs() {
+    const sauvegardes = localStorage.getItem('mes_tarifs');
+    if (sauvegardes) {
+        return JSON.parse(sauvegardes);
+    }
+    // Tarifs par défaut si rien n'est enregistré
+    return { 'A': 5000, 'B': 3000, 'C': 1500 };
+}
+
+// Fonction pour enregistrer vos nouveaux prix
+function sauvegarderTarifs() {
+    const nouveauxTarifs = {
+        'A': parseInt(document.getElementById('price-A').value),
+        'B': parseInt(document.getElementById('price-B').value),
+        'C': parseInt(document.getElementById('price-C').value)
+    };
+    
+    localStorage.setItem('mes_tarifs', JSON.stringify(nouveauxTarifs));
+    alert("✅ Tarifs mis à jour !");
+    
+    // Si un rapport est ouvert, on le rafraîchit
+    if (document.getElementById('modal-rapport').style.display === 'block') {
+        ouvrirRapport();
+    }
+}
+
+// Au chargement de la page, on remplit les cases avec les prix actuels
+window.onload = function() {
+    const t = obtenirTarifs();
+    document.getElementById('price-A').value = t.A;
+    document.getElementById('price-B').value = t.B;
+    document.getElementById('price-C').value = t.C;
 };
 
 // 1. OUVRIR LE BILAN
 function ouvrirRapport() {
+    // 1. Récupération des tarifs dynamiques et des éléments de l'interface
+    const t = obtenirTarifs(); 
     const modal = document.getElementById('modal-rapport');
     const zoneContenu = document.getElementById('contenu-rapport');
+    
+    // On récupère uniquement les clients actuellement affichés (ceux qui respectent le filtre)
     const rows = document.querySelectorAll('.user-row'); 
     
+    if (rows.length === 0) {
+        alert("Aucun client à afficher dans le rapport.");
+        return;
+    }
+
     let totalArgent = 0;
+    
+    // 2. Construction de l'en-tête du tableau (Style pro pour le PDF)
     let tableauHTML = `
-        <h2 style="text-align:center; margin:0; color:#222;">BILAN FINANCIER DES CLIENTS</h2>
-        <p style="text-align:center; color:#666; font-size:0.9rem;">Document généré le : ${new Date().toLocaleString()}</p>
-        <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+        <div style="text-align:center; margin-bottom:20px;">
+            <h2 style="margin:0; color:#222; text-transform:uppercase;">Bilan Financier Clients</h2>
+            <p style="margin:5px 0; color:#666; font-size:0.85rem;">Extraits le : ${new Date().toLocaleString()}</p>
+        </div>
         
-        <table style="width:100%; border-collapse: collapse; font-size:0.9rem;">
+        <table style="width:100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 0.9rem;">
             <thead>
-                <tr style="background:#f8f8f8; text-align:left;">
-                    <th style="padding:12px; border-bottom:2px solid #ddd;">NOM DU CLIENT</th>
-                    <th style="padding:12px; border-bottom:2px solid #ddd; text-align:center;">CAT.</th>
-                    <th style="padding:12px; border-bottom:2px solid #ddd; text-align:center;">RETARD</th>
-                    <th style="padding:12px; border-bottom:2px solid #ddd; text-align:right;">MONTANT</th>
+                <tr style="background:#f2f2f2; border-bottom: 2px solid #333;">
+                    <th style="padding:12px; text-align:left; border:1px solid #ddd;">NOM DU CLIENT</th>
+                    <th style="padding:12px; text-align:center; border:1px solid #ddd;">CAT.</th>
+                    <th style="padding:12px; text-align:center; border:1px solid #ddd;">RETARD</th>
+                    <th style="padding:12px; text-align:right; border:1px solid #ddd;">MONTANT</th>
                 </tr>
             </thead>
             <tbody>`;
 
+    // 3. Boucle sur les clients pour remplir les lignes et calculer le total
     rows.forEach(row => {
         const nom = row.querySelector('b').innerText;
         const cat = row.querySelector('select').value;
         const jours = row.querySelector('.stats-circle').innerText;
-        const montant = TARIFS[cat] || 0;
+        
+        // On récupère le montant basé sur VOTRE réglage (A, B ou C)
+        const montant = t[cat] || 0; 
         totalArgent += montant;
 
         tableauHTML += `
-            <tr style="border-bottom:1px solid #eee;">
-                <td style="padding:10px; font-weight:bold;">${nom}</td>
-                <td style="padding:10px; text-align:center;">${cat}</td>
-                <td style="padding:10px; text-align:center;">${jours}</td>
-                <td style="padding:10px; text-align:right;">${montant} FCFA</td>
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding:10px; border:1px solid #ddd;"><b>${nom}</b></td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center;">${cat}</td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center;">${jours}</td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:right; font-family: monospace;">
+                    ${montant.toLocaleString()} FCFA
+                </td>
             </tr>`;
     });
 
+    // 4. Pied de tableau avec le Total Général
     tableauHTML += `
             </tbody>
             <tfoot>
                 <tr style="background:#f9f9f9; font-weight:bold; font-size:1.1rem;">
-                    <td colspan="3" style="padding:20px; text-align:right;">TOTAL À ENCAISSER :</td>
-                    <td style="padding:20px; text-align:right; color:#27ae60;">${totalArgent} FCFA</td>
+                    <td colspan="3" style="padding:15px; text-align:right; border:1px solid #ddd;">TOTAL GÉNÉRAL :</td>
+                    <td style="padding:15px; text-align:right; border:1px solid #ddd; color:#27ae60;">
+                        ${totalArgent.toLocaleString()} FCFA
+                    </td>
                 </tr>
             </tfoot>
         </table>
-        <p style="margin-top:40px; font-size:0.7rem; color:#aaa; text-align:center;">Logiciel de Gestion - Admin Mode</p>
-    `;
+        
+        <div style="margin-top:30px; font-size:0.75rem; color:#888; text-align:center; font-style:italic;">
+            Rapport certifié conforme - Système de Gestion Admin
+        </div>`;
 
+    // 5. Injection du contenu et affichage de la fenêtre plein écran
     zoneContenu.innerHTML = tableauHTML;
     modal.style.display = 'block';
+    
+    // Empêcher le défilement de la page en arrière-plan
+    document.body.style.overflow = 'hidden';
 }
 
+// Fonction pour fermer et restaurer le défilement
+function fermerRapport() {
+    document.getElementById('modal-rapport').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
 // 2. FERMER LE BILAN
 function fermerRapport() {
     document.getElementById('modal-rapport').style.display = 'none';
@@ -817,7 +896,24 @@ function genererCSV() {
         location.reload();
     }
 }
+// Initialisation des tarifs au chargement de la page
+window.addEventListener('load', () => {
+    try {
+        const t = obtenirTarifs(); // On récupère tes prix (A, B, C)
+        
+        // On remplit les cases du formulaire avec les prix trouvés
+        if(document.getElementById('price-A')) {
+            document.getElementById('price-A').value = t.A;
+            document.getElementById('price-B').value = t.B;
+            document.getElementById('price-C').value = t.C;
+            console.log("Tarifs chargés avec succès :", t);
+        }
+    } catch (e) {
+        console.error("Erreur lors de l'initialisation des tarifs :", e);
+    }
+});
 
+// Ton lancement d'application reste identique
 window.onload = launchApp;
 </script>
 </body>
