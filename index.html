@@ -481,6 +481,10 @@ async function loadUsers(filtre = 'TOUT') {
                     </div>
 
                     <div style="display:flex; flex-direction:column; gap:5px; flex-shrink:0; align-items:flex-end;">
+                        <button onclick="envoyerRappel('${c.id}', '${c.nom}', '${c.categorie}')" 
+            style="width:75px; background:#25d366; color:white; border:none; padding:5px; font-size:0.55rem; border-radius:4px; font-weight:bold; cursor:pointer;">
+        💬 RAPPEL
+    </button>
                         <button class="pay-btn" onclick="validerPaiement('${c.id}')" 
                                 style="width:75px; padding:5px; font-size:0.55rem; font-weight:bold;">💰 PAYÉ</button>
                         
@@ -889,13 +893,31 @@ function genererCSV() {
     link.download = `BILAN_${new Date().toLocaleDateString()}.csv`;
     link.click();
 }
-   
+
+
+    function envoyerRappel(idUser, nom, cat) {
+    const t = obtenirTarifs();
+    const montant = t[cat] || 0;
+    
+    // On nettoie le numéro (enlève les espaces ou caractères spéciaux si besoin)
+    const tel = idUser.trim();
+    
+    // Votre message personnalisé (le %0A sert à faire un retour à la ligne)
+    const message = `Bonjour ${nom},%0A%0ANous vous informons que votre abonnement (Catégorie ${cat}) est arrivé à échéance.%0A%0AMontant à régulariser : ${montant} FCFA.%0A%0AMerci de votre confiance !`;
+
+    // Lien WhatsApp (wa.me)
+    const url = `https://wa.me/${tel}?text=${message}`;
+
+    // Ouvre WhatsApp dans un nouvel onglet
+    window.open(url, '_blank');
+}
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
         localStorage.removeItem('v32_active');
         location.reload();
     }
 }
+    
 // Initialisation des tarifs au chargement de la page
 window.addEventListener('load', () => {
     try {
