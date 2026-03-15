@@ -334,37 +334,7 @@ function openAdmin() {
 }
 
 
-async function loadUsers(filtre = 'TOUT') { 
-    const list = document.getElementById('admin-user-list');
-    list.innerHTML = "<p style='text-align:center; color:gray; padding:20px;'>Filtrage en cours...</p>";
-    
-    try {
-        const usersSnap = await database.ref('clients').once('value');
-        const blackSnap = await database.ref('blacklist').once('value');
-        const blacklisted = blackSnap.val() || {};
-        
-        let clientsArray = [];
-
-        usersSnap.forEach(u => {
-            const data = u.val().infos_client;
-            if(data) {
-                const maCat = data.categorie || 'C';
-
-                // --- NOUVEAU : LOGIQUE DE FILTRE ---
-                if (filtre === 'TOUT' || maCat === filtre) {
-                    clientsArray.push({
-                        id: u.key,
-                        nom: data.nom,
-                        date: data.date_inscription,
-                        jours: calculerJours(data.date_inscription),
-                        isBanned: blacklisted[u.key] === true,
-                        categorie: maCat
-                    });
-                }
-            }
-        });
-        
-        // ... (Le reste de la fonction reste identique : Tri, Compteur, Boucle HTML)
+async function loadUsers() {
     const list = document.getElementById('admin-user-list');
     list.innerHTML = "<p style='text-align:center; color:gray; padding:20px;'>Mise à jour depuis le Cloud...</p>";
     
