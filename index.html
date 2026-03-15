@@ -132,6 +132,30 @@
     border: 1px solid #444;
     white-space: nowrap;
 }
+        @media print {
+        /* On cache absolument tout le reste de l'application */
+        body * { 
+            visibility: hidden !important; 
+        }
+        /* On ne montre que le modal de rapport et son contenu */
+        #modal-rapport, #modal-rapport #contenu-rapport, #modal-rapport #contenu-rapport * { 
+            visibility: visible !important; 
+        }
+        /* On positionne le rapport tout en haut à gauche pour le PDF */
+        #modal-rapport { 
+            position: absolute !important; 
+            left: 0 !important; 
+            top: 0 !important; 
+            width: 100% !important; 
+            background: white !important; 
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        /* On cache la barre d'outils (boutons Retour, PDF, CSV) sur le fichier final */
+        .no-print { 
+            display: none !important; 
+        }
+    }
     </style>
 </head>
 <body>
@@ -751,7 +775,17 @@ function fermerRapport() {
 
 // 3. TÉLÉCHARGER EN PDF (Déclenche l'aperçu système)
 function sauvegarderPDF() {
+    // On change temporairement le titre de la page (ce sera le nom du fichier PDF)
+    const ancienTitre = document.title;
+    document.title = "Bilan_Financier_" + new Date().toLocaleDateString();
+
+    // On lance la génération
     window.print();
+
+    // On remet le titre original après
+    setTimeout(() => {
+        document.title = ancienTitre;
+    }, 1000);
 }
 
 // 4. TÉLÉCHARGER EN CSV (Pour Excel)
