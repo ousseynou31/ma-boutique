@@ -214,6 +214,11 @@
     
     <div class="card">
         <h3 style="margin-top:0; font-size:0.9rem; color:var(--s);">UTILISATEURS ENREGISTRÉS</h3>
+        <div style="margin-bottom: 15px;">
+    <input type="text" id="admin-search" placeholder="🔍 Rechercher un nom ou un numéro..." 
+           oninput="filtrerClients()" 
+           style="background: #1a1a1a; border: 1px solid var(--p); padding: 12px; border-radius: 10px; font-size: 0.9rem;">
+</div>
         <div id="admin-user-list">
             <p style="text-align:center; color:#444;">Chargement de la base Cloud...</p>
         </div>
@@ -502,6 +507,22 @@ function toggleInventaire() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
     return diffDays;
 }
+
+    function filtrerClients() {
+    const searchVal = document.getElementById('admin-search').value.toLowerCase();
+    const rows = document.querySelectorAll('.user-row');
+
+    rows.forEach(row => {
+        // On récupère le texte à l'intérieur de la ligne (nom et ID/tel)
+        const text = row.innerText.toLowerCase();
+        
+        if (text.includes(searchVal)) {
+            row.style.display = "flex"; // On affiche
+        } else {
+            row.style.display = "none"; // On cache
+        }
+    });
+}
 function deconnexion() {
     if(confirm("Verrouiller ?")) {
         localStorage.removeItem('v32_active');
@@ -513,6 +534,7 @@ window.onload = launchApp;
 </script>
 </body>
 </html>
+
 
 
 
