@@ -333,7 +333,38 @@ function openAdmin() {
     }
 }
 
-async function loadUsers() {
+
+async function loadUsers(filtre = 'TOUT') { 
+    const list = document.getElementById('admin-user-list');
+    list.innerHTML = "<p style='text-align:center; color:gray; padding:20px;'>Filtrage en cours...</p>";
+    
+    try {
+        const usersSnap = await database.ref('clients').once('value');
+        const blackSnap = await database.ref('blacklist').once('value');
+        const blacklisted = blackSnap.val() || {};
+        
+        let clientsArray = [];
+
+        usersSnap.forEach(u => {
+            const data = u.val().infos_client;
+            if(data) {
+                const maCat = data.categorie || 'C';
+
+                // --- NOUVEAU : LOGIQUE DE FILTRE ---
+                if (filtre === 'TOUT' || maCat === filtre) {
+                    clientsArray.push({
+                        id: u.key,
+                        nom: data.nom,
+                        date: data.date_inscription,
+                        jours: calculerJours(data.date_inscription),
+                        isBanned: blacklisted[u.key] === true,
+                        categorie: maCat
+                    });
+                }
+            }
+        });
+        
+        // ... (Le reste de la fonction reste identique : Tri, Compteur, Boucle HTML)
     const list = document.getElementById('admin-user-list');
     list.innerHTML = "<p style='text-align:center; color:gray; padding:20px;'>Mise à jour depuis le Cloud...</p>";
     
@@ -646,6 +677,35 @@ function toggleInventaire() {
     } catch (e) {
         alert("Erreur lors de la mise à jour de la catégorie");
     }
+}
+
+    function genererCSV() {
+    // 1. On prépare l'entête du tableau
+    let csvContent = "Nom;Telephone;Categorie;Jours;Statut\n";
+    
+    // 2. On récupère les lignes affichées dans ton admin-user-list
+    const rows = document.querySelectorAll('.user-row');
+    
+    rows.forEach(row => {
+        const nom = row.querySelector('b').innerText;
+        const tel = row.querySelector('small').innerText.replace('TEL: ', '');
+        const cat = row.querySelector('select').value;
+        const jours = row.querySelector('.stats-circle').innerText;
+        
+        // On crée la ligne pour le fichier
+        csvContent += `${nom};${tel};${cat};${jours};Inscrit\n`;
+    });
+
+    // 3. Création et téléchargement du fichier
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `RECAP_CLIENTS_${new Date().toLocaleDateString()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
