@@ -219,6 +219,14 @@
         <div style="margin-bottom: 15px;">
     
 </div>
+        <div id="admin-filters" style="display:flex; gap:5px; margin-bottom:15px; overflow-x:auto; padding-bottom:5px;">
+    <button onclick="filtrerVue('TOUT')" class="filter-btn">TOUT</button>
+    <button onclick="filtrerVue('A')" class="filter-btn" style="border-color:#ffd700;">CAT A</button>
+    <button onclick="filtrerVue('B')" class="filter-btn" style="border-color:#c0c0c0;">CAT B</button>
+    <button onclick="filtrerVue('C')" class="filter-btn" style="border-color:#cd7f32;">CAT C</button>
+    <button onclick="genererPDF()" class="filter-btn" style="background:#444;">📄 PDF</button>
+    <button onclick="genererCSV()" class="filter-btn" style="background:#444;">📊 EXCEL</button>
+</div>
         <div id="admin-user-list">
             <p style="text-align:center; color:#444;">Chargement de la base Cloud...</p>
         </div>
@@ -346,25 +354,28 @@ async function loadUsers() {
                     nom: data.nom,
                     date: data.date_inscription,
                     jours: calculerJours(data.date_inscription),
-                    isBanned: blacklisted[u.key] === true
+                    isBanned: blacklisted[u.key] === true,
+                    categorie: data.categorie || 'C' // Récupère la catégorie A, B ou C
                 });
             }
         });
 
-        // 3. TRI PAR URGENCE (Les plus anciens en haut)
+        // 3. TRI PAR URGENCE
         clientsArray.sort((a, b) => b.jours - a.jours);
 
-        // 4. AFFICHAGE DU COMPTEUR (On vide la liste avec "=")
+        // 4. AFFICHAGE DU COMPTEUR
         list.innerHTML = `
             <p style="font-size:0.75rem; color:var(--p); margin-bottom:15px; font-weight:800; text-align:center; border-bottom:1px solid #222; padding-bottom:10px;">
                 📊 TOTAL : ${clientsArray.length} CLIENTS ENREGISTRÉS
             </p>`;
 
-        // 5. GÉNÉRATION DE LA LISTE (On ajoute avec "+=")
+        // 5. GÉNÉRATION DE LA LISTE FUSIONNÉE
         clientsArray.forEach(c => {
             let colorClass = "status-ok";
             if(c.jours >= 26) colorClass = "status-warning";
             if(c.jours >= 30) colorClass = "status-danger";
+
+            const cat = c.categorie || 'C'; 
 
             list.innerHTML += `
                 <div class="user-row" style="display:flex; align-items:center; gap:10px; border-bottom: 1px solid #222; padding: 12px 0;">
@@ -374,27 +385,36 @@ async function loadUsers() {
                     </div>
 
                     <div style="flex:1; min-width:0;">
-                        <b style="font-size:0.9rem; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        <b style="font-size:0.85rem; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                             ${c.nom}
                         </b>
-                        <small style="font-size:0.65rem; color:#666;">TEL: ${c.id}</small>
+                        <small style="font-size:0.6rem; color:#666;">TEL: ${c.id}</small>
                     </div>
 
-                    <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0; align-items:flex-end;">
+                    <div style="flex-shrink:0;">
+                        <select onchange="changerCategorie('${c.id}', this.value)" 
+                                style="background:#1a1a1a; color:white; border:1px solid #444; border-radius:4px; font-size:0.65rem; padding:4px; cursor:pointer;">
+                            <option value="A" ${cat === 'A' ? 'selected' : ''}>CAT A</option>
+                            <option value="B" ${cat === 'B' ? 'selected' : ''}>CAT B</option>
+                            <option value="C" ${cat === 'C' ? 'selected' : ''}>CAT C</option>
+                        </select>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:5px; flex-shrink:0; align-items:flex-end;">
                         
                         <button class="pay-btn" onclick="validerPaiement('${c.id}')" 
-                                style="width:85px; padding:6px; font-size:0.6rem; font-weight:bold;">
+                                style="width:75px; padding:5px; font-size:0.55rem; font-weight:bold;">
                             💰 PAYÉ
                         </button>
                         
                         <button class="badge-ban" 
                                 onclick="toggleBan('${c.id}')"
-                                style="width:85px; background:${c.isBanned ? '#10b981' : '#ef4444'}; padding:6px; font-size:0.6rem; border-radius:5px; border:none; color:white; cursor:pointer; font-weight:bold;">
-                            ${c.isBanned ? 'RÉACTIVER' : 'SUSPENDRE'}
+                                style="width:75px; background:${c.isBanned ? '#10b981' : '#ef4444'}; padding:5px; font-size:0.55rem; border-radius:4px; border:none; color:white; cursor:pointer; font-weight:bold;">
+                            ${c.isBanned ? 'RÉACT' : 'SUSPEND'}
                         </button>
                         
                         <button onclick="deleteClient('${c.id}')" 
-                                style="width:85px; background:transparent; border:1px solid #ff4444; color:#ff4444; font-size:0.55rem; padding:4px; border-radius:4px; font-weight:bold; cursor:pointer; text-align:center;">
+                                style="width:75px; background:transparent; border:1px solid #ff4444; color:#ff4444; font-size:0.5rem; padding:3px; border-radius:4px; font-weight:bold; cursor:pointer; text-align:center;">
                             🗑️ DELETE
                         </button>
 
@@ -616,6 +636,17 @@ function toggleInventaire() {
     }
 }
 
+    async function changerCategorie(idUser, nouvelleCat) {
+    try {
+        await database.ref('clients/' + idUser + '/infos_client').update({
+            categorie: nouvelleCat
+        });
+        // Optionnel : un petit message discret ou une console log
+        console.log("Catégorie mise à jour pour " + idUser);
+    } catch (e) {
+        alert("Erreur lors de la mise à jour de la catégorie");
+    }
+}
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
         localStorage.removeItem('v32_active');
