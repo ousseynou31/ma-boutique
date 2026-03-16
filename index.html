@@ -1162,7 +1162,35 @@ async function ouvrirHistoriquePleinEcran() {
         tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>Erreur de chargement.</td></tr>";
     }
 }
-
+function telechargerHistorique() {
+    // 1. On récupère le contenu du tableau uniquement
+    const contenuTableau = document.getElementById('modal-historique').innerHTML;
+    
+    // 2. On crée une fenêtre temporaire pour l'impression
+    const fenetreImpression = window.open('', '', 'height=600,width=800');
+    
+    fenetreImpression.document.write('<html><head><title>Historique des Paiements</title>');
+    fenetreImpression.document.write('<style>');
+    fenetreImpression.document.write('body { font-family: sans-serif; padding: 20px; }');
+    fenetreImpression.document.write('table { width: 100%; border-collapse: collapse; margin-top: 20px; }');
+    fenetreImpression.document.write('th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }');
+    fenetreImpression.document.write('th { background-color: #f2f2f2; }');
+    fenetreImpression.document.write('button { display: none; }'); // Cache les boutons sur le PDF
+    fenetreImpression.document.write('</style></head><body>');
+    
+    // 3. On écrit le contenu (sans les boutons d'action)
+    fenetreImpression.document.write('<h2 style="text-align:center;">JOURNAL DES PAIEMENTS</h2>');
+    fenetreImpression.document.write(document.getElementById('table-paiements-body-fullscreen').closest('table').outerHTML);
+    
+    fenetreImpression.document.write('</body></html>');
+    
+    fenetreImpression.document.close();
+    
+    // 4. On lance l'impression / Enregistrement PDF
+    setTimeout(() => {
+        fenetreImpression.print();
+    }, 500);
+}
 // Fonction pour fermer la vue
 function fermerHistoriquePleinEcran() {
     document.getElementById('modal-historique').style.display = 'none';
@@ -1201,6 +1229,10 @@ window.addEventListener('load', () => {
     
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
         <h2 style="color:var(--p); font-size:1.1rem; margin:0;">📋 HISTORIQUE DES PAIEMENTS</h2>
+        <button onclick="telechargerHistorique()" 
+        style="background:#00a8ff; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; margin-right:10px; display:flex; align-items:center; gap:5px;">
+    📥 TÉLÉCHARGER / PDF
+</button>
         <button onclick="fermerHistoriquePleinEcran()" style="background:#ff4444; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer;">FERMER</button>
     </div>
 
