@@ -681,34 +681,42 @@ function toggleInventaire() {
             </div>`;
     });
 }
-
-  async function validerPaiement(userId) {
+async function validerPaiement(userId) {
     if(!confirm("Valider le paiement ?")) return;
 
     try {
         const maintenant = new Date();
         const dateFr = maintenant.toLocaleDateString('fr-FR') + " " + maintenant.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
 
-        // 1. Récupérer les infos du client
-        const snap = await database.ref('clients/' + userId + '/infos_client').once('value');
-        const dataClient = snap.val();
+        // 1. Récupérer les infos du client ET les tarifs des paramètres
+        const snapClient = await database.ref('clients/' + userId + '/infos_client').once('value');
+        const snapTarifs = await database.ref('parametres/tarifs').once('value');
+        
+        const client = snapClient.val();
+        const tarifs = snapTarifs.val();
 
-        // 2. Mettre à jour la date d'inscription
+        // 2. Trouver le prix correspondant à la catégorie du client
+        // Si le client est "VIP", on prend le prix VIP des paramètres
+        const prixApplique = tarifs[client.categorie] || 0;
+
+        // 3. Mettre à jour la date du client
         await database.ref('clients/' + userId + '/infos_client').update({
             date_inscription: maintenant.toISOString()
         });
 
-        // 3. Ajouter à l'historique AVEC LE NUMÉRO (userId)
+        // 4. Enregistrer dans l'historique AVEC LE PRIX RÉEL
         await database.ref('historique_paiements').push({
-            nom: dataClient.nom,
-            telephone: userId, // On ajoute le numéro ici
+            nom: client.nom,
+            telephone: userId,
             date: dateFr,
+            categorie: client.categorie,
+            montant: prixApplique, // On enregistre le prix ici !
             situation: "PAYÉ"
         });
 
-        alert("Paiement enregistré !");
+        alert("Paiement de " + prixApplique + " FCFA enregistré !");
         loadUsers(); 
-        if(typeof ouvrirHistoriquePleinEcran === "function") ouvrirHistoriquePleinEcran();
+        chargerHistoriquePaiements();
     } catch (e) {
         console.error(e);
     }
@@ -1124,43 +1132,48 @@ async function forceReparationDates() {
 }
     // Fonction pour ouvrir la vue plein écran
 async function ouvrirHistoriquePleinEcran() {
-    const modal = document.getElementById('modal-historique');
     const tbody = document.getElementById('table-paiements-body-fullscreen');
-    
-    modal.style.display = 'block';
-    tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:30px;'>Chargement des transactions...</td></tr>";
+    const tfoot = document.getElementById('table-paiements-footer');
+    document.getElementById('modal-historique').style.display = 'block';
 
     try {
-        // On récupère les 50 derniers paiements
-        const snap = await database.ref('historique_paiements').limitToLast(50).once('value');
+        const snap = await database.ref('historique_paiements').once('value');
         let html = "";
-        let entries = [];
+        let cumulArgent = 0;
+        let nombrePaiements = 0;
 
-        // On transforme en tableau pour pouvoir inverser l'ordre (plus récent en haut)
         snap.forEach(p => {
-            entries.unshift({ id: p.key, ...p.val() });
+            const data = p.val();
+            const montant = Number(data.montant) || 0; // On récupère le montant enregistré
+            
+            cumulArgent += montant; // On additionne
+            nombrePaiements++;
+
+            html = `
+                <tr style="border-bottom:1px solid #222;">
+                    <td style="padding:12px; color:#aaa; font-size:0.7rem;">${data.date}</td>
+                    <td style="padding:12px;"><b>${data.nom}</b><br><small>${data.categorie}</small></td>
+                    <td style="padding:12px; font-family:monospace;">${data.telephone}</td>
+                    <td style="padding:12px; text-align:right; font-weight:bold; color:#25D366;">
+                        ${montant.toLocaleString()} F
+                    </td>
+                </tr>
+            ` + html; // Pour avoir le plus récent en haut
         });
 
-       entries.forEach(data => {
-    html += `
-        <tr style="border-bottom:1px solid #222;">
-            <td style="padding:12px; color:#aaa; font-size:0.7rem;">${data.date}</td>
-            <td style="padding:12px; font-weight:bold;">${data.nom}</td>
-            <td style="padding:12px; color:#25D366; font-family:monospace;">${data.telephone || 'N/A'}</td>
-            <td style="padding:12px; text-align:center;">
-                <span style="background:#1a1a1a; color:#25D366; border:1px solid #25D366; padding:3px 8px; border-radius:10px; font-size:0.6rem; font-weight:bold;">
-                    ✅ PAYÉ
-                </span>
-            </td>
-        </tr>
-    `;
-});
-        tbody.innerHTML = html || "<tr><td colspan='3' style='text-align:center; padding:30px;'>Aucun historique trouvé.</td></tr>";
+        tbody.innerHTML = html;
 
-    } catch (e) {
-        console.error(e);
-        tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>Erreur de chargement.</td></tr>";
-    }
+        // Ligne de TOTAL automatique
+        tfoot.innerHTML = `
+            <tr style="background:#000; color:#25D366; font-size:1rem;">
+                <td colspan="2" style="padding:15px;">TOTAL (${nombrePaiements} reçus)</td>
+                <td colspan="2" style="padding:15px; text-align:right; font-weight:bold; border-left:1px solid #333;">
+                    ${cumulArgent.toLocaleString()} FCFA
+                </td>
+            </tr>
+        `;
+
+    } catch (e) { console.error(e); }
 }
 function telechargerHistorique() {
     // 1. On récupère le contenu du tableau uniquement
@@ -1192,37 +1205,39 @@ function telechargerHistorique() {
     }, 500);
 }
 
-    function telechargerCSV() {
-    // 1. Définir l'entête du fichier Excel
+   function telechargerCSV() {
+    // 1. Définir l'entête
     let csvContent = "Date;Nom;Telephone;Situation\n";
 
-    // 2. Récupérer toutes les lignes du tableau plein écran
+    // 2. Récupérer les lignes
     const rows = document.querySelectorAll("#table-paiements-body-fullscreen tr");
 
     if (rows.length === 0 || rows[0].innerText.includes("Aucun")) {
         return alert("L'historique est vide !");
     }
 
-    // 3. Parcourir chaque ligne pour extraire les données
     rows.forEach(row => {
         const cols = row.querySelectorAll("td");
         if (cols.length >= 4) {
-            let date = cols[0].innerText.trim();
+            // On nettoie les espaces et les retours à la ligne
+            let date = cols[0].innerText.trim().replace(/\n/g, " ");
             let nom = cols[1].innerText.trim();
             let tel = cols[2].innerText.trim();
-            let situation = "PAYE"; // On simplifie pour Excel
+            let situation = "PAYE";
 
-            // On ajoute la ligne au contenu CSV (séparé par des points-virgules)
             csvContent += `${date};${nom};${tel};${situation}\n`;
         }
     });
 
-    // 4. Créer le fichier et déclencher le téléchargement
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // 3. CRUCIAL : Ajouter le BOM UTF-8 pour qu'Excel affiche bien les caractères
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // 4. Téléchargement
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    
     const maintenant = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
+    
     link.setAttribute("href", url);
     link.setAttribute("download", `historique_paiements_${maintenant}.csv`);
     link.style.visibility = 'hidden';
@@ -1280,19 +1295,22 @@ window.addEventListener('load', () => {
         <button onclick="fermerHistoriquePleinEcran()" style="background:#ff4444; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer;">FERMER</button>
     </div>
 
-    <table style="width:100%; border-collapse: collapse; font-size:0.8rem; color:white;">
-       <thead>
-    <tr style="background:#1a1a1a; text-align:left;">
-        <th style="padding:12px; border-bottom:2px solid #333;">DATE</th>
-        <th style="padding:12px; border-bottom:2px solid #333;">NOM</th>
-        <th style="padding:12px; border-bottom:2px solid #333;">TÉLÉPHONE</th>
-        <th style="padding:12px; border-bottom:2px solid #333; text-align:center;">SITUATION</th>
-    </tr>
-</thead>
-        <tbody id="table-paiements-body-fullscreen">
-            </tbody>
-    </table>
+        <table style="width:100%; border-collapse: collapse; font-size:0.8rem; color:white;">
+    <thead>
+        <tr style="background:#1a1a1a; text-align:left;">
+            <th style="padding:12px; border-bottom:2px solid #333;">DATE</th>
+            <th style="padding:12px; border-bottom:2px solid #333;">NOM</th>
+            <th style="padding:12px; border-bottom:2px solid #333;">TÉLÉPHONE</th>
+            <th style="padding:12px; border-bottom:2px solid #333; text-align:center;">SITUATION</th>
+        </tr>
+    </thead>
+    <tbody id="table-paiements-body-fullscreen">
+        </tbody>
+    <tfoot id="table-paiements-footer" style="background:#1a1a1a; font-weight:bold; border-top:2px solid #25D366;">
+        </tfoot>
+</table>
 </div>
+    
 </body>
 </html>
 
