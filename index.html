@@ -685,44 +685,58 @@ async function validerPaiement(userId) {
     if(!confirm("Confirmer le paiement et enregistrer le montant ?")) return;
 
     try {
-        // 1. On récupère les infos du client
+        // 1. Récupération des données client
         const snapClient = await database.ref('clients/' + userId + '/infos_client').once('value');
         const client = snapClient.val();
 
-        // 2. On récupère TOUS les tarifs que vous avez définis dans les paramètres
+        // 2. Récupération des tarifs (Paramètres)
         const snapTarifs = await database.ref('parametres/tarifs').once('value');
         const tarifs = snapTarifs.val() || {};
 
-        // 3. On cherche le prix qui correspond à la catégorie du client
-        // Si le client est "VIP" et que dans vos paramètres VIP = 5000, montant sera 5000
-        const montantAPayer = Number(tarifs[client.categorie]) || 0;
+        // --- DÉBUT DU BLOC ROBUSTE ---
+        let montantAPayer = 0;
+        if (client.categorie && tarifs) {
+            // On prépare le nom de la catégorie du client (nettoyé et en minuscules)
+            const categorieNettoyee = client.categorie.trim().toLowerCase();
+            
+            // On cherche dans les tarifs si une clé correspond (peu importe la casse)
+            for (let nomTarif in tarifs) {
+                if (nomTarif.trim().toLowerCase() === categorieNettoyee) {
+                    montantAPayer = Number(tarifs[nomTarif]);
+                    break;
+                }
+            }
+        }
+        // --- FIN DU BLOC ROBUSTE ---
 
         const maintenant = new Date();
         const dateISO = maintenant.toISOString();
         const dateFr = maintenant.toLocaleDateString('fr-FR') + " " + maintenant.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
 
-        // 4. On met à jour la fiche du client (Date d'inscription)
+        // 3. Mise à jour de la date d'inscription du client
         await database.ref('clients/' + userId + '/infos_client').update({
             date_inscription: dateISO
         });
 
-        // 5. ON ENREGISTRE L'HISTORIQUE AVEC LE MONTANT (C'est cette ligne qui crée la donnée manquante)
+        // 4. Enregistrement dans l'historique avec le montant trouvé
         await database.ref('historique_paiements').push({
             nom: client.nom,
             telephone: userId,
             categorie: client.categorie || "Non défini",
             date: dateFr,
-            montant: montantAPayer, // Voici la donnée qui manquait !
+            montant: montantAPayer, 
             situation: "PAYÉ"
         });
 
         alert("Succès ! Montant enregistré : " + montantAPayer + " F");
-        loadUsers(); 
-        if(typeof chargerHistoriquePaiements === "function") chargerHistoriquePaiements();
+        
+        // 5. Rafraîchissement de l'affichage
+        if (typeof loadUsers === "function") loadUsers(); 
+        if (typeof chargerHistoriquePaiements === "function") chargerHistoriquePaiements();
 
     } catch (e) {
         console.error("Erreur paiement:", e);
-        alert("Erreur lors de l'enregistrement du montant.");
+        alert("Une erreur est survenue lors de la validation.");
     }
 }
   function filtrerClients() {
