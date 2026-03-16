@@ -678,52 +678,30 @@ function toggleInventaire() {
 }
 
     async function validerPaiement(idUser) {
-    if(confirm("Confirmer le paiement et relancer le mois pour ce client ?")) {
-        const nouvelleDate = new Date().toLocaleString();
-        try {
-            // On met à jour la date d'inscription pour repartir de zéro (cycle de 30j)
-            await database.ref('clients/' + idUser + '/infos_client').update({
-                date_inscription: nouvelleDate
-            });
-            alert("✅ Cycle réinitialisé avec succès !");
-            loadUsers();
-        } catch(e) {
-            alert("Erreur lors de la validation.");
-        }
-    }
-}
-function calculerJours(dateStr) {
-    if (!dateStr) return 0;
-
-    try {
-        let dateInscription;
-
-        if (dateStr.includes('/')) {
-            // ÉTAPE 1: On sépare la date et l'heure
-            let partieDate = dateStr.split(' ')[0]; // On prend "14/03/2026"
-            let parties = partieDate.split('/');    // On sépare [14, 03, 2026]
-
-            // ÉTAPE 2: On force le format Année, Mois (0-11), Jour
-            // Note: En JS les mois commencent à 0 (Janvier = 0), donc on fait -1
-            dateInscription = new Date(parties[2], parties[1] - 1, parties[0]);
-        } else {
-            // Format ISO (nouveau format après correction)
-            dateInscription = new Date(dateStr);
-        }
-
-        const aujourdhui = new Date();
+    // 1. Demande de confirmation pour éviter les erreurs de clic
+    if(confirm("Confirmer le paiement et relancer le cycle de 30 jours pour ce client ?")) {
         
-        // Calcul de la différence
-        const diffTime = aujourdhui - dateInscription;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        try {
+            // 2. On génère la date précise du paiement au format ISO
+            const dateAujourdhui = new Date().toISOString();
 
-        return diffDays < 0 ? 0 : diffDays;
+            // 3. Mise à jour sur Firebase
+            await database.ref('clients/' + idUser + '/infos_client').update({
+                date_inscription: dateAujourdhui
+            });
 
-    } catch (e) {
-        console.error("Erreur sur la date:", dateStr);
-        return 0;
+            alert("✅ Paiement validé. Le compteur est remis à zéro !");
+            
+            // 4. On recharge la liste pour voir le changement immédiatement
+            loadUsers(); 
+
+        } catch(e) {
+            console.error("Erreur Paiement:", e);
+            alert("⚠️ Erreur technique : Impossible de valider le paiement sur le Cloud.");
+        }
     }
 }
+
   function filtrerClients() {
     const searchVal = document.getElementById('admin-search').value.toLowerCase();
     const rows = document.querySelectorAll('.user-row');
@@ -1011,7 +989,42 @@ function mettreAJourDashboard(clients) {
         document.getElementById('dash-retard').innerText = nbRetard;
     }
 }
-   
+ function calculerJours(dateStr) {
+    if (!dateStr) return 0;
+
+    try {
+        let dateInscription;
+
+        // CAS 1 : Anciennes dates avec des slashs (ex: 14/03/2026)
+        if (dateStr.includes('/')) {
+            let partieDate = dateStr.split(' ')[0]; // On isole "14/03/2026"
+            let p = partieDate.split('/');          // On coupe : [14, 03, 2026]
+            
+            // On force l'ordre : Année, Mois (0-11), Jour
+            // Attention : en JS, Janvier = 0, donc on fait Mois - 1
+            dateInscription = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+        } 
+        // CAS 2 : Nouvelles dates format ISO (ex: 2026-03-15T...)
+        else {
+            dateInscription = new Date(dateStr);
+        }
+
+        const aujourdhui = new Date();
+        
+        // Calcul de la différence en millisecondes
+        const diffTime = aujourdhui - dateInscription;
+        
+        // Conversion en jours (arrondi à l'unité inférieure)
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        // On retourne 0 si c'est aujourd'hui, sinon le nombre de jours
+        return diffDays < 0 ? 0 : diffDays;
+
+    } catch (e) {
+        console.error("Erreur de calcul date :", dateStr);
+        return 0;
+    }
+}  
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
         localStorage.removeItem('v32_active');
