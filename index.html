@@ -380,20 +380,40 @@ function verifierLicence() {
 async function enregistrerProfil() {
     const nom = document.getElementById('reg-nom').value.trim();
     const tel = document.getElementById('reg-tel').value.trim();
-    if(!nom || !tel) return alert("Champs incomplets");
     
+    // Vérification des champs
+    if(!nom || !tel) {
+        return alert("Veuillez remplir tous les champs.");
+    }
+    
+    // Nettoyage du numéro de téléphone (uniquement des chiffres)
     const cleanTel = tel.replace(/\D/g,''); 
+    
     try {
+        // Enregistrement sur le Cloud Firebase
         await database.ref('clients/' + cleanTel + '/infos_client').set({
-            nom: nom, tel: cleanTel,
-            date_inscription: new Date().toLocaleString(),
-            device_source: getDeviceId()
+            nom: nom, 
+            tel: cleanTel,
+            // Format ISO : Très important pour le calcul des jours (ex: 2026-03-16T10:00:00Z)
+            date_inscription: new Date().toISOString(), 
+            device_source: getDeviceId(),
+            categorie: 'C' // Catégorie par défaut à l'inscription
         });
+
+        // Sauvegarde locale pour la session
         localStorage.setItem('user_tel_id', cleanTel);
         localStorage.setItem('v32_registered', 'true');
+        
+        // Mise à jour de l'ID actuel et lancement de l'application
         currentId = cleanTel; 
+        
+        alert("✅ Compte Cloud créé avec succès !");
         launchApp();
-    } catch(e) { alert("Erreur Cloud."); }
+        
+    } catch(e) { 
+        console.error("Erreur Inscription:", e);
+        alert("⚠️ Erreur de connexion au Cloud. Vérifiez votre internet."); 
+    }
 }
 
 async function checkBanStatus() {
@@ -672,21 +692,33 @@ function toggleInventaire() {
         }
     }
 }
-   function calculerJours(dateInscription) {
-    if (!dateInscription || dateInscription === "") return 0; // Si vide, on met 0j
+ function calculerJours(dateStr) {
+    if (!dateStr) return 0;
 
-    const dateInit = new Date(dateInscription);
-    const dateAuj = new Date();
+    let dateInscription;
     
-    // Vérification si la date est valide
-    if (isNaN(dateInit.getTime())) return 0; 
+    // Si la date est au format "15/03/2026..." (ancien format)
+    if (dateStr.includes('/')) {
+        // On transforme "15/03/2026" en un format que JS comprend
+        const parties = dateStr.split(' ')[0].split('/');
+        // Format attendu par JS : MM/JJ/AAAA
+        dateInscription = new Date(`${parties[1]}/${parties[0]}/${parties[2]}`);
+    } else {
+        // Si c'est le nouveau format (ISO)
+        dateInscription = new Date(dateStr);
+    }
 
-    const diffInterne = dateAuj - dateInit;
-    const jours = Math.floor(diffInterne / (1000 * 60 * 60 * 24));
+    const aujourdhui = new Date();
     
-    return jours < 0 ? 0 : jours; // Empêche les nombres négatifs
+    // Calcul de la différence en millisecondes
+    const diffTime = aujourdhui - dateInscription;
+    
+    // Conversion en jours
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Retourne le nombre de jours (0 minimum)
+    return diffDays < 0 ? 0 : diffDays;
 }
-
   function filtrerClients() {
     const searchVal = document.getElementById('admin-search').value.toLowerCase();
     const rows = document.querySelectorAll('.user-row');
@@ -942,9 +974,8 @@ function genererCSV() {
     // 5. Ouverture de WhatsApp
     window.open(url, '_blank');
 }
-
-   function mettreAJourDashboard(clients) {
-    // 1. Récupérer les tarifs depuis les inputs du menu caché
+function mettreAJourDashboard(clients) {
+    // 1. Récupération des prix depuis vos réglages (inputs)
     const tarifA = parseInt(document.getElementById('price-A').value) || 0;
     const tarifB = parseInt(document.getElementById('price-B').value) || 0;
     const tarifC = parseInt(document.getElementById('price-C').value) || 0;
@@ -952,25 +983,30 @@ function genererCSV() {
     let totalGlobal = 0;
     let nbRetard = 0;
 
+    // 2. Analyse de chaque client envoyé par loadUsers
     clients.forEach(c => {
-        // 2. Calcul du montant selon la catégorie
-        let prix = tarifC; // Par défaut
-        if (c.categorie === 'A') prix = tarifA;
-        if (c.categorie === 'B') prix = tarifB;
-        
-        totalGlobal += prix;
+        // On détermine le prix selon la catégorie du client
+        let prixApplique = 0;
+        if (c.categorie === 'A') prixApplique = tarifA;
+        else if (c.categorie === 'B') prixApplique = tarifB;
+        else prixApplique = tarifC; // Catégorie C ou autre
 
-        // 3. Compter les retards (30 jours ou plus)
+        totalGlobal += prixApplique;
+
+        // On compte comme "en retard" ceux qui ont 30 jours ou plus
         if (c.jours >= 30) {
             nbRetard++;
         }
     });
 
-    // 4. Écriture dans le HTML
-    document.getElementById('dash-total-a').innerText = clients.length;
-    document.getElementById('dash-total-global').innerText = totalGlobal.toLocaleString() + " FCFA";
-    document.getElementById('dash-retard').innerText = nbRetard;
+    // 3. Mise à jour de l'affichage dans les cases du haut
+    if (document.getElementById('dash-total-a')) {
+        document.getElementById('dash-total-a').innerText = clients.length;
+        document.getElementById('dash-total-global').innerText = totalGlobal.toLocaleString() + " FCFA";
+        document.getElementById('dash-retard').innerText = nbRetard;
+    }
 }
+   
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
         localStorage.removeItem('v32_active');
