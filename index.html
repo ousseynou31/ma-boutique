@@ -1079,7 +1079,14 @@ async function forceReparationDates() {
         alert("Erreur : " + err.message);
     }
 }
-       
+ function deconnexionManuelle() {
+    console.log("Clic détecté !"); // Ceci s'affiche dans la console F12
+    if(confirm("Voulez-vous déconnecter l'appareil ? Il faudra saisir à nouveau le MOT DE PASSE pour entrer.")) {
+        localStorage.removeItem('v32_active');
+        alert("Déconnexion réussie"); // Pour être sûr que ça a fonctionné
+        location.reload();
+    }
+}      
 // Initialisation des tarifs au chargement de la page
 // Initialisation des tarifs et lancement au chargement de la page
 window.addEventListener('load', () => {
@@ -1090,18 +1097,7 @@ window.addEventListener('load', () => {
             document.getElementById('price-A').value = t.A;
             document.getElementById('price-B').value = t.B;
             document.getElementById('price-C').value = t.C;
- function deconnexionManuelle() {
-    // Le message de confirmation mis à jour
-    const message = "Voulez-vous déconnecter l'appareil ? Il faudra saisir à nouveau le MOT DE PASSE pour entrer.";
-    
-    if(confirm(message)) {
-        // 1. On retire l'autorisation d'accès
-        localStorage.removeItem('v32_active');
-        
-        // 2. On recharge pour revenir à la page de garde (demande de mot de passe)
-        location.reload();
-    }
-}           console.log("Tarifs chargés avec succès :", t);
+            console.log("Tarifs chargés avec succès :", t);
         }
     } catch (e) {
         console.error("Erreur lors de l'initialisation des tarifs :", e);
