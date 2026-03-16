@@ -676,28 +676,22 @@ function toggleInventaire() {
     });
 }
 
-    async function validerPaiement(idUser) {
-    // 1. Demande de confirmation pour éviter les erreurs de clic
-    if(confirm("Confirmer le paiement et relancer le cycle de 30 jours pour ce client ?")) {
+   async function validerPaiement(userId) {
+    if(!confirm("Confirmer le paiement et remettre les jours à 0 ?")) return;
+
+    try {
+        const nouvelleDate = new Date().toISOString(); // Format propre : 2026-03-16T...
         
-        try {
-            // 2. On génère la date précise du paiement au format ISO
-            const dateAujourdhui = new Date().toISOString();
+        await database.ref('clients/' + userId + '/infos_client').update({
+            // On s'assure d'utiliser exactement le nom que loadUsers recherche
+            date_inscription: nouvelleDate 
+        });
 
-            // 3. Mise à jour sur Firebase
-            await database.ref('clients/' + idUser + '/infos_client').update({
-                date_inscription: dateAujourdhui
-            });
-
-            alert("✅ Paiement validé. Le compteur est remis à zéro !");
-            
-            // 4. On recharge la liste pour voir le changement immédiatement
-            loadUsers(); 
-
-        } catch(e) {
-            console.error("Erreur Paiement:", e);
-            alert("⚠️ Erreur technique : Impossible de valider le paiement sur le Cloud.");
-        }
+        alert("Paiement validé !");
+        loadUsers(); // Recharge la liste pour voir le "0j"
+    } catch (e) {
+        alert("Erreur lors du paiement");
+        console.error(e);
     }
 }
 
