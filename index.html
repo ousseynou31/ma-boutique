@@ -527,7 +527,7 @@ const styleUrgence = c.jours >= 30
                     </div>
                 </div>`;
         });
-
+mettreAJourDashboard(clientsArray);
     } catch(e) { 
         list.innerHTML = "<p style='color:red; text-align:center; padding:20px;'>⚠️ Erreur Cloud.</p>"; 
         console.error("Erreur LoadUsers:", e);
@@ -781,6 +781,8 @@ function sauvegarderTarifs() {
     if (document.getElementById('modal-rapport').style.display === 'block') {
         ouvrirRapport();
     }
+    // À la fin de la fonction sauvegarderTarifs
+loadUsers('TOUT'); // Cela va recharger la liste et recalculer le dashboard
 }
 
 // Au chargement de la page, on remplit les cases avec les prix actuels
@@ -943,6 +945,33 @@ function genererCSV() {
 
     // 5. Ouverture de WhatsApp
     window.open(url, '_blank');
+}
+
+    function mettreAJourDashboard(clients) {
+    const t = obtenirTarifs(); // On récupère vos prix A, B, C
+    let totalGlobal = 0;
+    let nbRetard = 0;
+
+    clients.forEach(c => {
+        // On calcule le montant basé sur la catégorie du client
+        const montant = parseInt(t[c.categorie]) || 0;
+        totalGlobal += montant;
+
+        // On compte les retards (30 jours ou plus)
+        // Assurez-vous que c.jours est bien un nombre
+        if (parseInt(c.jours) >= 30) {
+            nbRetard++;
+        }
+    });
+
+    // Mise à jour visuelle des cases du Dashboard
+    const elUnites = document.getElementById('dash-total-a');
+    const elGlobal = document.getElementById('dash-total-global');
+    const elRetard = document.getElementById('dash-retard');
+
+    if (elUnites) elUnites.innerText = clients.length;
+    if (elGlobal) elGlobal.innerText = totalGlobal.toLocaleString() + " FCFA";
+    if (elRetard) elRetard.innerText = nbRetard;
 }
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
