@@ -523,7 +523,17 @@ async function loadUsers(filtre = 'TOUT') {
                             <option value="C" ${c.categorie === 'C' ? 'selected' : ''}>CAT C</option>
                         </select>
                     </div>
-
+                     // --- MODIFICATION POUR VOIR LA DATE RÉELLE ---
+<div style="flex:1; min-width:0;">
+    <b style="font-size:0.85rem; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+        ${c.nom} 
+        <span style="color:#ffa500; font-size:0.65rem; margin-left:5px;">
+            [LU: ${c.date ? c.date : 'VIDE'}]
+        </span>
+    </b>
+    <small style="font-size:0.6rem; color:#666;">TEL: ${c.id}</small>
+</div>
+// --- MODIFICATION POUR VOIR LA DATE RÉELLE ---
                     <div style="display:flex; flex-direction:column; gap:5px; flex-shrink:0; align-items:flex-end;">
                         <button onclick="envoyerRappel('${c.id}', '${c.nom}', '${c.categorie}')" 
                                 style="width:75px; background:#25D366; color:white; border:none; padding:5px; font-size:0.55rem; border-radius:4px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:3px;">
