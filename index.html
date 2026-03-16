@@ -246,23 +246,10 @@
 <div id="page-admin" class="full-page">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
         <h2 style="color:var(--p); margin:0;">🛡️ CONTRÔLE ADMIN</h2>
-      <div style="margin-top:20px; background:#1a1a1a; padding:15px; border-radius:10px;">
-    <h3 style="color:var(--p); font-size:0.9rem; text-align:center; margin-bottom:15px;">📜 HISTORIQUE DES PAIEMENTS</h3>
-    
-    <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse: collapse; font-size:0.7rem; color:white;">
-            <thead>
-                <tr style="border-bottom:2px solid #333; text-align:left;">
-                    <th style="padding:8px;">DATE</th>
-                    <th style="padding:8px;">NOM</th>
-                    <th style="padding:8px; text-align:center;">SITUATION</th>
-                </tr>
-            </thead>
-            <tbody id="table-paiements-body">
-                </tbody>
-        </table>
-    </div>
-</div>  
+     <button onclick="ouvrirHistoriquePleinEcran()" 
+        style="width:100%; background:#6c5ce7; color:white; border:none; padding:12px; font-size:0.8rem; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
+    📊 VOIR L'HISTORIQUE COMPLET
+</button>
      <button onclick="deconnexionManuelle()" 
         style="width:100%; background:#444; color:white; border:none; padding:12px; font-size:0.8rem; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
     🚪 DÉCONNECTER L'APPAREIL
@@ -1135,6 +1122,51 @@ async function forceReparationDates() {
         console.error("Erreur historique:", e);
     }
 }
+    // Fonction pour ouvrir la vue plein écran
+async function ouvrirHistoriquePleinEcran() {
+    const modal = document.getElementById('modal-historique');
+    const tbody = document.getElementById('table-paiements-body-fullscreen');
+    
+    modal.style.display = 'block';
+    tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:30px;'>Chargement des transactions...</td></tr>";
+
+    try {
+        // On récupère les 50 derniers paiements
+        const snap = await database.ref('historique_paiements').limitToLast(50).once('value');
+        let html = "";
+        let entries = [];
+
+        // On transforme en tableau pour pouvoir inverser l'ordre (plus récent en haut)
+        snap.forEach(p => {
+            entries.unshift({ id: p.key, ...p.val() });
+        });
+
+        entries.forEach(data => {
+            html += `
+                <tr style="border-bottom:1px solid #222;">
+                    <td style="padding:12px; color:#aaa;">${data.date}</td>
+                    <td style="padding:12px; font-weight:bold;">${data.nom}</td>
+                    <td style="padding:12px; text-align:center;">
+                        <span style="background:#25D366; color:white; padding:3px 8px; border-radius:10px; font-size:0.6rem; font-weight:bold;">
+                            ✅ PAYÉ
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html || "<tr><td colspan='3' style='text-align:center; padding:30px;'>Aucun historique trouvé.</td></tr>";
+
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>Erreur de chargement.</td></tr>";
+    }
+}
+
+// Fonction pour fermer la vue
+function fermerHistoriquePleinEcran() {
+    document.getElementById('modal-historique').style.display = 'none';
+}
  function deconnexionManuelle() {
     console.log("Clic détecté !"); // Ceci s'affiche dans la console F12
     if(confirm("Voulez-vous déconnecter l'appareil ? Il faudra saisir à nouveau le MOT DE PASSE pour entrer.")) {
@@ -1165,6 +1197,25 @@ window.addEventListener('load', () => {
 });
     
 </script>
+    <div id="modal-historique" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:9999; overflow-y:auto; padding:20px; box-sizing:border-box;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
+        <h2 style="color:var(--p); font-size:1.1rem; margin:0;">📋 HISTORIQUE DES PAIEMENTS</h2>
+        <button onclick="fermerHistoriquePleinEcran()" style="background:#ff4444; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer;">FERMER</button>
+    </div>
+
+    <table style="width:100%; border-collapse: collapse; font-size:0.8rem; color:white;">
+        <thead>
+            <tr style="background:#1a1a1a; text-align:left;">
+                <th style="padding:12px; border-bottom:2px solid #333;">DATE</th>
+                <th style="padding:12px; border-bottom:2px solid #333;">NOM</th>
+                <th style="padding:12px; border-bottom:2px solid #333; text-align:center;">SITUATION</th>
+            </tr>
+        </thead>
+        <tbody id="table-paiements-body-fullscreen">
+            </tbody>
+    </table>
+</div>
 </body>
 </html>
 
