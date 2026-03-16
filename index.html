@@ -1046,55 +1046,39 @@ function calculerJours(dateStr) {
     }
 }
 async function forceReparationDates() {
-    console.log("Tentative de réparation lancée...");
+    alert("Le bouton fonctionne ! Connexion à Firebase..."); // Pour tester le clic
     
     try {
-        // On récupère les données
         const snapshot = await database.ref('clients').once('value');
-        if (!snapshot.exists()) {
-            alert("Aucun client trouvé dans la base.");
-            return;
-        }
-
         const updates = {};
-        let count = 0;
-
+        
         snapshot.forEach(child => {
-            const id = child.key;
             const data = child.val().infos_client;
-
             if (data && data.date_inscription) {
+                // On crée une date propre de force
                 let d = data.date_inscription;
                 let dateObj;
-
+                
                 if (d.includes('/')) {
-                    // Analyse du format 14/03/2026
                     let p = d.split(' ')[0].split('/');
-                    dateObj = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
+                    dateObj = new Date(p[2], p[1]-1, p[0], 12, 0, 0);
                 } else {
                     dateObj = new Date(d);
                 }
 
                 if (!isNaN(dateObj.getTime())) {
-                    updates[`clients/${id}/infos_client/date_inscription`] = dateObj.toISOString();
-                    count++;
+                    updates[`clients/${child.key}/infos_client/date_inscription`] = dateObj.toISOString();
                 }
             }
         });
 
-        // Application des changements
         await database.ref().update(updates);
-        console.log(count + " clients mis à jour.");
-        alert("✅ Succès : " + count + " dates réparées !");
-        
-        // On recharge la page pour appliquer les changements
-        window.location.reload();
-
-    } catch (error) {
-        console.error("Erreur détaillée:", error);
-        alert("❌ Erreur : " + error.message);
+        alert("✅ Réparation terminée !");
+        location.reload();
+    } catch (e) {
+        alert("Erreur : " + e.message);
     }
-}  
+}
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
         localStorage.removeItem('v32_active');
