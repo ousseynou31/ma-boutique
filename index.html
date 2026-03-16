@@ -246,7 +246,23 @@
 <div id="page-admin" class="full-page">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
         <h2 style="color:var(--p); margin:0;">🛡️ CONTRÔLE ADMIN</h2>
-        
+      <div style="margin-top:20px; background:#1a1a1a; padding:15px; border-radius:10px;">
+    <h3 style="color:var(--p); font-size:0.9rem; text-align:center; margin-bottom:15px;">📜 HISTORIQUE DES PAIEMENTS</h3>
+    
+    <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse: collapse; font-size:0.7rem; color:white;">
+            <thead>
+                <tr style="border-bottom:2px solid #333; text-align:left;">
+                    <th style="padding:8px;">DATE</th>
+                    <th style="padding:8px;">NOM</th>
+                    <th style="padding:8px; text-align:center;">SITUATION</th>
+                </tr>
+            </thead>
+            <tbody id="table-paiements-body">
+                </tbody>
+        </table>
+    </div>
+</div>  
      <button onclick="deconnexionManuelle()" 
         style="width:100%; background:#444; color:white; border:none; padding:12px; font-size:0.8rem; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
     🚪 DÉCONNECTER L'APPAREIL
@@ -679,25 +695,37 @@ function toggleInventaire() {
     });
 }
 
-   async function validerPaiement(userId) {
-    if(!confirm("Confirmer le paiement et remettre les jours à 0 ?")) return;
+  async function validerPaiement(userId) {
+    if(!confirm("Valider le paiement ?")) return;
 
     try {
-        const nouvelleDate = new Date().toISOString(); // Format propre : 2026-03-16T...
-        
+        const maintenant = new Date();
+        const dateISO = maintenant.toISOString();
+        const dateFr = maintenant.toLocaleDateString('fr-FR') + " " + maintenant.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+
+        // 1. Récupérer le nom du client d'abord
+        const snap = await database.ref('clients/' + userId + '/infos_client').once('value');
+        const nomClient = snap.val().nom;
+
+        // 2. Mettre à jour la date d'inscription (remise à zéro des jours)
         await database.ref('clients/' + userId + '/infos_client').update({
-            // On s'assure d'utiliser exactement le nom que loadUsers recherche
-            date_inscription: nouvelleDate 
+            date_inscription: dateISO
         });
 
-        alert("Paiement validé !");
-        loadUsers(); // Recharge la liste pour voir le "0j"
+        // 3. Ajouter une ligne dans l'historique des paiements
+        await database.ref('historique_paiements').push({
+            nom: nomClient,
+            date: dateFr,
+            situation: "PAYÉ"
+        });
+
+        alert("Paiement enregistré et historique mis à jour !");
+        loadUsers(); 
+        chargerHistoriquePaiements(); // On rafraîchit le tableau
     } catch (e) {
-        alert("Erreur lors du paiement");
         console.error(e);
     }
 }
-
   function filtrerClients() {
     const searchVal = document.getElementById('admin-search').value.toLowerCase();
     const rows = document.querySelectorAll('.user-row');
@@ -1077,6 +1105,34 @@ async function forceReparationDates() {
         location.reload();
     } catch (err) {
         alert("Erreur : " + err.message);
+    }
+}
+    async function chargerHistoriquePaiements() {
+    const tbody = document.getElementById('table-paiements-body');
+    if(!tbody) return;
+
+    try {
+        const snap = await database.ref('historique_paiements').limitToLast(20).once('value');
+        let html = "";
+
+        snap.forEach(p => {
+            const data = p.val();
+            const estPaye = data.situation === "PAYÉ";
+
+            html += `
+                <tr style="border-bottom:1px solid #222;">
+                    <td style="padding:8px; color:#888;">${data.date}</td>
+                    <td style="padding:8px; font-weight:bold;">${data.nom}</td>
+                    <td style="padding:8px; text-align:center;">
+                        ${estPaye ? '<span style="color:#25D366;">✅ PAYÉ</span>' : '<span style="color:#ff4444;">❌ NON</span>'}
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html || "<tr><td colspan='3' style='text-align:center; padding:20px;'>Aucun paiement enregistré</td></tr>";
+    } catch (e) {
+        console.error("Erreur historique:", e);
     }
 }
  function deconnexionManuelle() {
