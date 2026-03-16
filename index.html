@@ -692,32 +692,37 @@ function toggleInventaire() {
         }
     }
 }
- function calculerJours(dateStr) {
+function calculerJours(dateStr) {
     if (!dateStr) return 0;
 
-    let dateInscription;
-    
-    // Si la date est au format "15/03/2026..." (ancien format)
-    if (dateStr.includes('/')) {
-        // On transforme "15/03/2026" en un format que JS comprend
-        const parties = dateStr.split(' ')[0].split('/');
-        // Format attendu par JS : MM/JJ/AAAA
-        dateInscription = new Date(`${parties[1]}/${parties[0]}/${parties[2]}`);
-    } else {
-        // Si c'est le nouveau format (ISO)
-        dateInscription = new Date(dateStr);
-    }
+    try {
+        let dateInscription;
 
-    const aujourdhui = new Date();
-    
-    // Calcul de la différence en millisecondes
-    const diffTime = aujourdhui - dateInscription;
-    
-    // Conversion en jours
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    // Retourne le nombre de jours (0 minimum)
-    return diffDays < 0 ? 0 : diffDays;
+        if (dateStr.includes('/')) {
+            // ÉTAPE 1: On sépare la date et l'heure
+            let partieDate = dateStr.split(' ')[0]; // On prend "14/03/2026"
+            let parties = partieDate.split('/');    // On sépare [14, 03, 2026]
+
+            // ÉTAPE 2: On force le format Année, Mois (0-11), Jour
+            // Note: En JS les mois commencent à 0 (Janvier = 0), donc on fait -1
+            dateInscription = new Date(parties[2], parties[1] - 1, parties[0]);
+        } else {
+            // Format ISO (nouveau format après correction)
+            dateInscription = new Date(dateStr);
+        }
+
+        const aujourdhui = new Date();
+        
+        // Calcul de la différence
+        const diffTime = aujourdhui - dateInscription;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        return diffDays < 0 ? 0 : diffDays;
+
+    } catch (e) {
+        console.error("Erreur sur la date:", dateStr);
+        return 0;
+    }
 }
   function filtrerClients() {
     const searchVal = document.getElementById('admin-search').value.toLowerCase();
