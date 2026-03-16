@@ -1088,11 +1088,11 @@ async function forceReparationDates() {
 }
     
 // Initialisation des tarifs au chargement de la page
+// Initialisation des tarifs et lancement au chargement de la page
 window.addEventListener('load', () => {
     try {
-        const t = obtenirTarifs(); // On récupère tes prix (A, B, C)
-        
-        // On remplit les cases du formulaire avec les prix trouvés
+        // 1. On charge les tarifs dans les cases Admin
+        const t = obtenirTarifs(); 
         if(document.getElementById('price-A')) {
             document.getElementById('price-A').value = t.A;
             document.getElementById('price-B').value = t.B;
@@ -1102,10 +1102,11 @@ window.addEventListener('load', () => {
     } catch (e) {
         console.error("Erreur lors de l'initialisation des tarifs :", e);
     }
-});
 
-// Ton lancement d'application reste identique
-window.onload = launchApp;
+    // 2. On lance l'application (Vérification licence/ban/inscription)
+    launchApp();
+});
+    
 </script>
 </body>
 </html>
