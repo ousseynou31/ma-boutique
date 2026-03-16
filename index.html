@@ -250,6 +250,10 @@
 <div id="page-admin" class="full-page">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
         <h2 style="color:var(--p); margin:0;">🛡️ CONTRÔLE ADMIN</h2>
+        <button onclick="forceReparationDates()" 
+        style="background: #f59e0b; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin: 10px auto; display: block; width: 90%;">
+    🔄 RÉPARER TOUTES LES DATES
+</button>
         <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px; cursor:pointer;">FERMER</button>
     </div>
     <input type="text" id="admin-search" placeholder="🔍 Rechercher un client..." 
@@ -1054,6 +1058,57 @@ function calculerJours(dateStr) {
         }
     } catch(e) {
         alert("Erreur lors de la récupération.");
+    }
+}
+    async function forceReparationDates() {
+    if(!confirm("Voulez-vous forcer la réparation des dates ?\nCela transformera les formats 14/03/2026 en format ISO pour corriger le bug du '0 jours'.")) return;
+    
+    const list = document.getElementById('admin-user-list');
+    list.innerHTML = "<p style='text-align:center; color:orange;'>🔧 Réparation en cours...</p>";
+
+    try {
+        const snap = await database.ref('clients').once('value');
+        let compteur = 0;
+
+        // On parcourt tous les clients
+        const updates = {};
+        snap.forEach(clientSnap => {
+            const id = clientSnap.key;
+            const data = clientSnap.val().infos_client;
+
+            if (data && data.date_inscription) {
+                let d = data.date_inscription;
+                let dateObj;
+
+                if (d.includes('/')) {
+                    // RÉPARATION DU FORMAT FRANÇAIS
+                    let partieDate = d.split(' ')[0];
+                    let p = partieDate.split('/');
+                    // On crée une date propre (Année, Mois-1, Jour)
+                    dateObj = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+                } else {
+                    // DÉJÀ ISO OU AUTRE
+                    dateObj = new Date(d);
+                }
+
+                // Si la date est valide, on prépare la mise à jour en format ISO
+                if (!isNaN(dateObj.getTime())) {
+                    updates[`clients/${id}/infos_client/date_inscription`] = dateObj.toISOString();
+                    compteur++;
+                }
+            }
+        });
+
+        // On envoie toutes les corrections d'un coup à Firebase
+        await database.ref().update(updates);
+        
+        alert("✅ Terminé ! " + compteur + " dates ont été corrigées.");
+        loadUsers(); // On recharge la liste proprement
+
+    } catch(e) {
+        console.error(e);
+        alert("❌ Erreur lors de la réparation.");
+        loadUsers();
     }
 }
  function deconnexion() {
