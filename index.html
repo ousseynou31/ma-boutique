@@ -694,7 +694,7 @@ async function validerPaiement(userId) {
         const tarifs = snapTarifs.val() || {};
 
         // --- DÉBUT DU BLOC ROBUSTE ---
-        let montantAPayer = 0;
+        let montantAPayer = 555;
         if (client.categorie && tarifs) {
             // On prépare le nom de la catégorie du client (nettoyé et en minuscules)
             const categorieNettoyee = client.categorie.trim().toLowerCase();
