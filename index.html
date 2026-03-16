@@ -246,15 +246,12 @@
 <div id="page-admin" class="full-page">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
         <h2 style="color:var(--p); margin:0;">🛡️ CONTRÔLE ADMIN</h2>
-        //........................
-        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #444;">
-    <p style="font-size: 0.6rem; color: #888; text-align: center; margin-bottom: 8px;">ZONE DE SÉCURITÉ</p>
-    <button onclick="verrouillerApp()" 
-            style="width:100%; background:#8b0000; color:white; border:none; padding:10px; font-size:0.75rem; border-radius:6px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
-        🔒 VERROUILLER L'ACCÈS
-    </button>
-</div>
-        //................
+        
+      <button onclick="deconnexionManuelle()" 
+        style="width:100%; background:#444; color:white; border:none; padding:12px; font-size:0.8rem; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
+    🚪 DÉCONNECTER L'APPAREIL
+</button>
+        
         <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px;">FERMER</button>
     </div>
 
@@ -1082,26 +1079,18 @@ async function forceReparationDates() {
         alert("Erreur : " + err.message);
     }
 }
-    async function verrouillerApp() {
-    if(!confirm("Ceci va simuler un dépassement de délai et bloquer l'application. Continuer ?")) return;
+    function deconnexionManuelle() {
+    if(confirm("Voulez-vous déconnecter l'appareil ? Il faudra saisir à nouveau le numéro de téléphone pour entrer.")) {
+        // 1. On efface la clé d'activation locale
+        localStorage.removeItem('v32_active');
+        
+        // Optionnel : si vous voulez aussi effacer l'ID de l'utilisateur
+        // localStorage.removeItem('userId');
 
-    try {
-        const id = localStorage.getItem('userId');
-        if(!id) return;
-
-        // On met une date très vieille pour forcer le blocage automatique
-        await database.ref('clients/' + id + '/infos_client').update({
-            date_inscription: "2000-01-01T12:00:00Z"
-        });
-
-        alert("Application verrouillée avec succès.");
-        location.reload(); 
-    } catch (e) {
-        console.error("Erreur de verrouillage:", e);
+        // 2. On recharge la page pour revenir au début (Page d'accueil/Inscription)
+        location.reload();
     }
-}
- 
-    
+}    
 // Initialisation des tarifs au chargement de la page
 // Initialisation des tarifs et lancement au chargement de la page
 window.addEventListener('load', () => {
