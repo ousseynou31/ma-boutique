@@ -682,61 +682,73 @@ function toggleInventaire() {
     });
 }
 async function validerPaiement(userId) {
-    if(!confirm("Confirmer le paiement et enregistrer le montant ?")) return;
+    // 1. Demande de confirmation initiale
+    if(!confirm("Voulez-vous valider le paiement pour ce client ?")) return;
 
     try {
-        // 1. Récupération des données client
+        // 2. Récupération des informations du client (Nom, Catégorie, etc.)
         const snapClient = await database.ref('clients/' + userId + '/infos_client').once('value');
         const client = snapClient.val();
 
-        // 2. Récupération des tarifs (Paramètres)
+        if (!client) {
+            alert("Erreur : Client introuvable.");
+            return;
+        }
+
+        // 3. Récupération des tarifs définis dans vos Paramètres
         const snapTarifs = await database.ref('parametres/tarifs').once('value');
         const tarifs = snapTarifs.val() || {};
 
-        // --- DÉBUT DU BLOC ROBUSTE ---
-        let montantAPayer = 555;
+        // 4. --- RECHERCHE DU PRIX (LOGIQUE ROBUSTE) ---
+        let montantAPayer = 0;
         if (client.categorie && tarifs) {
-            // On prépare le nom de la catégorie du client (nettoyé et en minuscules)
-            const categorieNettoyee = client.categorie.trim().toLowerCase();
+            const catCherchee = client.categorie.trim().toLowerCase();
             
-            // On cherche dans les tarifs si une clé correspond (peu importe la casse)
-            for (let nomTarif in tarifs) {
-                if (nomTarif.trim().toLowerCase() === categorieNettoyee) {
-                    montantAPayer = Number(tarifs[nomTarif]);
+            for (let clef in tarifs) {
+                // On compare en ignorant les majuscules et les espaces inutiles
+                if (clef.trim().toLowerCase() === catCherchee) {
+                    montantAPayer = Number(tarifs[clef]);
                     break;
                 }
             }
         }
-        // --- FIN DU BLOC ROBUSTE ---
 
+        // 5. --- SÉCURITÉ : SI LE PRIX EST TOUJOURS 0 ---
+        if (montantAPayer === 0) {
+            alert("❌ ERREUR : Aucun prix trouvé pour la catégorie '" + (client.categorie || "Inconnue") + "'.\n\nVérifiez que le nom de la catégorie dans vos Paramètres est identique à celui du client.");
+            return; // ON ARRÊTE TOUT ICI : Rien n'est envoyé à Firebase
+        }
+
+        // 6. Préparation des données de temps
         const maintenant = new Date();
-        const dateISO = maintenant.toISOString();
         const dateFr = maintenant.toLocaleDateString('fr-FR') + " " + maintenant.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
 
-        // 3. Mise à jour de la date d'inscription du client
+        // 7. ENREGISTREMENT DANS FIREBASE (Seulement si le montant est > 0)
+        
+        // Mise à jour de la date sur la fiche client
         await database.ref('clients/' + userId + '/infos_client').update({
-            date_inscription: dateISO
+            date_inscription: maintenant.toISOString()
         });
 
-        // 4. Enregistrement dans l'historique avec le montant trouvé
+        // Ajout à l'historique des paiements
         await database.ref('historique_paiements').push({
             nom: client.nom,
             telephone: userId,
-            categorie: client.categorie || "Non défini",
+            categorie: client.categorie || "Non spécifiée",
             date: dateFr,
-            montant: montantAPayer, 
+            montant: montantAPayer, // Le montant correct trouvé
             situation: "PAYÉ"
         });
 
-        alert("Succès ! Montant enregistré : " + montantAPayer + " F");
+        // 8. Succès et rafraîchissement
+        alert("✅ Succès ! Montant de " + montantAPayer + " F enregistré pour " + client.nom);
         
-        // 5. Rafraîchissement de l'affichage
         if (typeof loadUsers === "function") loadUsers(); 
-        if (typeof chargerHistoriquePaiements === "function") chargerHistoriquePaiements();
+        // Si vous avez une fonction pour fermer la liste après paiement, appelez-la ici
 
     } catch (e) {
-        console.error("Erreur paiement:", e);
-        alert("Une erreur est survenue lors de la validation.");
+        console.error("Erreur critique paiement:", e);
+        alert("Une erreur technique est survenue. Vérifiez votre connexion.");
     }
 }
   function filtrerClients() {
