@@ -185,6 +185,9 @@
         <input type="text" id="reg-nom" placeholder="Votre Nom">
         <input type="tel" id="reg-tel" placeholder="Votre Téléphone">
         <button id="btn-reg" class="btn-3d" style="background:var(--p); border:none;" onclick="enregistrerProfil()">CRÉER MON COMPTE CLOUD</button>
+        <p style="margin-top:15px; font-size:0.7rem; color:gray;">
+    Déjà inscrit ? <a href="#" onclick="recupererCompte()" style="color:var(--p);">Récupérer mon accès</a>
+</p>
     </div>
 </div>
 
@@ -1025,6 +1028,32 @@ function calculerJours(dateStr) {
     } catch (e) {
         console.error("Erreur fatale date:", e);
         return 0;
+    }
+}
+    async function recupererCompte() {
+    const tel = prompt("Entrez votre numéro de téléphone (celui utilisé à l'inscription) :");
+    if(!tel) return;
+
+    const cleanTel = tel.replace(/\D/g,'');
+    
+    try {
+        // On vérifie si ce numéro existe sur Firebase
+        const snap = await database.ref('clients/' + cleanTel + '/infos_client').once('value');
+        
+        if(snap.exists()) {
+            // On restaure les clés locales
+            localStorage.setItem('user_tel_id', cleanTel);
+            localStorage.setItem('v32_registered', 'true');
+            localStorage.setItem('v32_active', 'true'); // On réactive aussi la licence
+            
+            currentId = cleanTel;
+            alert("✅ Accès restauré ! Bienvenue " + snap.val().nom);
+            location.reload(); // On redémarre l'app proprement
+        } else {
+            alert("❌ Aucun compte trouvé pour ce numéro.");
+        }
+    } catch(e) {
+        alert("Erreur lors de la récupération.");
     }
 }
  function deconnexion() {
