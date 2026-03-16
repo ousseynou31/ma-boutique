@@ -1030,15 +1030,25 @@ function calculerJours(dateStr) {
     if (!dateStr) return 0;
     try {
         let dInsc;
+        // On gère les deux formats possibles
         if (dateStr.includes('/')) {
             let p = dateStr.split(' ')[0].split('/');
-            dInsc = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
+            dInsc = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
         } else {
             dInsc = new Date(dateStr);
         }
-        let aujourdhui = new Date();
-        let diffTime = aujourdhui.getTime() - dInsc.getTime();
-        let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        // On remet les deux dates à MINUIT PILE pour comparer uniquement les jours
+        const dateInscription = new Date(dInsc.getFullYear(), dInsc.getMonth(), dInsc.getDate());
+        const dateAujourdhui = new Date();
+        const aujourdhuiMinuit = new Date(dateAujourdhui.getFullYear(), dateAujourdhui.getMonth(), dateAujourdhui.getDate());
+
+        // Calcul de la différence en millisecondes
+        const diffTime = aujourdhuiMinuit.getTime() - dateInscription.getTime();
+        
+        // Conversion en jours (1 jour = 86 400 000 ms)
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
         return diffDays < 0 ? 0 : diffDays;
     } catch (e) { 
         return 0; 
