@@ -895,20 +895,27 @@ function genererCSV() {
 }
 
 
-    function envoyerRappel(idUser, nom, cat) {
+   function envoyerRappel(idUser, nom, cat) {
     const t = obtenirTarifs();
     const montant = t[cat] || 0;
     
-    // On nettoie le numéro (enlève les espaces ou caractères spéciaux si besoin)
-    const tel = idUser.trim();
-    
-    // Votre message personnalisé (le %0A sert à faire un retour à la ligne)
-    const message = `Bonjour ${nom},%0A%0ANous vous informons que votre abonnement (Catégorie ${cat}) est arrivé à échéance.%0A%0AMontant à régulariser : ${montant} FCFA.%0A%0AMerci de votre confiance !`;
+    // 1. Nettoyage du numéro : on garde uniquement les chiffres
+    // Cela enlève les espaces, les "+" ou les tirets éventuels
+    let tel = idUser.replace(/\D/g, ''); 
 
-    // Lien WhatsApp (wa.me)
+    // 2. Vérification de l'indicatif
+    // Si le numéro ne commence pas déjà par 221, on l'ajoute
+    if (!tel.startsWith('221')) {
+        tel = '221' + tel;
+    }
+    
+    // 3. Préparation du message
+    const message = `Bonjour ${nom},%0A%0ANous vous informons que votre abonnement (Catégorie ${cat}) est arrivé à échéance.%0A%0AMontant à régulariser : ${montant.toLocaleString()} FCFA.%0A%0AMerci de votre confiance !`;
+
+    // 4. Construction de l'URL finale
     const url = `https://wa.me/${tel}?text=${message}`;
 
-    // Ouvre WhatsApp dans un nouvel onglet
+    // 5. Ouverture de WhatsApp
     window.open(url, '_blank');
 }
  function deconnexion() {
