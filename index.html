@@ -1155,6 +1155,7 @@ window.addEventListener('load', () => {
             document.getElementById('price-C').value = t.C;
             console.log("Tarifs chargés avec succès :", t);
         }
+        chargerHistoriquePaiements();
     } catch (e) {
         console.error("Erreur lors de l'initialisation des tarifs :", e);
     }
