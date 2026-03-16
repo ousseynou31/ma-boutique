@@ -947,31 +947,33 @@ function genererCSV() {
     window.open(url, '_blank');
 }
 
-    function mettreAJourDashboard(clients) {
-    const t = obtenirTarifs(); // On récupère vos prix A, B, C
+   function mettreAJourDashboard(clients) {
+    // 1. Récupérer les tarifs depuis les inputs du menu caché
+    const tarifA = parseInt(document.getElementById('price-A').value) || 0;
+    const tarifB = parseInt(document.getElementById('price-B').value) || 0;
+    const tarifC = parseInt(document.getElementById('price-C').value) || 0;
+
     let totalGlobal = 0;
     let nbRetard = 0;
 
     clients.forEach(c => {
-        // On calcule le montant basé sur la catégorie du client
-        const montant = parseInt(t[c.categorie]) || 0;
-        totalGlobal += montant;
+        // 2. Calcul du montant selon la catégorie
+        let prix = tarifC; // Par défaut
+        if (c.categorie === 'A') prix = tarifA;
+        if (c.categorie === 'B') prix = tarifB;
+        
+        totalGlobal += prix;
 
-        // On compte les retards (30 jours ou plus)
-        // Assurez-vous que c.jours est bien un nombre
-        if (parseInt(c.jours) >= 30) {
+        // 3. Compter les retards (30 jours ou plus)
+        if (c.jours >= 30) {
             nbRetard++;
         }
     });
 
-    // Mise à jour visuelle des cases du Dashboard
-    const elUnites = document.getElementById('dash-total-a');
-    const elGlobal = document.getElementById('dash-total-global');
-    const elRetard = document.getElementById('dash-retard');
-
-    if (elUnites) elUnites.innerText = clients.length;
-    if (elGlobal) elGlobal.innerText = totalGlobal.toLocaleString() + " FCFA";
-    if (elRetard) elRetard.innerText = nbRetard;
+    // 4. Écriture dans le HTML
+    document.getElementById('dash-total-a').innerText = clients.length;
+    document.getElementById('dash-total-global').innerText = totalGlobal.toLocaleString() + " FCFA";
+    document.getElementById('dash-retard').innerText = nbRetard;
 }
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
