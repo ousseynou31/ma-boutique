@@ -1046,22 +1046,54 @@ function calculerJours(dateStr) {
     }
 }
 async function forceReparationDates() {
-    const snap = await database.ref('clients').once('value');
-    const updates = {};
+    console.log("Tentative de réparation lancée...");
     
-    snap.forEach(c => {
-        const d = c.val().infos_client.date_inscription;
-        if(d && d.includes('/')) {
-            let p = d.split(' ')[0].split('/');
-            // On transforme en format ISO propre
-            let cleanDate = new Date(p[2], p[1]-1, p[0]).toISOString();
-            updates[`clients/${c.key}/infos_client/date_inscription`] = cleanDate;
+    try {
+        // On récupère les données
+        const snapshot = await database.ref('clients').once('value');
+        if (!snapshot.exists()) {
+            alert("Aucun client trouvé dans la base.");
+            return;
         }
-    });
 
-    await database.ref().update(updates);
-    alert("✅ Dates synchronisées !");
-    location.reload(); 
+        const updates = {};
+        let count = 0;
+
+        snapshot.forEach(child => {
+            const id = child.key;
+            const data = child.val().infos_client;
+
+            if (data && data.date_inscription) {
+                let d = data.date_inscription;
+                let dateObj;
+
+                if (d.includes('/')) {
+                    // Analyse du format 14/03/2026
+                    let p = d.split(' ')[0].split('/');
+                    dateObj = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
+                } else {
+                    dateObj = new Date(d);
+                }
+
+                if (!isNaN(dateObj.getTime())) {
+                    updates[`clients/${id}/infos_client/date_inscription`] = dateObj.toISOString();
+                    count++;
+                }
+            }
+        });
+
+        // Application des changements
+        await database.ref().update(updates);
+        console.log(count + " clients mis à jour.");
+        alert("✅ Succès : " + count + " dates réparées !");
+        
+        // On recharge la page pour appliquer les changements
+        window.location.reload();
+
+    } catch (error) {
+        console.error("Erreur détaillée:", error);
+        alert("❌ Erreur : " + error.message);
+    }
 }  
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
