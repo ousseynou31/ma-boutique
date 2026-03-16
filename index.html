@@ -992,42 +992,33 @@ function mettreAJourDashboard(clients) {
     if (elArgent) elArgent.innerText = totalArgentAttendu.toLocaleString() + " FCFA";
     if (elRetard) elRetard.innerText = nbClientsEnRetard;
 }
- function calculerJours(dateStr) {
+function calculerJours(dateStr) {
     if (!dateStr) return 0;
 
     try {
-        let dateInscription;
-
-        // CAS 1 : Anciennes dates avec des slashs (ex: 14/03/2026)
+        let dateInsc;
         if (dateStr.includes('/')) {
-            let partieDate = dateStr.split(' ')[0]; // On isole "14/03/2026"
-            let p = partieDate.split('/');          // On coupe : [14, 03, 2026]
-            
-            // On force l'ordre : Année, Mois (0-11), Jour
-            // Attention : en JS, Janvier = 0, donc on fait Mois - 1
-            dateInscription = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
-        } 
-        // CAS 2 : Nouvelles dates format ISO (ex: 2026-03-15T...)
-        else {
-            dateInscription = new Date(dateStr);
+            let p = dateStr.split(' ')[0].split('/');
+            dateInsc = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+        } else {
+            dateInsc = new Date(dateStr);
         }
 
-        const aujourdhui = new Date();
-        
-        // Calcul de la différence en millisecondes
-        const diffTime = aujourdhui - dateInscription;
-        
-        // Conversion en jours (arrondi à l'unité inférieure)
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // --- LA CORRECTION EST ICI ---
+        // On remet les deux dates à MINUIT (00:00:00) pour comparer uniquement les jours
+        const d1 = new Date(dateInsc.getFullYear(), dateInsc.getMonth(), dateInsc.getDate());
+        const maintenant = new Date();
+        const d2 = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate());
 
-        // On retourne 0 si c'est aujourd'hui, sinon le nombre de jours
+        // Calcul de la différence
+        const diffTime = d2 - d1;
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
         return diffDays < 0 ? 0 : diffDays;
-
     } catch (e) {
-        console.error("Erreur de calcul date :", dateStr);
         return 0;
     }
-}  
+}
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
         localStorage.removeItem('v32_active');
