@@ -996,26 +996,34 @@ function calculerJours(dateStr) {
     if (!dateStr) return 0;
 
     try {
-        let dateInsc;
+        let dateInscription;
+        
+        // 1. On transforme n'importe quel format en objet Date
         if (dateStr.includes('/')) {
             let p = dateStr.split(' ')[0].split('/');
-            dateInsc = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+            dateInscription = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
         } else {
-            dateInsc = new Date(dateStr);
+            dateInscription = new Date(dateStr);
         }
 
-        // --- LA CORRECTION EST ICI ---
-        // On remet les deux dates à MINUIT (00:00:00) pour comparer uniquement les jours
-        const d1 = new Date(dateInsc.getFullYear(), dateInsc.getMonth(), dateInsc.getDate());
-        const maintenant = new Date();
-        const d2 = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate());
+        // 2. On récupère la date d'aujourd'hui
+        let aujourdhui = new Date();
 
-        // Calcul de la différence
-        const diffTime = d2 - d1;
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        // 3. FORCE : On ignore les heures, minutes, secondes (on met tout à zéro)
+        dateInscription.setHours(0, 0, 0, 0);
+        aujourdhui.setHours(0, 0, 0, 0);
 
-        return diffDays < 0 ? 0 : diffDays;
+        // 4. Calcul mathématique simple
+        const unJourEnMs = 24 * 60 * 60 * 1000;
+        const differenceMs = aujourdhui.getTime() - dateInscription.getTime();
+        
+        // 5. On arrondit au chiffre entier le plus proche
+        let resultat = Math.round(differenceMs / unJourEnMs);
+
+        return resultat < 0 ? 0 : resultat;
+
     } catch (e) {
+        console.error("Erreur fatale date:", e);
         return 0;
     }
 }
