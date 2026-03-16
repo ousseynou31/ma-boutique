@@ -246,19 +246,19 @@
     <p style="color:#666;">Cet appareil a été désactivé par l'administrateur.</p>
     <p id="ban-id-display" style="font-size:0.7rem; color:var(--p); opacity:0.5;"></p>
 </div>
-
 <div id="page-admin" class="full-page">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
         <h2 style="color:var(--p); margin:0;">🛡️ CONTRÔLE ADMIN</h2>
-       
-<div id="admin-user-list">
-   </div>
-    
-        <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px; cursor:pointer;">FERMER</button>
+        <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px;">FERMER</button>
     </div>
-    <input type="text" id="admin-search" placeholder="🔍 Rechercher un client..." 
-       oninput="filtrerClients()" 
-       style="width: 100%; background: #1a1a1a; border: 2px solid var(--p); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+
+    <input type="text" id="admin-search" placeholder="🔍 Rechercher..." oninput="filtrerClients()" 
+           style="width: 100%; background: #1a1a1a; border: 2px solid var(--p); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+
+    <button onclick="forceReparationDates()" 
+            style="width:100%; background:#f59e0b; color:white; border:none; padding:12px; border-radius:10px; font-weight:bold; margin-bottom:20px; cursor:pointer;">
+        🔄 RÉPARER LE BUG DES 0 JOURS
+    </button>
     <div class="card">
         <h3 style="margin-top:0; font-size:0.9rem; color:var(--s);">UTILISATEURS ENREGISTRÉS</h3>
         <div style="margin-bottom: 15px;">
