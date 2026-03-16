@@ -958,36 +958,39 @@ function genererCSV() {
     window.open(url, '_blank');
 }
 function mettreAJourDashboard(clients) {
-    // 1. Récupération des prix depuis vos réglages (inputs)
+    // 1. On récupère les tarifs que VOUS avez définis dans les cases de réglages
+    // Si une case est vide, on met 0 par défaut pour éviter les bugs
     const tarifA = parseInt(document.getElementById('price-A').value) || 0;
     const tarifB = parseInt(document.getElementById('price-B').value) || 0;
     const tarifC = parseInt(document.getElementById('price-C').value) || 0;
 
-    let totalGlobal = 0;
-    let nbRetard = 0;
+    let totalArgentAttendu = 0;
+    let nbClientsEnRetard = 0;
 
-    // 2. Analyse de chaque client envoyé par loadUsers
+    // 2. On fait le calcul pour chaque client
     clients.forEach(c => {
-        // On détermine le prix selon la catégorie du client
-        let prixApplique = 0;
-        if (c.categorie === 'A') prixApplique = tarifA;
-        else if (c.categorie === 'B') prixApplique = tarifB;
-        else prixApplique = tarifC; // Catégorie C ou autre
+        // On applique le prix selon la catégorie enregistrée dans Firebase
+        let prixDuClient = 0;
+        if (c.categorie === 'A') prixDuClient = tarifA;
+        else if (c.categorie === 'B') prixClient = tarifB;
+        else prixDuClient = tarifC; // Pour la catégorie C (ou si rien n'est coché)
 
-        totalGlobal += prixApplique;
+        totalArgentAttendu += prixDuClient;
 
-        // On compte comme "en retard" ceux qui ont 30 jours ou plus
+        // On compte comme "retard" celui qui a 30 jours ou plus
         if (c.jours >= 30) {
-            nbRetard++;
+            nbClientsEnRetard++;
         }
     });
 
-    // 3. Mise à jour de l'affichage dans les cases du haut
-    if (document.getElementById('dash-total-a')) {
-        document.getElementById('dash-total-a').innerText = clients.length;
-        document.getElementById('dash-total-global').innerText = totalGlobal.toLocaleString() + " FCFA";
-        document.getElementById('dash-retard').innerText = nbRetard;
-    }
+    // 3. Mise à jour de l'affichage en haut de l'écran
+    const elTotal = document.getElementById('dash-total-a');
+    const elArgent = document.getElementById('dash-total-global');
+    const elRetard = document.getElementById('dash-retard');
+
+    if (elTotal) elTotal.innerText = clients.length;
+    if (elArgent) elArgent.innerText = totalArgentAttendu.toLocaleString() + " FCFA";
+    if (elRetard) elRetard.innerText = nbClientsEnRetard;
 }
  function calculerJours(dateStr) {
     if (!dateStr) return 0;
