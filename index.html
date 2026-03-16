@@ -1060,47 +1060,7 @@ function calculerJours(dateStr) {
         alert("Erreur lors de la récupération.");
     }
 }
-  async function forceReparationDates() {
-    if(!confirm("Voulez-vous transformer les dates pour afficher le bon nombre de jours ?")) return;
-    
-    try {
-        const snap = await database.ref('clients').once('value');
-        const updates = {};
-        let nb = 0;
-
-        snap.forEach(child => {
-            const info = child.val().infos_client;
-            if (info && info.date_inscription) {
-                let d = info.date_inscription;
-                let dateObj;
-
-                if (d.includes('/')) {
-                    // On découpe "14/03/2026"
-                    let p = d.split(' ')[0].split('/');
-                    // On crée la date : Année, Mois-1, Jour
-                    dateObj = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
-                    // On force l'heure à 00:00:01 pour être sûr que ça compte pour un jour plein
-                    dateObj.setHours(0, 0, 1, 0);
-                } else {
-                    dateObj = new Date(d);
-                    dateObj.setHours(0, 0, 1, 0);
-                }
-
-                if (!isNaN(dateObj.getTime())) {
-                    updates[`clients/${child.key}/infos_client/date_inscription`] = dateObj.toISOString();
-                    nb++;
-                }
-            }
-        });
-
-        await database.ref().update(updates);
-        alert("✅ " + nb + " clients réparés ! Le calcul va se mettre à jour.");
-        loadUsers(); // Recharge la liste
-
-    } catch (e) {
-        alert("Erreur de connexion Cloud");
-    }
-}
+  
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
         localStorage.removeItem('v32_active');
