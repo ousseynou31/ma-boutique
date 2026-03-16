@@ -247,7 +247,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
         <h2 style="color:var(--p); margin:0;">🛡️ CONTRÔLE ADMIN</h2>
         
-      <button onclick="deconnexionManuelle()" 
+     <button onclick="deconnexionManuelle()" 
         style="width:100%; background:#444; color:white; border:none; padding:12px; font-size:0.8rem; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
     🚪 DÉCONNECTER L'APPAREIL
 </button>
@@ -1079,18 +1079,7 @@ async function forceReparationDates() {
         alert("Erreur : " + err.message);
     }
 }
-    function deconnexionManuelle() {
-    if(confirm("Voulez-vous déconnecter l'appareil ? Il faudra saisir à nouveau le numéro de téléphone pour entrer.")) {
-        // 1. On efface la clé d'activation locale
-        localStorage.removeItem('v32_active');
-        
-        // Optionnel : si vous voulez aussi effacer l'ID de l'utilisateur
-        // localStorage.removeItem('userId');
-
-        // 2. On recharge la page pour revenir au début (Page d'accueil/Inscription)
-        location.reload();
-    }
-}    
+       
 // Initialisation des tarifs au chargement de la page
 // Initialisation des tarifs et lancement au chargement de la page
 window.addEventListener('load', () => {
@@ -1101,7 +1090,18 @@ window.addEventListener('load', () => {
             document.getElementById('price-A').value = t.A;
             document.getElementById('price-B').value = t.B;
             document.getElementById('price-C').value = t.C;
-            console.log("Tarifs chargés avec succès :", t);
+ function deconnexionManuelle() {
+    // Le message de confirmation mis à jour
+    const message = "Voulez-vous déconnecter l'appareil ? Il faudra saisir à nouveau le MOT DE PASSE pour entrer.";
+    
+    if(confirm(message)) {
+        // 1. On retire l'autorisation d'accès
+        localStorage.removeItem('v32_active');
+        
+        // 2. On recharge pour revenir à la page de garde (demande de mot de passe)
+        location.reload();
+    }
+}           console.log("Tarifs chargés avec succès :", t);
         }
     } catch (e) {
         console.error("Erreur lors de l'initialisation des tarifs :", e);
