@@ -682,73 +682,71 @@ function toggleInventaire() {
     });
 }
 async function validerPaiement(userId) {
-    // 1. Demande de confirmation initiale
-    if(!confirm("Voulez-vous valider le paiement pour ce client ?")) return;
+    if(!confirm("Confirmer le paiement ?")) return;
 
     try {
-        // 2. Récupération des informations du client (Nom, Catégorie, etc.)
+        // 1. Récupération des données client
         const snapClient = await database.ref('clients/' + userId + '/infos_client').once('value');
         const client = snapClient.val();
 
-        if (!client) {
-            alert("Erreur : Client introuvable.");
-            return;
+        if (!client) return alert("Client introuvable.");
+
+        // 2. Récupération des tarifs (On cherche dans Firebase en priorité)
+        const snapTarifs = await database.ref('parametres/tarifs').once('value');
+        let tarifs = snapTarifs.val();
+
+        // Si Firebase est vide, on prend les tarifs par défaut du code
+        if (!tarifs) {
+            tarifs = { 'A': 5000, 'B': 3000, 'C': 1500 };
         }
 
-        // 3. Récupération des tarifs définis dans vos Paramètres
-        const snapTarifs = await database.ref('parametres/tarifs').once('value');
-        const tarifs = snapTarifs.val() || {};
-
-        // 4. --- RECHERCHE DU PRIX (LOGIQUE ROBUSTE) ---
+        // 3. --- LOGIQUE DE CALCUL DU MONTANT ---
         let montantAPayer = 0;
-        if (client.categorie && tarifs) {
-            const catCherchee = client.categorie.trim().toLowerCase();
-            
-            for (let clef in tarifs) {
-                // On compare en ignorant les majuscules et les espaces inutiles
-                if (clef.trim().toLowerCase() === catCherchee) {
-                    montantAPayer = Number(tarifs[clef]);
+        const catClient = (client.categorie || "C").trim().toUpperCase();
+
+        // On vérifie si la catégorie existe dans les tarifs
+        if (tarifs[catClient]) {
+            montantAPayer = Number(tarifs[catClient]);
+        } else {
+            // Sécurité : recherche insensible à la casse (a = A)
+            for (let key in tarifs) {
+                if (key.trim().toUpperCase() === catClient) {
+                    montantAPayer = Number(tarifs[key]);
                     break;
                 }
             }
         }
 
-        // 5. --- SÉCURITÉ : SI LE PRIX EST TOUJOURS 0 ---
-        if (montantAPayer === 0) {
-            alert("❌ ERREUR : Aucun prix trouvé pour la catégorie '" + (client.categorie || "Inconnue") + "'.\n\nVérifiez que le nom de la catégorie dans vos Paramètres est identique à celui du client.");
-            return; // ON ARRÊTE TOUT ICI : Rien n'est envoyé à Firebase
+        // 4. --- SÉCURITÉ ANTI-ZÉRO ---
+        if (montantAPayer <= 0) {
+            alert("❌ ERREUR : Aucun prix trouvé pour la catégorie '" + catClient + "'.\nAllez dans vos paramètres pour définir le prix.");
+            return; 
         }
 
-        // 6. Préparation des données de temps
         const maintenant = new Date();
         const dateFr = maintenant.toLocaleDateString('fr-FR') + " " + maintenant.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
 
-        // 7. ENREGISTREMENT DANS FIREBASE (Seulement si le montant est > 0)
-        
-        // Mise à jour de la date sur la fiche client
+        // 5. Mise à jour Cloud
         await database.ref('clients/' + userId + '/infos_client').update({
             date_inscription: maintenant.toISOString()
         });
 
-        // Ajout à l'historique des paiements
+        // 6. Enregistrement historique
         await database.ref('historique_paiements').push({
             nom: client.nom,
             telephone: userId,
-            categorie: client.categorie || "Non spécifiée",
+            categorie: catClient,
             date: dateFr,
-            montant: montantAPayer, // Le montant correct trouvé
+            montant: montantAPayer,
             situation: "PAYÉ"
         });
 
-        // 8. Succès et rafraîchissement
-        alert("✅ Succès ! Montant de " + montantAPayer + " F enregistré pour " + client.nom);
-        
-        if (typeof loadUsers === "function") loadUsers(); 
-        // Si vous avez une fonction pour fermer la liste après paiement, appelez-la ici
+        alert("✅ Succès ! " + montantAPayer + " F enregistrés.");
+        loadUsers(); 
 
     } catch (e) {
-        console.error("Erreur critique paiement:", e);
-        alert("Une erreur technique est survenue. Vérifiez votre connexion.");
+        console.error(e);
+        alert("Erreur de connexion.");
     }
 }
   function filtrerClients() {
@@ -831,22 +829,25 @@ function obtenirTarifs() {
 }
 
 // Fonction pour enregistrer vos nouveaux prix
-function sauvegarderTarifs() {
+async function sauvegarderTarifs() {
     const nouveauxTarifs = {
-        'A': parseInt(document.getElementById('price-A').value),
-        'B': parseInt(document.getElementById('price-B').value),
-        'C': parseInt(document.getElementById('price-C').value)
+        'A': parseInt(document.getElementById('price-A').value) || 0,
+        'B': parseInt(document.getElementById('price-B').value) || 0,
+        'C': parseInt(document.getElementById('price-C').value) || 0
     };
     
-    localStorage.setItem('mes_tarifs', JSON.stringify(nouveauxTarifs));
-    alert("✅ Tarifs mis à jour !");
-    
-    // Si un rapport est ouvert, on le rafraîchit
-    if (document.getElementById('modal-rapport').style.display === 'block') {
-        ouvrirRapport();
+    try {
+        // On enregistre sur le Cloud pour que validerPaiement puisse les voir
+        await database.ref('parametres/tarifs').set(nouveauxTarifs);
+        
+        // On garde une copie locale
+        localStorage.setItem('mes_tarifs', JSON.stringify(nouveauxTarifs));
+        
+        alert("✅ Tarifs synchronisés sur le Cloud !");
+        loadUsers('TOUT'); 
+    } catch(e) {
+        alert("Erreur de synchronisation des prix.");
     }
-    // À la fin de la fonction sauvegarderTarifs
-loadUsers('TOUT'); // Cela va recharger la liste et recalculer le dashboard
 }
 
 // Au chargement de la page, on remplit les cases avec les prix actuels
