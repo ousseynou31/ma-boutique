@@ -999,26 +999,6 @@ function mettreAJourDashboard(clients) {
     if (elArgent) elArgent.innerText = totalArgentAttendu.toLocaleString() + " FCFA";
     if (elRetard) elRetard.innerText = nbClientsEnRetard;
 }
-function calculerJours(dateStr) {
-    if (!dateStr) return 0;
-    try {
-        let dInsc;
-        if (dateStr.includes('/')) {
-            let p = dateStr.split(' ')[0].split('/');
-            dInsc = new Date(p[2], p[1]-1, p[0]); // Format JJ/MM/AAAA
-        } else {
-            dInsc = new Date(dateStr);
-        }
-
-        // On compare uniquement les JOURS, on ignore les heures
-        const aujourdhui = new Date();
-        const date1 = Date.UTC(dInsc.getFullYear(), dInsc.getMonth(), dInsc.getDate());
-        const date2 = Date.UTC(aujourdhui.getFullYear aujourdhui.getMonth(), aujourdhui.getDate());
-
-        const diff = Math.floor((date2 - date1) / (1000 * 60 * 60 * 24));
-        return diff < 0 ? 0 : diff;
-    } catch(e) { return 0; }
-}
     async function recupererCompte() {
     const tel = prompt("Entrez votre numéro de téléphone (celui utilisé à l'inscription) :");
     if(!tel) return;
@@ -1045,38 +1025,59 @@ function calculerJours(dateStr) {
         alert("Erreur lors de la récupération.");
     }
 }
+// --- FONCTION 1 : CALCUL DES JOURS ---
+function calculerJours(dateStr) {
+    if (!dateStr) return 0;
+    try {
+        let dInsc;
+        if (dateStr.includes('/')) {
+            let p = dateStr.split(' ')[0].split('/');
+            dInsc = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
+        } else {
+            dInsc = new Date(dateStr);
+        }
+        let aujourdhui = new Date();
+        let diffTime = aujourdhui.getTime() - dInsc.getTime();
+        let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays < 0 ? 0 : diffDays;
+    } catch (e) { 
+        return 0; 
+    }
+}
+
+// --- FONCTION 2 : RÉPARATION DES DONNÉES ---
 async function forceReparationDates() {
-    alert("Le bouton fonctionne ! Connexion à Firebase..."); // Pour tester le clic
-    
+    console.log("Démarrage de la réparation...");
     try {
         const snapshot = await database.ref('clients').once('value');
-        const updates = {};
-        
+        if (!snapshot.exists()) {
+            alert("Aucun client trouvé.");
+            return;
+        }
+        let updates = {};
+        let nb = 0;
         snapshot.forEach(child => {
-            const data = child.val().infos_client;
-            if (data && data.date_inscription) {
-                // On crée une date propre de force
-                let d = data.date_inscription;
+            const info = child.val().infos_client;
+            if (info && info.date_inscription) {
+                let d = info.date_inscription;
                 let dateObj;
-                
                 if (d.includes('/')) {
                     let p = d.split(' ')[0].split('/');
-                    dateObj = new Date(p[2], p[1]-1, p[0], 12, 0, 0);
+                    dateObj = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
                 } else {
                     dateObj = new Date(d);
                 }
-
                 if (!isNaN(dateObj.getTime())) {
-                    updates[`clients/${child.key}/infos_client/date_inscription`] = dateObj.toISOString();
+                    updates["clients/" + child.key + "/infos_client/date_inscription"] = dateObj.toISOString();
+                    nb++;
                 }
             }
         });
-
         await database.ref().update(updates);
-        alert("✅ Réparation terminée !");
+        alert("✅ Réparation réussie pour " + nb + " clients !");
         location.reload();
-    } catch (e) {
-        alert("Erreur : " + e.message);
+    } catch (err) {
+        alert("Erreur : " + err.message);
     }
 }
  function deconnexion() {
