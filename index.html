@@ -1001,38 +1001,23 @@ function mettreAJourDashboard(clients) {
 }
 function calculerJours(dateStr) {
     if (!dateStr) return 0;
-
     try {
-        let dateInscription;
-        
-        // 1. On transforme n'importe quel format en objet Date
+        let dInsc;
         if (dateStr.includes('/')) {
             let p = dateStr.split(' ')[0].split('/');
-            dateInscription = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+            dInsc = new Date(p[2], p[1]-1, p[0]); // Format JJ/MM/AAAA
         } else {
-            dateInscription = new Date(dateStr);
+            dInsc = new Date(dateStr);
         }
 
-        // 2. On récupère la date d'aujourd'hui
-        let aujourdhui = new Date();
+        // On compare uniquement les JOURS, on ignore les heures
+        const aujourdhui = new Date();
+        const date1 = Date.UTC(dInsc.getFullYear(), dInsc.getMonth(), dInsc.getDate());
+        const date2 = Date.UTC(aujourdhui.getFullYear aujourdhui.getMonth(), aujourdhui.getDate());
 
-        // 3. FORCE : On ignore les heures, minutes, secondes (on met tout à zéro)
-        dateInscription.setHours(0, 0, 0, 0);
-        aujourdhui.setHours(0, 0, 0, 0);
-
-        // 4. Calcul mathématique simple
-        const unJourEnMs = 24 * 60 * 60 * 1000;
-        const differenceMs = aujourdhui.getTime() - dateInscription.getTime();
-        
-        // 5. On arrondit au chiffre entier le plus proche
-        let resultat = Math.round(differenceMs / unJourEnMs);
-
-        return resultat < 0 ? 0 : resultat;
-
-    } catch (e) {
-        console.error("Erreur fatale date:", e);
-        return 0;
-    }
+        const diff = Math.floor((date2 - date1) / (1000 * 60 * 60 * 24));
+        return diff < 0 ? 0 : diff;
+    } catch(e) { return 0; }
 }
     async function recupererCompte() {
     const tel = prompt("Entrez votre numéro de téléphone (celui utilisé à l'inscription) :");
@@ -1060,7 +1045,24 @@ function calculerJours(dateStr) {
         alert("Erreur lors de la récupération.");
     }
 }
-  
+async function forceReparationDates() {
+    const snap = await database.ref('clients').once('value');
+    const updates = {};
+    
+    snap.forEach(c => {
+        const d = c.val().infos_client.date_inscription;
+        if(d && d.includes('/')) {
+            let p = d.split(' ')[0].split('/');
+            // On transforme en format ISO propre
+            let cleanDate = new Date(p[2], p[1]-1, p[0]).toISOString();
+            updates[`clients/${c.key}/infos_client/date_inscription`] = cleanDate;
+        }
+    });
+
+    await database.ref().update(updates);
+    alert("✅ Dates synchronisées !");
+    location.reload(); 
+}  
  function deconnexion() {
     if(confirm("Verrouiller ?")) {
         localStorage.removeItem('v32_active');
