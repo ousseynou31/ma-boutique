@@ -460,26 +460,26 @@ async function loadUsers(filtre = 'TOUT') {
     list.innerHTML = "<p style='text-align:center; color:gray; padding:20px;'>Chargement des données...</p>";
     
     try {
-        // 1. RÉCUPÉRATION DES DONNÉES DEPUIS FIREBASE
         const usersSnap = await database.ref('clients').once('value');
         const blackSnap = await database.ref('blacklist').once('value');
         const blacklisted = blackSnap.val() || {};
         
         let clientsArray = [];
 
-        // 2. FILTRAGE ET EXTRACTION
         usersSnap.forEach(u => {
             const data = u.val().infos_client;
             if(data) {
-                const maCat = data.categorie || 'C'; // Par défaut catégorie C
+                const maCat = data.categorie || 'C';
 
-                // CONDITION DE FILTRE : On ne garde que ce qui nous intéresse
                 if (filtre === 'TOUT' || maCat === filtre) {
+                    // FORCE LE RECALCUL ICI
+                    const joursCalcules = calculerJours(data.date_inscription);
+                    
                     clientsArray.push({
                         id: u.key,
                         nom: data.nom,
                         date: data.date_inscription,
-                        jours: calculerJours(data.date_inscription),
+                        jours: joursCalcules, // Utilise la valeur fraîchement calculée
                         isBanned: blacklisted[u.key] === true,
                         categorie: maCat
                     });
@@ -487,25 +487,19 @@ async function loadUsers(filtre = 'TOUT') {
             }
         });
 
-        // 3. TRI PAR URGENCE (Les plus de jours en haut)
+        // Tri : les plus urgents en haut
         clientsArray.sort((a, b) => b.jours - a.jours);
 
-        // 4. MISE À JOUR DU TITRE DYNAMIQUE
         const titreVue = filtre === 'TOUT' ? 'TOUS LES CLIENTS' : 'CATÉGORIE ' + filtre;
         list.innerHTML = `
             <p style="font-size:0.75rem; color:var(--p); margin-bottom:15px; font-weight:800; text-align:center; border-bottom:1px solid #222; padding-bottom:10px;">
                 📊 ${titreVue} : ${clientsArray.length}
             </p>`;
 
-        // 5. GÉNÉRATION DU HTML POUR CHAQUE CLIENT
         clientsArray.forEach(c => {
             let colorClass = "status-ok";
             if(c.jours >= 26) colorClass = "status-warning";
             if(c.jours >= 30) colorClass = "status-danger";
-            // 2. On ajoute la logique pour le bouton WhatsApp
-const styleUrgence = c.jours >= 30 
-    ? "background:#ff4444; animation: pulse 1.5s infinite; border:none;" 
-    : "background:#25D366; border:none;";
 
             list.innerHTML += `
                 <div class="user-row" style="display:flex; align-items:center; gap:10px; border-bottom: 1px solid #222; padding: 12px 0;">
@@ -531,18 +525,14 @@ const styleUrgence = c.jours >= 30
                     </div>
 
                     <div style="display:flex; flex-direction:column; gap:5px; flex-shrink:0; align-items:flex-end;">
-            <button onclick="envoyerRappel('${c.id}', '${c.nom}', '${c.categorie}')" 
-        style="width:75px; background:#25D366; color:white; border:none; padding:5px; font-size:0.55rem; border-radius:4px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:3px; margin-bottom:5px;">
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="white">
-        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.747-2.834-2.515-2.921-2.629-.087-.114-.726-.967-.726-1.843 0-.877.443-1.304.602-1.474.159-.17.348-.213.463-.213.115 0 .231.001.332.005.109.004.257-.042.402.305.144.347.492 1.2.535 1.287.043.087.072.188.014.304-.058.116-.087.188-.174.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.434-.506.549-.68.116-.174.231-.144.39-.087s1.013.477 1.186.564c.174.087.289.13.332.202.045.072.045.419-.1.824z"/>
-    </svg>
-    WHATSAPP
-</button>
+                        <button onclick="envoyerRappel('${c.id}', '${c.nom}', '${c.categorie}')" 
+                                style="width:75px; background:#25D366; color:white; border:none; padding:5px; font-size:0.55rem; border-radius:4px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:3px;">
+                            WHATSAPP
+                        </button>
                         <button class="pay-btn" onclick="validerPaiement('${c.id}')" 
                                 style="width:75px; padding:5px; font-size:0.55rem; font-weight:bold;">💰 PAYÉ</button>
                         
-                        <button class="badge-ban" 
-                                onclick="toggleBan('${c.id}')"
+                        <button class="badge-ban" onclick="toggleBan('${c.id}')"
                                 style="width:75px; background:${c.isBanned ? '#10b981' : '#ef4444'}; padding:5px; font-size:0.55rem; border-radius:4px; border:none; color:white; cursor:pointer; font-weight:bold;">
                             ${c.isBanned ? 'RÉACT' : 'SUSPEND'}
                         </button>
@@ -554,7 +544,9 @@ const styleUrgence = c.jours >= 30
                     </div>
                 </div>`;
         });
-mettreAJourDashboard(clientsArray);
+
+        mettreAJourDashboard(clientsArray);
+
     } catch(e) { 
         list.innerHTML = "<p style='color:red; text-align:center; padding:20px;'>⚠️ Erreur Cloud.</p>"; 
         console.error("Erreur LoadUsers:", e);
