@@ -1191,6 +1191,46 @@ function telechargerHistorique() {
         fenetreImpression.print();
     }, 500);
 }
+
+    function telechargerCSV() {
+    // 1. Définir l'entête du fichier Excel
+    let csvContent = "Date;Nom;Telephone;Situation\n";
+
+    // 2. Récupérer toutes les lignes du tableau plein écran
+    const rows = document.querySelectorAll("#table-paiements-body-fullscreen tr");
+
+    if (rows.length === 0 || rows[0].innerText.includes("Aucun")) {
+        return alert("L'historique est vide !");
+    }
+
+    // 3. Parcourir chaque ligne pour extraire les données
+    rows.forEach(row => {
+        const cols = row.querySelectorAll("td");
+        if (cols.length >= 4) {
+            let date = cols[0].innerText.trim();
+            let nom = cols[1].innerText.trim();
+            let tel = cols[2].innerText.trim();
+            let situation = "PAYE"; // On simplifie pour Excel
+
+            // On ajoute la ligne au contenu CSV (séparé par des points-virgules)
+            csvContent += `${date};${nom};${tel};${situation}\n`;
+        }
+    });
+
+    // 4. Créer le fichier et déclencher le téléchargement
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    
+    const maintenant = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
+    link.setAttribute("href", url);
+    link.setAttribute("download", `historique_paiements_${maintenant}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 // Fonction pour fermer la vue
 function fermerHistoriquePleinEcran() {
     document.getElementById('modal-historique').style.display = 'none';
@@ -1230,6 +1270,10 @@ window.addEventListener('load', () => {
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
         <h2 style="color:var(--p); font-size:1.1rem; margin:0;">📋 HISTORIQUE DES PAIEMENTS</h2>
         <button onclick="telechargerHistorique()" 
+            <button onclick="telechargerCSV()" 
+        style="background:#2ecc71; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; margin-right:10px; display:flex; align-items:center; gap:5px;">
+    📊 EXCEL / CSV
+</button>
         style="background:#00a8ff; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; margin-right:10px; display:flex; align-items:center; gap:5px;">
     📥 TÉLÉCHARGER / PDF
 </button>
