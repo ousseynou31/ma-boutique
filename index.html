@@ -687,28 +687,28 @@ function toggleInventaire() {
 
     try {
         const maintenant = new Date();
-        const dateISO = maintenant.toISOString();
         const dateFr = maintenant.toLocaleDateString('fr-FR') + " " + maintenant.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
 
-        // 1. Récupérer le nom du client d'abord
+        // 1. Récupérer les infos du client
         const snap = await database.ref('clients/' + userId + '/infos_client').once('value');
-        const nomClient = snap.val().nom;
+        const dataClient = snap.val();
 
-        // 2. Mettre à jour la date d'inscription (remise à zéro des jours)
+        // 2. Mettre à jour la date d'inscription
         await database.ref('clients/' + userId + '/infos_client').update({
-            date_inscription: dateISO
+            date_inscription: maintenant.toISOString()
         });
 
-        // 3. Ajouter une ligne dans l'historique des paiements
+        // 3. Ajouter à l'historique AVEC LE NUMÉRO (userId)
         await database.ref('historique_paiements').push({
-            nom: nomClient,
+            nom: dataClient.nom,
+            telephone: userId, // On ajoute le numéro ici
             date: dateFr,
             situation: "PAYÉ"
         });
 
-        alert("Paiement enregistré et historique mis à jour !");
+        alert("Paiement enregistré !");
         loadUsers(); 
-        chargerHistoriquePaiements(); // On rafraîchit le tableau
+        if(typeof ouvrirHistoriquePleinEcran === "function") ouvrirHistoriquePleinEcran();
     } catch (e) {
         console.error(e);
     }
@@ -1141,20 +1141,20 @@ async function ouvrirHistoriquePleinEcran() {
             entries.unshift({ id: p.key, ...p.val() });
         });
 
-        entries.forEach(data => {
-            html += `
-                <tr style="border-bottom:1px solid #222;">
-                    <td style="padding:12px; color:#aaa;">${data.date}</td>
-                    <td style="padding:12px; font-weight:bold;">${data.nom}</td>
-                    <td style="padding:12px; text-align:center;">
-                        <span style="background:#25D366; color:white; padding:3px 8px; border-radius:10px; font-size:0.6rem; font-weight:bold;">
-                            ✅ PAYÉ
-                        </span>
-                    </td>
-                </tr>
-            `;
-        });
-
+       entries.forEach(data => {
+    html += `
+        <tr style="border-bottom:1px solid #222;">
+            <td style="padding:12px; color:#aaa; font-size:0.7rem;">${data.date}</td>
+            <td style="padding:12px; font-weight:bold;">${data.nom}</td>
+            <td style="padding:12px; color:#25D366; font-family:monospace;">${data.telephone || 'N/A'}</td>
+            <td style="padding:12px; text-align:center;">
+                <span style="background:#1a1a1a; color:#25D366; border:1px solid #25D366; padding:3px 8px; border-radius:10px; font-size:0.6rem; font-weight:bold;">
+                    ✅ PAYÉ
+                </span>
+            </td>
+        </tr>
+    `;
+});
         tbody.innerHTML = html || "<tr><td colspan='3' style='text-align:center; padding:30px;'>Aucun historique trouvé.</td></tr>";
 
     } catch (e) {
@@ -1209,6 +1209,7 @@ window.addEventListener('load', () => {
             <tr style="background:#1a1a1a; text-align:left;">
                 <th style="padding:12px; border-bottom:2px solid #333;">DATE</th>
                 <th style="padding:12px; border-bottom:2px solid #333;">NOM</th>
+                <th style="padding:12px; border-bottom:2px solid #333;">TÉLÉPHONE</th> <th style="padding:12px; border-bottom:2px solid #333; text-align:center;">SITUATION</th>
                 <th style="padding:12px; border-bottom:2px solid #333; text-align:center;">SITUATION</th>
             </tr>
         </thead>
