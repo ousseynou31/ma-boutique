@@ -198,9 +198,6 @@
         <button class="btn-3d" onclick="alert('Module Caisse en attente')"><span>🛒</span> CAISSE DE VENTE</button>
         <button class="btn-3d" onclick="naviguer('page-banque')"><span>📈</span> BANQUE & PROFITS</button>
         
-        <button class="btn-3d" style="border-color: var(--d); color: var(--d); margin-top: 40px; background: rgba(239, 68, 68, 0.1);" onclick="deconnexion()">
-            <span>🔒</span> VERROUILLER L'ACCÈS
-        </button>
     </div>
 </div>
 
@@ -249,6 +246,15 @@
 <div id="page-admin" class="full-page">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
         <h2 style="color:var(--p); margin:0;">🛡️ CONTRÔLE ADMIN</h2>
+        //........................
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #444;">
+    <p style="font-size: 0.6rem; color: #888; text-align: center; margin-bottom: 8px;">ZONE DE SÉCURITÉ</p>
+    <button onclick="verrouillerApp()" 
+            style="width:100%; background:#8b0000; color:white; border:none; padding:10px; font-size:0.75rem; border-radius:6px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+        🔒 VERROUILLER L'ACCÈS
+    </button>
+</div>
+        //................
         <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:10px; border-radius:10px;">FERMER</button>
     </div>
 
@@ -1076,12 +1082,25 @@ async function forceReparationDates() {
         alert("Erreur : " + err.message);
     }
 }
- function deconnexion() {
-    if(confirm("Verrouiller ?")) {
-        localStorage.removeItem('v32_active');
-        location.reload();
+    async function verrouillerApp() {
+    if(!confirm("Ceci va simuler un dépassement de délai et bloquer l'application. Continuer ?")) return;
+
+    try {
+        const id = localStorage.getItem('userId');
+        if(!id) return;
+
+        // On met une date très vieille pour forcer le blocage automatique
+        await database.ref('clients/' + id + '/infos_client').update({
+            date_inscription: "2000-01-01T12:00:00Z"
+        });
+
+        alert("Application verrouillée avec succès.");
+        location.reload(); 
+    } catch (e) {
+        console.error("Erreur de verrouillage:", e);
     }
 }
+ 
     
 // Initialisation des tarifs au chargement de la page
 // Initialisation des tarifs et lancement au chargement de la page
