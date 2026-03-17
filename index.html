@@ -1282,7 +1282,9 @@ function fermerHistoriquePleinEcran() {
 async function ouvrirHistoriquePleinEcran() {
     const tbody = document.getElementById('table-paiements-body-fullscreen');
     const tfoot = document.getElementById('table-paiements-footer');
-    document.getElementById('modal-historique').style.display = 'block';
+    const modal = document.getElementById('modal-historique');
+    
+    if (modal) modal.style.display = 'block';
 
     try {
         const snap = await database.ref('historique_paiements').once('value');
@@ -1292,37 +1294,50 @@ async function ouvrirHistoriquePleinEcran() {
 
         snap.forEach(p => {
             const data = p.val();
+            
+            // 1. GESTION DU MONTANT (On s'assure que c'est un nombre propre)
             const montant = Number(data.montant) || 0;
             cumulArgent += montant;
             nombrePaiements++;
 
-            // Formatage de la date en Français pour que le filtre "17/03" fonctionne
-            const dateLisible = data.date.includes('-') ? 
-                new Date(data.date).toLocaleDateString('fr-FR') : data.date;
+            // 2. GESTION DE LA DATE (Robuste pour le filtre JJ/MM/AAAA)
+            let dateLisible = data.date || "";
+            if (dateLisible.includes('-') || !isNaN(Date.parse(dateLisible))) {
+                const d = new Date(dateLisible);
+                dateLisible = d.toLocaleDateString('fr-FR'); 
+                // Optionnel : ajouter l'heure pour plus de précision :
+                // dateLisible += " " + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+            }
 
+            // 3. CONSTRUCTION DE LA LIGNE
+            // Note : On met le montant brut dans le texte pour que le filtre le trouve
             html = `
                 <tr style="border-bottom:1px solid #222;">
                     <td style="padding:12px; color:#aaa;">${dateLisible}</td>
-                    <td style="padding:12px;"><b>${data.nom}</b><br><small>${data.categorie}</small></td>
+                    <td style="padding:12px;"><b>${data.nom}</b><br><small style="color:#888;">${data.categorie || 'SANS CAT.'}</small></td>
                     <td style="padding:12px; font-family:monospace;">${data.telephone}</td>
                     <td style="padding:12px; text-align:right; font-weight:bold; color:#25D366;">
-                        PAYÉ ${montant.toLocaleString()} F
+                        PAYÉ ${montant} F
                     </td>
                 </tr>` + html; 
         });
 
-        tbody.innerHTML = html;
-        tfoot.innerHTML = `
-            <tr style="background:#000; color:#25D366;">
-                <td colspan="2" style="padding:15px;">TOTAL (${nombrePaiements} reçus)</td>
-                <td colspan="2" style="padding:15px; text-align:right; font-weight:bold; border-left:1px solid #333;">
-                    ${cumulArgent.toLocaleString()} FCFA
-                </td>
-            </tr>`;
+        if (tbody) tbody.innerHTML = html;
+        
+        if (tfoot) {
+            tfoot.innerHTML = `
+                <tr style="background:#000; color:#25D366; font-size:1.1rem;">
+                    <td colspan="2" style="padding:15px;">TOTAL (${nombrePaiements} reçus)</td>
+                    <td colspan="2" style="padding:15px; text-align:right; font-weight:bold; border-left:1px solid #333;">
+                        ${cumulArgent.toLocaleString()} FCFA
+                    </td>
+                </tr>`;
+        }
 
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error("Erreur lors de l'ouverture de l'historique :", e); 
+    }
 }
-
 // 3. FONCTION FILTRER (Correction lecture Date et Situation)
 function filtrerHistorique() {
     const input = document.getElementById('search-historique');
@@ -1336,18 +1351,20 @@ function filtrerHistorique() {
     let nouveauTotal = 0;
 
     for (let i = 0; i < rows.length; i++) {
-        // On utilise innerText pour capter la date formatée et le prix affiché
+        // On lit tout le texte de la ligne (Date formatée, Nom, Prix)
         const texteLigne = rows[i].innerText.toLowerCase();
         
         if (texteLigne.includes(filter)) {
             rows[i].style.display = ""; 
             
-            // On calcule le total basé sur ce qui est affiché dans la 4ème colonne
-            const celluleSituation = rows[i].cells[3]; 
-            if (celluleSituation) {
-                const montantExtraite = celluleSituation.innerText.replace(/\D/g, '');
-                if (montantExtraite) {
-                    nouveauTotal += parseInt(montantExtraite);
+            // Extraction du montant depuis la 4ème colonne (index 3)
+            const celluleMontant = rows[i].cells[3]; 
+            if (celluleMontant) {
+                // Cette ligne est magique : elle supprime tout SAUF les chiffres
+                const chiffresSeuls = celluleMontant.innerText.replace(/[^\d]/g, '');
+                
+                if (chiffresSeuls !== "") {
+                    nouveauTotal += parseInt(chiffresSeuls);
                 }
             }
         } else {
@@ -1355,12 +1372,18 @@ function filtrerHistorique() {
         }
     }
 
+    // Mise à jour du footer avec le nouveau total calculé
     const footer = document.getElementById('table-paiements-footer');
     if (footer) {
+        // On récupère le nombre de lignes visibles pour l'afficher aussi
+        const nbVisibles = Array.from(rows).filter(r => r.style.display !== "none").length;
+        
         footer.innerHTML = `
-            <tr style="background:#1a1a1a; color:#25D366;">
-                <td colspan="3" style="padding:15px; text-align:right; font-weight:bold;">TOTAL FILTRÉ :</td>
-                <td style="padding:15px; text-align:center; font-weight:bold; border-left:1px solid #333;">
+            <tr style="background:#1a1a1a; color:#25D366; font-size:1.1rem;">
+                <td colspan="3" style="padding:15px; text-align:right; font-weight:bold;">
+                    TOTAL FILTRÉ (${nbVisibles} lignes) :
+                </td>
+                <td style="padding:15px; text-align:right; font-weight:bold; border-left:1px solid #333;">
                     ${nouveauTotal.toLocaleString()} FCFA
                 </td>
             </tr>`;
