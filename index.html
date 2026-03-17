@@ -250,6 +250,10 @@
         style="width:100%; background:#6c5ce7; color:white; border:none; padding:12px; font-size:0.8rem; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
     📊 VOIR L'HISTORIQUE COMPLET
 </button>
+        <button onclick="nettoyerHistoriqueComplet()" 
+        style="background:#ef4444; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; width:100%; margin-bottom:20px;">
+    🗑️ EFFACER TOUT L'HISTORIQUE DES PAIEMENTS
+</button>
      <button onclick="deconnexionManuelle()" 
         style="width:100%; background:#444; color:white; border:none; padding:12px; font-size:0.8rem; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
     🚪 DÉCONNECTER L'APPAREIL
@@ -1270,6 +1274,33 @@ function telechargerHistorique() {
 // Fonction pour fermer la vue
 function fermerHistoriquePleinEcran() {
     document.getElementById('modal-historique').style.display = 'none';
+}
+    async function nettoyerHistoriqueComplet() {
+    // Barrière 1 : Confirmation simple
+    const confirmation = confirm("⚠️ ATTENTION : Vous allez effacer TOUS les paiements enregistrés jusqu'à présent. Cette action est irréversible.\n\nVoulez-vous continuer ?");
+    
+    if (confirmation) {
+        // Barrière 2 : Mot de passe Admin
+        const pass = prompt("🔒 SÉCURITÉ : Entrez le mot de passe Admin pour confirmer l'effacement :");
+        
+        if (pass === ADMIN_PASS) {
+            try {
+                // Suppression du dossier historique_paiements sur Firebase
+                await database.ref('historique_paiements').remove();
+                
+                alert("✅ HISTORIQUE NETTOYÉ : Votre comptabilité repart à 0.");
+                
+                // On ferme et on recharge pour voir le résultat
+                if (typeof ouvrirHistoriquePleinEcran === "function") {
+                    ouvrirHistoriquePleinEcran();
+                }
+            } catch (e) {
+                alert("❌ Erreur : Impossible de nettoyer le Cloud.");
+            }
+        } else {
+            alert("🚫 Mot de passe incorrect. Action annulée.");
+        }
+    }
 }
  function deconnexionManuelle() {
     console.log("Clic détecté !"); // Ceci s'affiche dans la console F12
