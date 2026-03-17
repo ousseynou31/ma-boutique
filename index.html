@@ -1276,30 +1276,46 @@ function fermerHistoriquePleinEcran() {
     document.getElementById('modal-historique').style.display = 'none';
 }
 
- function filtrerHistorique() {
+function filtrerHistorique() {
     const filter = document.getElementById('search-historique').value.toLowerCase();
     const tbody = document.getElementById('table-paiements-body-fullscreen');
     const rows = tbody.getElementsByTagName('tr');
     let nouveauTotal = 0;
 
     for (let i = 0; i < rows.length; i++) {
+        // On récupère le texte de toute la ligne pour la recherche
         const texteLigne = rows[i].textContent.toLowerCase();
         
         if (texteLigne.includes(filter)) {
-            rows[i].style.display = ""; // On affiche
+            rows[i].style.display = ""; // Afficher la ligne
             
-            // --- CALCUL DU TOTAL FILTRÉ ---
-            // On cherche le montant dans la ligne. 
-            // On suppose que le montant est dans la 4ème colonne (index 3) ou on cherche le texte " F"
-            const celluleMontant = rows[i].innerText.match(/(\d+)\s*F/); 
-            if (celluleMontant) {
-                nouveauTotal += parseInt(celluleMontant[1]);
+            // --- EXTRACTION DU PRIX DEPUIS LA COLONNE "SITUATION" ---
+            // La colonne SITUATION est la 4ème (index 3)
+            const celluleSituation = rows[i].cells[3]; 
+            if (celluleSituation) {
+                // On extrait uniquement les chiffres du texte (ex: "1500 F" devient "1500")
+                const montantExtraite = celluleSituation.innerText.replace(/\D/g, '');
+                if (montantExtraite) {
+                    nouveauTotal += parseInt(montantExtraite);
+                }
             }
         } else {
-            rows[i].style.display = "none"; // On cache
+            rows[i].style.display = "none"; // Cacher la ligne
         }
     }
 
+    // MISE À JOUR DU TOTAL EN BAS
+    const footer = document.getElementById('table-paiements-footer');
+    if (footer) {
+        footer.innerHTML = `
+            <tr style="background:#1a1a1a; color:#25D366; font-size:1rem;">
+                <td colspan="3" style="padding:15px; text-align:right; font-weight:bold;">TOTAL VISIBLE :</td>
+                <td style="padding:15px; text-align:center; font-weight:bold; border-left:1px solid #333;">
+                    ${nouveauTotal.toLocaleString()} FCFA
+                </td>
+            </tr>`;
+    }
+}
     // 2. MISE À JOUR DU FOOTER (La ligne du Total)
     const footer = document.getElementById('table-paiements-footer');
     if (footer) {
