@@ -1278,7 +1278,7 @@ function fermerHistoriquePleinEcran() {
 
 function filtrerHistorique() {
     const input = document.getElementById('search-historique');
-    if (!input) return; // Sécurité si l'élément n'existe pas encore
+    if (!input) return;
     
     const filter = input.value.toLowerCase();
     const tbody = document.getElementById('table-paiements-body-fullscreen');
@@ -1288,25 +1288,27 @@ function filtrerHistorique() {
     let nouveauTotal = 0;
 
     for (let i = 0; i < rows.length; i++) {
-        const texteLigne = rows[i].textContent.toLowerCase();
+        // MODIF 1 : Utiliser innerText pour mieux détecter les dates et prix affichés
+        const texteLigne = rows[i].innerText.toLowerCase();
         
         if (texteLigne.includes(filter)) {
-            rows[i].style.display = ""; // Afficher la ligne
+            rows[i].style.display = ""; 
             
             // Extraction du montant depuis la 4ème colonne (SITUATION)
             const celluleSituation = rows[i].cells[3]; 
             if (celluleSituation) {
-                const montantExtraite = celluleSituation.innerText.replace(/\D/g, '');
-                if (montantExtraite) {
-                    nouveauTotal += parseInt(montantExtraite);
+                // MODIF 2 : On nettoie tous les caractères non numériques
+                const montantNettoye = celluleSituation.innerText.replace(/\D/g, '');
+                if (montantNettoye !== "") {
+                    nouveauTotal += parseInt(montantNettoye);
                 }
             }
         } else {
-            rows[i].style.display = "none"; // Cacher la ligne
+            rows[i].style.display = "none";
         }
     }
 
-    // MISE À JOUR DU TOTAL DYNAMIQUE EN BAS
+    // MISE À JOUR DU TOTAL EN BAS
     const footer = document.getElementById('table-paiements-footer');
     if (footer) {
         footer.innerHTML = `
@@ -1317,7 +1319,7 @@ function filtrerHistorique() {
                 </td>
             </tr>`;
     }
-} // <--- C'EST CETTE ACCOLADE QUI MANQUAIT PEUT-ÊTRE !
+}
     async function nettoyerHistoriqueComplet() {
     // 1. Demande de confirmation
     if (!confirm("Voulez-vous SAUVEGARDER sur Excel puis EFFACER tout l'historique ?")) return;
