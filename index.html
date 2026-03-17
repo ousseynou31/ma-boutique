@@ -1277,23 +1277,25 @@ function fermerHistoriquePleinEcran() {
 }
 
 function filtrerHistorique() {
-    const filter = document.getElementById('search-historique').value.toLowerCase();
+    const input = document.getElementById('search-historique');
+    if (!input) return; // Sécurité si l'élément n'existe pas encore
+    
+    const filter = input.value.toLowerCase();
     const tbody = document.getElementById('table-paiements-body-fullscreen');
+    if (!tbody) return;
+
     const rows = tbody.getElementsByTagName('tr');
     let nouveauTotal = 0;
 
     for (let i = 0; i < rows.length; i++) {
-        // On récupère le texte de toute la ligne pour la recherche
         const texteLigne = rows[i].textContent.toLowerCase();
         
         if (texteLigne.includes(filter)) {
             rows[i].style.display = ""; // Afficher la ligne
             
-            // --- EXTRACTION DU PRIX DEPUIS LA COLONNE "SITUATION" ---
-            // La colonne SITUATION est la 4ème (index 3)
+            // Extraction du montant depuis la 4ème colonne (SITUATION)
             const celluleSituation = rows[i].cells[3]; 
             if (celluleSituation) {
-                // On extrait uniquement les chiffres du texte (ex: "1500 F" devient "1500")
                 const montantExtraite = celluleSituation.innerText.replace(/\D/g, '');
                 if (montantExtraite) {
                     nouveauTotal += parseInt(montantExtraite);
@@ -1303,6 +1305,19 @@ function filtrerHistorique() {
             rows[i].style.display = "none"; // Cacher la ligne
         }
     }
+
+    // MISE À JOUR DU TOTAL DYNAMIQUE EN BAS
+    const footer = document.getElementById('table-paiements-footer');
+    if (footer) {
+        footer.innerHTML = `
+            <tr style="background:#1a1a1a; color:#25D366; font-size:1rem;">
+                <td colspan="3" style="padding:15px; text-align:right; font-weight:bold;">TOTAL FILTRÉ :</td>
+                <td style="padding:15px; text-align:center; font-weight:bold; border-left:1px solid #333;">
+                    ${nouveauTotal.toLocaleString()} FCFA
+                </td>
+            </tr>`;
+    }
+} // <--- C'EST CETTE ACCOLADE QUI MANQUAIT PEUT-ÊTRE !
 
     // MISE À JOUR DU TOTAL EN BAS
     const footer = document.getElementById('table-paiements-footer');
