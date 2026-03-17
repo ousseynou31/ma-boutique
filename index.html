@@ -1275,6 +1275,32 @@ function telechargerHistorique() {
 function fermerHistoriquePleinEcran() {
     document.getElementById('modal-historique').style.display = 'none';
 }
+
+    function filtrerHistorique() {
+    const searchVal = document.getElementById('search-historique').value.toLowerCase();
+    const table = document.querySelector("#modal-rapport table"); // Cible votre tableau de bilan
+    const rows = table.querySelectorAll("tbody tr");
+    let totalFiltre = 0;
+
+    rows.forEach(row => {
+        const texteLigne = row.innerText.toLowerCase();
+        
+        if (texteLigne.includes(searchVal)) {
+            row.style.display = "";
+            // On recalcule le total visible uniquement
+            const montantTexte = row.cells[3].innerText.replace(/\D/g, ''); // On prend juste les chiffres du montant
+            totalFiltre += Number(montantTexte);
+        } else {
+            row.style.display = "none";
+        }
+    });
+
+    // Optionnel : Mise à jour du total affiché en bas si vous voulez qu'il s'adapte à la recherche
+    const piedTableau = table.querySelector("tfoot td:last-child");
+    if (piedTableau) {
+        piedTableau.innerText = totalFiltre.toLocaleString() + " FCFA";
+    }
+}
     async function nettoyerHistoriqueComplet() {
     // 1. Demande de confirmation
     if (!confirm("Voulez-vous SAUVEGARDER sur Excel puis EFFACER tout l'historique ?")) return;
@@ -1350,6 +1376,11 @@ window.addEventListener('load', () => {
     <div id="modal-historique" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:9999; overflow-y:auto; padding:20px; box-sizing:border-box;">
     
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
+        <div style="padding: 10px; background: #f8f9fa; border-bottom: 1px solid #ddd;">
+    <input type="text" id="search-historique" onkeyup="filtrerHistorique()" 
+           placeholder="🔍 Rechercher un nom ou une date..." 
+           style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem;">
+</div>
         <h2 style="color:var(--p); font-size:1.1rem; margin:0;">📋 HISTORIQUE DES PAIEMENTS</h2>
          <button onclick="telechargerCSV()" 
         style="background:#2ecc71; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; margin-right:10px; display:flex; align-items:center; gap:5px;">
