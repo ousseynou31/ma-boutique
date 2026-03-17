@@ -830,7 +830,6 @@ function obtenirTarifs() {
 
 // Fonction pour enregistrer vos nouveaux prix
 async function sauvegarderTarifs() {
-    // 1. On récupère les chiffres que vous avez tapés dans les cases
     const nouveauxTarifs = {
         'A': parseInt(document.getElementById('price-A').value) || 0,
         'B': parseInt(document.getElementById('price-B').value) || 0,
@@ -838,49 +837,26 @@ async function sauvegarderTarifs() {
     };
     
     try {
-        // 2. ON ENVOIE SUR FIREBASE (C'est l'étape qui manquait)
+        // On met à jour Firebase pour que le bouton PAYÉ voie les mêmes chiffres que le filtre
         await database.ref('parametres/tarifs').set(nouveauxTarifs);
         
-        // 3. On garde une copie locale par sécurité
+        // On sauvegarde en local aussi
         localStorage.setItem('mes_tarifs', JSON.stringify(nouveauxTarifs));
         
-        alert("✅ PRIX SYNCHRONISÉS ! Firebase utilise maintenant :\n" + 
-              "A: " + nouveauxTarifs.A + " F\n" +
-              "B: " + nouveauxTarifs.B + " F\n" +
-              "C: " + nouveauxTarifs.C + " F");
-              
+        alert("✅ TARIFS SYNCHRONISÉS !\nLe bouton PAYÉ utilisera désormais ces montants.");
         loadUsers('TOUT'); 
     } catch(e) {
-        alert("❌ Erreur de connexion : Les prix n'ont pas pu être envoyés sur le Cloud.");
+        alert("Erreur Cloud : Vérifiez votre connexion.");
     }
 }
-
-window.onload = async function() {
-    try {
-        // 1. On tente de récupérer les tarifs sur le Cloud
-        const snap = await database.ref('parametres/tarifs').once('value');
-        const t = snap.val();
-
-        if (t) {
-            // 2. Si on les trouve, on remplit les cases
-            document.getElementById('price-A').value = t.A || 0;
-            document.getElementById('price-B').value = t.B || 0;
-            document.getElementById('price-C').value = t.C || 0;
-            // On met à jour la copie locale par sécurité
-            localStorage.setItem('mes_tarifs', JSON.stringify(t));
-        } else {
-            // 3. Sinon, on utilise votre ancienne méthode locale
-            const localT = JSON.parse(localStorage.getItem('mes_tarifs')) || {A:5000, B:3000, C:1500};
-            document.getElementById('price-A').value = localT.A;
-            document.getElementById('price-B').value = localT.B;
-            document.getElementById('price-C').value = localT.C;
-        }
-    } catch (e) {
-        console.log("Mode hors-ligne : chargement des prix locaux");
-    }
+window.onload = function() {
+    // On remplit les cases avec ce qu'on a en mémoire locale
+    const t = obtenirTarifs();
+    document.getElementById('price-A').value = t.A || 5000;
+    document.getElementById('price-B').value = t.B || 3000;
+    document.getElementById('price-C').value = t.C || 1500;
     
-    // On n'oublie pas de lancer l'app
-    launchApp(); 
+    launchApp();
 };
 // 1. OUVRIR LE BILAN
 function ouvrirRapport() {
