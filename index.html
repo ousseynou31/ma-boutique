@@ -1016,7 +1016,7 @@ function mettreAJourDashboard(clients) {
         // On applique le prix selon la catégorie enregistrée dans Firebase
         let prixDuClient = 0;
         if (c.categorie === 'A') prixDuClient = tarifA;
-        else if (c.categorie === 'B') prixClient = tarifB;
+        else if (c.categorie === 'B') prixDuClient = tarifB;
         else prixDuClient = tarifC; // Pour la catégorie C (ou si rien n'est coché)
 
         totalArgentAttendu += prixDuClient;
