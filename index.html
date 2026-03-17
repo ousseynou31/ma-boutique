@@ -1277,19 +1277,6 @@ function fermerHistoriquePleinEcran() {
     }
 }
 
-// 1. DÉMARRAGE SYNCHRONISÉ
-window.addEventListener('load', () => {
-    try {
-        const t = obtenirTarifs(); 
-        if(document.getElementById('price-A')) {
-            document.getElementById('price-A').value = t.A || 5000;
-            document.getElementById('price-B').value = t.B || 3000;
-            document.getElementById('price-C').value = t.C || 1500;
-        }
-        chargerHistoriquePaiements();
-    } catch (e) { console.error("Erreur chargement:", e); }
-    launchApp();
-});
 
 // 2. OUVERTURE DE L'HISTORIQUE (Correction Date et Montant Variable)
 async function ouvrirHistoriquePleinEcran() {
@@ -1379,6 +1366,20 @@ function filtrerHistorique() {
             </tr>`;
     }
 }
+    //  DÉMARRAGE SYNCHRONISÉ
+window.addEventListener('load', () => {
+    try {
+        const t = obtenirTarifs(); 
+        if(document.getElementById('price-A')) {
+            document.getElementById('price-A').value = t.A || 5000;
+            document.getElementById('price-B').value = t.B || 3000;
+            document.getElementById('price-C').value = t.C || 1500;
+        }
+        chargerHistoriquePaiements();
+    } catch (e) { console.error("Erreur chargement:", e); }
+    launchApp();
+});
+
 
  function deconnexionManuelle() {
     console.log("Clic détecté !"); // Ceci s'affiche dans la console F12
