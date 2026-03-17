@@ -1276,30 +1276,45 @@ function fermerHistoriquePleinEcran() {
     document.getElementById('modal-historique').style.display = 'none';
 }
     async function nettoyerHistoriqueComplet() {
-    // Barrière 1 : Confirmation simple
-    const confirmation = confirm("⚠️ ATTENTION : Vous allez effacer TOUS les paiements enregistrés jusqu'à présent. Cette action est irréversible.\n\nVoulez-vous continuer ?");
-    
-    if (confirmation) {
-        // Barrière 2 : Mot de passe Admin
-        const pass = prompt("🔒 SÉCURITÉ : Entrez le mot de passe Admin pour confirmer l'effacement :");
+    // 1. Demande de confirmation
+    if (!confirm("Voulez-vous SAUVEGARDER sur Excel puis EFFACER tout l'historique ?")) return;
+
+    // 2. Vérification du mot de passe
+    const pass = prompt("🔒 Entrez le mot de passe Admin pour confirmer :");
+    if (pass !== ADMIN_PASS) return alert("Mot de passe incorrect.");
+
+    try {
+        // --- ÉTAPE A : LA SAUVEGARDE AUTOMATIQUE ---
+        const snap = await database.ref('historique_paiements').once('value');
         
-        if (pass === ADMIN_PASS) {
-            try {
-                // Suppression du dossier historique_paiements sur Firebase
-                await database.ref('historique_paiements').remove();
-                
-                alert("✅ HISTORIQUE NETTOYÉ : Votre comptabilité repart à 0.");
-                
-                // On ferme et on recharge pour voir le résultat
-                if (typeof ouvrirHistoriquePleinEcran === "function") {
-                    ouvrirHistoriquePleinEcran();
-                }
-            } catch (e) {
-                alert("❌ Erreur : Impossible de nettoyer le Cloud.");
-            }
-        } else {
-            alert("🚫 Mot de passe incorrect. Action annulée.");
+        if (snap.exists()) {
+            let csv = "\uFEFFDate;Nom;Telephone;Categorie;Montant\n";
+            snap.forEach(p => {
+                const d = p.val();
+                csv += `${d.date};${d.nom};${d.telephone};${d.categorie};${d.montant}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `SAUVEGARDE_AVANT_NETTOYAGE_${new Date().toLocaleDateString()}.csv`;
+            link.click(); // Lance le téléchargement
         }
+
+        // --- ÉTAPE B : LE NETTOYAGE ---
+        await database.ref('historique_paiements').remove();
+        
+        alert("✅ Sauvegarde terminée et historique vidé avec succès !");
+        
+        // Rafraîchir l'affichage
+        if (document.getElementById('modal-historique').style.display === 'block') {
+            ouvrirHistoriquePleinEcran();
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert("❌ Une erreur est survenue lors du nettoyage.");
     }
 }
  function deconnexionManuelle() {
