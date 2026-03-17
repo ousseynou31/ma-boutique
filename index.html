@@ -682,71 +682,61 @@ function toggleInventaire() {
     });
 }
 async function validerPaiement(userId) {
-    if(!confirm("Confirmer le paiement ?")) return;
+    if(!confirm("Voulez-vous valider le paiement pour ce compte ?")) return;
 
     try {
-        // 1. Récupération des données client
-        const snapClient = await database.ref('clients/' + userId + '/infos_client').once('value');
-        const client = snapClient.val();
+        // 1. Récupération globale du compte (ID machine ou Tel)
+        const snap = await database.ref('clients/' + userId).once('value');
+        const data = snap.val();
 
-        if (!client) return alert("Client introuvable.");
+        if (!data) {
+            alert("❌ Compte introuvable sur le Cloud.");
+            return;
+        }
 
-        // 2. Récupération des tarifs (On cherche dans Firebase en priorité)
+        // 2. RECHERCHE FLEXIBLE : On cherche les infos là où elles sont
+        // On regarde dans 'infos_client' OU directement à la racine de l'ID
+        const client = data.infos_client ? data.infos_client : data;
+
+        // 3. Récupération des tarifs Cloud
         const snapTarifs = await database.ref('parametres/tarifs').once('value');
-        let tarifs = snapTarifs.val();
+        const tarifs = snapTarifs.val() || { 'A': 5000, 'B': 3000, 'C': 1500 };
 
-        // Si Firebase est vide, on prend les tarifs par défaut du code
-        if (!tarifs) {
-            tarifs = { 'A': 5000, 'B': 3000, 'C': 1500 };
-        }
+        // 4. Identification de la catégorie (A par défaut si non trouvée)
+        const maCat = (client.categorie || "A").trim().toUpperCase();
+        const montant = Number(tarifs[maCat]) || 0;
 
-        // 3. --- LOGIQUE DE CALCUL DU MONTANT ---
-        let montantAPayer = 0;
-        const catClient = (client.categorie || "C").trim().toUpperCase();
-
-        // On vérifie si la catégorie existe dans les tarifs
-        if (tarifs[catClient]) {
-            montantAPayer = Number(tarifs[catClient]);
-        } else {
-            // Sécurité : recherche insensible à la casse (a = A)
-            for (let key in tarifs) {
-                if (key.trim().toUpperCase() === catClient) {
-                    montantAPayer = Number(tarifs[key]);
-                    break;
-                }
-            }
-        }
-
-        // 4. --- SÉCURITÉ ANTI-ZÉRO ---
-        if (montantAPayer <= 0) {
-            alert("❌ ERREUR : Aucun prix trouvé pour la catégorie '" + catClient + "'.\nAllez dans vos paramètres pour définir le prix.");
-            return; 
+        if (montant === 0) {
+            alert("❌ Erreur : Le tarif pour la catégorie " + maCat + " est à 0.");
+            return;
         }
 
         const maintenant = new Date();
-        const dateFr = maintenant.toLocaleDateString('fr-FR') + " " + maintenant.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+        const dateFr = maintenant.toLocaleDateString('fr-FR') + " " + maintenant.toLocaleTimeString('fr-FR');
 
-        // 5. Mise à jour Cloud
+        // 5. MISE À JOUR (On répare la structure en passant)
         await database.ref('clients/' + userId + '/infos_client').update({
+            nom: client.nom || "Admin Machine",
+            categorie: maCat,
             date_inscription: maintenant.toISOString()
         });
 
-        // 6. Enregistrement historique
+        // 6. ENREGISTREMENT HISTORIQUE
         await database.ref('historique_paiements').push({
-            nom: client.nom,
+            nom: client.nom || "Admin Machine",
             telephone: userId,
-            categorie: catClient,
+            categorie: maCat,
             date: dateFr,
-            montant: montantAPayer,
+            montant: montant,
             situation: "PAYÉ"
         });
 
-        alert("✅ Succès ! " + montantAPayer + " F enregistrés.");
+        alert("✅ Paiement de " + montant + " F validé pour votre compte machine !");
         loadUsers(); 
 
     } catch (e) {
         console.error(e);
-        alert("Erreur de connexion.");
+        alert("❌ Erreur technique lors du paiement.");
     }
 }
   function filtrerClients() {
