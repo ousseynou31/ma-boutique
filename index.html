@@ -1276,23 +1276,29 @@ function fermerHistoriquePleinEcran() {
     document.getElementById('modal-historique').style.display = 'none';
 }
 
-   function filtrerHistorique() {
-    // 1. On récupère ce qui est tapé dans la barre
+  function filtrerHistorique() {
+    // 1. On récupère la barre de recherche
     const input = document.getElementById('search-historique');
     const filter = input.value.toLowerCase();
     
-    // 2. On cible le corps du tableau
+    // 2. On cible précisément le corps du tableau que vous avez défini
     const tbody = document.getElementById('table-paiements-body-fullscreen');
+    
+    // 3. On récupère toutes les lignes (tr) présentes dans ce corps
     const rows = tbody.getElementsByTagName('tr');
 
-    // 3. On boucle sur chaque ligne pour cacher ou afficher
+    // DEBUG : Affiche dans la console si le tableau est vide ou pas
+    console.log("Nombre de lignes trouvées : " + rows.length);
+
+    // 4. On boucle sur chaque ligne
     for (let i = 0; i < rows.length; i++) {
-        const texteLigne = rows[i].innerText.toLowerCase();
+        // On récupère tout le texte de la ligne pour comparer
+        const textContent = rows[i].textContent.toLowerCase();
         
-        if (texteLigne.indexOf(filter) > -1) {
-            rows[i].style.display = ""; // On affiche
+        if (textContent.includes(filter)) {
+            rows[i].style.display = ""; // On affiche si ça correspond
         } else {
-            rows[i].style.display = "none"; // On cache
+            rows[i].style.display = "none"; // On cache sinon
         }
     }
 }
